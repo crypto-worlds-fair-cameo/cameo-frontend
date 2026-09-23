@@ -1,6 +1,6 @@
 # Frontend Convention
 
-설계·구현·검토 기준은 [react-page-first-architecture](../../.agents/skills/react-page-first-architecture/SKILL.md)입니다. 이 문서는 해당 기준으로 정리한 현재 boilerplate의 구현과 시작 방법을 설명합니다.
+설계·구현·검토 기준은 [react-page-first-architecture](../.agents/skills/react-page-first-architecture/SKILL.md)입니다. 이 문서는 해당 기준으로 정리한 현재 boilerplate의 구현과 시작 방법을 설명합니다.
 
 ## 구조와 소유권
 
@@ -52,20 +52,20 @@ src/
 
 ## 새 프로젝트와 공통 UI 설계
 
-1. 루트 `PROJECT.md`에 목적·화면·행동을 정리합니다.
+1. [project.md](project.md)에 목적·화면·행동을 정리합니다.
 2. [공통 UI 설계 양식](../../docs/design.md)에 사용할 토큰·컴포넌트·상태·검토 결정을 기록합니다.
-3. [시각 검토 양식](../../docs/pre-design.html)을 브라우저에서 열어 예시값을 프로젝트에 맞게 조정합니다.
+3. [시각 검토 양식](../../docs/design/base-ui.html)을 브라우저에서 열어 예시값을 프로젝트에 맞게 조정합니다.
 4. 검토된 항목만 실제 `shared/ui`에 구현하고, 특정 페이지에만 필요한 구성은 그 페이지 `ui`에 둡니다.
 
 설계 HTML은 공통 UI를 결정하기 위한 미리보기 양식입니다. 실제 구현은 `shared/ui`에 두며, shadcn 생성 경로는 `components.json`에서 관리합니다.
 
 ## 페이지 생성과 검증
 
-저장소 루트에서 `./scripts/create-page orders-list`를 실행하면 `pages/orders-list/OrdersListPage.tsx`가 생성됩니다. 출력된 lazy import와 route object를 `app/router/route-config.tsx`에 추가하세요. 기존 페이지 디렉토리는 덮어쓰지 않습니다.
+`src/pages/orders-list/OrdersListPage.tsx`처럼 페이지 진입점을 만들고 lazy import와 route object를 `src/app/router/route-config.tsx`에 추가하세요. 현재 페이지 생성 스크립트는 없습니다.
 
 React 19·Vite·TypeScript·Tailwind v4·React Query·Zustand·Radix를 사용합니다. API 기본 URL은 `VITE_API_URL || /api`입니다. Provider 순서는 ThemeProvider → QueryClientProvider이며 StrictMode는 기본으로 활성화하지 않습니다.
 
-앱 소유 코드는 4-space와 세미콜론을 기본으로 합니다. 기존 shadcn 파일은 생성 스타일을 유지합니다. 변경 후 `npm run lint`, `npm run build`를 실행하고 홈·404·내비게이션 및 변경한 상태 흐름을 브라우저에서 확인합니다. Vitest·Testing Library·jsdom 테스트를 `npm test`로 실행합니다.
+코드 포맷은 공통 UI를 포함해 `.prettierrc`의 2칸 들여쓰기와 세미콜론 기준으로 통일합니다. `npm run format`으로 적용하고 `npm run format:check`로 검사합니다. 변경 후 `npm run lint`, `npm run build`를 실행하고 홈·404·내비게이션 및 변경한 상태 흐름을 브라우저에서 확인합니다. Vitest·Testing Library·jsdom 테스트를 `npm test`로 실행합니다.
 
 ## 공통 오류·로딩·탐색 수명주기
 
@@ -77,9 +77,9 @@ React 19·Vite·TypeScript·Tailwind v4·React Query·Zustand·Radix를 사용�
 const { show, hide } = useLoadingStore.getState();
 const taskId = show();
 try {
-    await work();
+  await work();
 } finally {
-    hide(taskId);
+  hide(taskId);
 }
 ```
 
@@ -91,4 +91,4 @@ try {
 
 ## i18n
 
-초기화와 namespace 조립은 `app/i18n`, 범용 번역은 `shared/i18n/locales`, 페이지 번역은 `pages/<page>/config/locales`가 소유합니다. UI는 `react-i18next`의 `useTranslation(namespace)`을 사용하고 페이지에서 app 인스턴스를 import하지 않습니다. [다국어 구성 가이드](../../docs/i18n.md)를 참고하세요.
+초기화와 namespace 조립은 `app/i18n`, 범용 번역은 `shared/i18n/locales`, 페이지 번역은 `pages/<page>/config/locales`가 소유합니다. UI는 `react-i18next`의 `useTranslation(namespace)`을 사용하고 페이지에서 app 인스턴스를 import하지 않습니다. 번역과 namespace 등록은 [i18n 설정](../src/app/i18n/config.ts)을 참고하세요.

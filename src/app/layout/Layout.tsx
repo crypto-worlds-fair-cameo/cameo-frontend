@@ -15,57 +15,57 @@ export type LayoutFrame = 'full' | 'mobile' | 'tablet' | 'laptop' | 'desktop';
 export type ContentWidth = 'compact' | 'content' | 'wide' | 'full';
 
 export interface LayoutProps {
-    mode?: LayoutMode;
-    frame?: LayoutFrame;
-    contentWidth?: ContentWidth;
-    showHeader?: boolean;
-    showSidebar?: boolean;
-    showFooter?: boolean;
+  mode?: LayoutMode;
+  frame?: LayoutFrame;
+  contentWidth?: ContentWidth;
+  showHeader?: boolean;
+  showSidebar?: boolean;
+  showFooter?: boolean;
 }
 
 const Layout = ({
-    mode = 'web',
-    frame = 'full',
-    contentWidth = 'wide',
-    showHeader = true,
-    showSidebar = true,
-    showFooter = true,
+  mode = 'web',
+  frame = 'full',
+  contentWidth = 'wide',
+  showHeader = true,
+  showSidebar = true,
+  showFooter = true,
 }: LayoutProps) => {
-    const { key } = useLocation();
-    const mainRef = useRef<HTMLElement>(null);
-    useRouteScroll(mode, mainRef);
-    useEffect(() => {
-        const html = document.documentElement;
-        html.dataset.scrollMode = mode;
+  const { key } = useLocation();
+  const mainRef = useRef<HTMLElement>(null);
+  useRouteScroll(mode, mainRef);
+  useEffect(() => {
+    const html = document.documentElement;
+    html.dataset.scrollMode = mode;
 
-        return () => {
-            if (html.dataset.scrollMode === mode) {
-                delete html.dataset.scrollMode;
-            }
-        };
-    }, [mode]);
+    return () => {
+      if (html.dataset.scrollMode === mode) {
+        delete html.dataset.scrollMode;
+      }
+    };
+  }, [mode]);
 
-    return (
-        <SidebarProvider>
-            {showSidebar && <MenuLeft menuItems={menuConfig} />}
+  return (
+    <SidebarProvider>
+      {showSidebar && <MenuLeft menuItems={menuConfig} />}
 
-            <SidebarInset className="layout-shell" data-mode={mode} data-frame={frame}>
-                {showHeader && <Header menuItems={menuConfig} showSidebar={showSidebar} />}
+      <SidebarInset className="layout-shell" data-mode={mode} data-frame={frame}>
+        {showHeader && <Header menuItems={menuConfig} showSidebar={showSidebar} />}
 
-                <main ref={mainRef} className="layout-main">
-                    <div className="layout-content" data-content-width={contentWidth}>
-                        <ErrorBoundary resetKey={key} scope="page">
-                            <Suspense fallback={<RouteLoading />}>
-                                <Outlet />
-                            </Suspense>
-                        </ErrorBoundary>
-                    </div>
-                </main>
+        <main ref={mainRef} className="layout-main">
+          <div className="layout-content" data-content-width={contentWidth}>
+            <ErrorBoundary resetKey={key} scope="page">
+              <Suspense fallback={<RouteLoading />}>
+                <Outlet />
+              </Suspense>
+            </ErrorBoundary>
+          </div>
+        </main>
 
-                {showFooter && mode === 'web' && <Footer />}
-            </SidebarInset>
-        </SidebarProvider>
-    );
+        {showFooter && mode === 'web' && <Footer />}
+      </SidebarInset>
+    </SidebarProvider>
+  );
 };
 
 export default Layout;

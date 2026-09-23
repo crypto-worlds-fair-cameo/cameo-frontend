@@ -9,26 +9,26 @@ import { activeLayoutPreset } from '@/app/config/site';
 import { appRoutes, fallbackRoute } from '@/app/router/route-config';
 
 function App() {
-    return (
-        <ErrorBoundary scope="app">
-            <AppProviders>
-                <BrowserRouter>
-                    <Routes>
-                        <Route element={<Layout {...activeLayoutPreset} />}>
-                            {appRoutes.map((route) => (
-                                <Route key={route.path} path={route.path} element={route.element} />
-                            ))}
-                            <Route path={fallbackRoute.path} element={fallbackRoute.element} />
-                        </Route>
-                    </Routes>
+  return (
+    <ErrorBoundary scope="app">
+      <AppProviders>
+        <BrowserRouter>
+          <Routes>
+            <Route element={<Layout {...activeLayoutPreset} />}>
+              {appRoutes.map(route => (
+                <Route key={route.path} path={route.path} element={route.element} />
+              ))}
+              <Route path={fallbackRoute.path} element={fallbackRoute.element} />
+            </Route>
+          </Routes>
 
-                    <GlobalModal />
-                    <GlobalLoading />
-                    <GlobalToast />
-                </BrowserRouter>
-            </AppProviders>
-        </ErrorBoundary>
-    );
+          <GlobalModal />
+          <GlobalLoading />
+          <GlobalToast />
+        </BrowserRouter>
+      </AppProviders>
+    </ErrorBoundary>
+  );
 }
 
 export default App;

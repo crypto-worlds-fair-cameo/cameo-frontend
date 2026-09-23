@@ -9,14 +9,14 @@ import { useModalStore } from '@/shared/ui/modal/model/modalStore';
  * };
  */
 export const GlobalModal = () => {
-    const { isModalOpen, title, titleClassName, content, closeModal } = useModalStore();
+  const { isModalOpen, title, titleClassName, content, closeModal } = useModalStore();
 
-    return (
-        <Dialog open={isModalOpen} onOpenChange={closeModal}>
-            <DialogContent className="max-w-2xl">
-                <DialogTitle className={titleClassName}>{title}</DialogTitle>
-                {content}
-            </DialogContent>
-        </Dialog>
-    );
+  return (
+    <Dialog open={isModalOpen} onOpenChange={closeModal}>
+      <DialogContent className="max-w-2xl">
+        <DialogTitle className={titleClassName}>{title}</DialogTitle>
+        {content}
+      </DialogContent>
+    </Dialog>
+  );
 };

@@ -1,101 +1,101 @@
 .layout-shell {
-    min-height: 100dvh;
-    background:
-        radial-gradient(circle at top left, rgba(14, 165, 233, 0.12), transparent 24rem),
-        radial-gradient(circle at top right, rgba(99, 102, 241, 0.1), transparent 22rem),
-        linear-gradient(180deg, rgba(248, 250, 252, 0.95), rgba(241, 245, 249, 0.96));
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at top left, rgba(14, 165, 233, 0.12), transparent 24rem),
+    radial-gradient(circle at top right, rgba(99, 102, 241, 0.1), transparent 22rem),
+    linear-gradient(180deg, rgba(248, 250, 252, 0.95), rgba(241, 245, 249, 0.96));
 }
 
 .layout-shell[data-mode='mobile'] {
-    height: 100dvh;
-    overflow: hidden;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 .layout-shell[data-frame='mobile'] {
-    max-width: 30rem;
-    margin: 0 auto;
+  max-width: 30rem;
+  margin: 0 auto;
 }
 
 .layout-shell[data-frame='tablet'] {
-    max-width: 48rem;
-    margin: 0 auto;
+  max-width: 48rem;
+  margin: 0 auto;
 }
 
 .layout-shell[data-frame='laptop'] {
-    max-width: 72rem;
-    margin: 0 auto;
+  max-width: 72rem;
+  margin: 0 auto;
 }
 
 .layout-shell[data-frame='desktop'] {
-    max-width: 90rem;
-    margin: 0 auto;
+  max-width: 90rem;
+  margin: 0 auto;
 }
 
 .layout-header {
-    position: sticky;
-    top: 0;
-    z-index: 30;
-    backdrop-filter: blur(18px);
-    background: color-mix(in oklab, var(--background) 84%, white 16%);
-    border-bottom: 1px solid color-mix(in oklab, var(--border) 82%, transparent 18%);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  backdrop-filter: blur(18px);
+  background: color-mix(in oklab, var(--background) 84%, white 16%);
+  border-bottom: 1px solid color-mix(in oklab, var(--border) 82%, transparent 18%);
 }
 
 .layout-header-inner {
-    width: min(100%, 96rem);
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 1rem 1.25rem;
+  width: min(100%, 96rem);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
 }
 
 .layout-main {
-    flex: 1;
-    min-height: 0;
-    padding: 1.5rem 1rem 2rem;
+  flex: 1;
+  min-height: 0;
+  padding: 1.5rem 1rem 2rem;
 }
 
 .layout-shell[data-mode='mobile'] .layout-main {
-    overflow-y: auto;
+  overflow-y: auto;
 }
 
 .layout-content {
-    width: min(100%, var(--content-width));
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+  width: min(100%, var(--content-width));
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .layout-content[data-content-width='compact'] {
-    --content-width: 48rem;
+  --content-width: 48rem;
 }
 
 .layout-content[data-content-width='content'] {
-    --content-width: 64rem;
+  --content-width: 64rem;
 }
 
 .layout-content[data-content-width='wide'] {
-    --content-width: 80rem;
+  --content-width: 80rem;
 }
 
 .layout-content[data-content-width='full'] {
-    --content-width: 100%;
+  --content-width: 100%;
 }
 
 .layout-footer {
-    width: min(100%, 96rem);
-    margin: 0 auto;
-    padding: 0 1rem 2rem;
+  width: min(100%, 96rem);
+  margin: 0 auto;
+  padding: 0 1rem 2rem;
 }
 
 @media (min-width: 768px) {
-    .layout-header-inner {
-        padding: 1rem 1.5rem;
-    }
+  .layout-header-inner {
+    padding: 1rem 1.5rem;
+  }
 
-    .layout-main {
-        padding: 2rem 1.5rem 2.5rem;
-    }
+  .layout-main {
+    padding: 2rem 1.5rem 2.5rem;
+  }
 }

@@ -6,3 +6,13 @@ build
 .idea
 *.log
 .DS_Store
+dist-ssr
+out
+coverage
+.nyc_output
+.cache
+.vite
+.agents
+.codex
+**/AGENTS.md
+package-lock.json

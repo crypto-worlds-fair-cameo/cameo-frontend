@@ -6,11 +6,11 @@ import { queryClient } from './queryClient';
 import { ThemeProvider } from './ThemeProvider';
 
 export function AppProviders({ children }: PropsWithChildren) {
-    return (
-        <I18nextProvider i18n={i18n}>
-            <ThemeProvider>
-                <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-            </ThemeProvider>
-        </I18nextProvider>
-    );
+  return (
+    <I18nextProvider i18n={i18n}>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      </ThemeProvider>
+    </I18nextProvider>
+  );
 }

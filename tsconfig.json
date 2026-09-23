@@ -1,11 +1,11 @@
 {
-    "files": [],
-    "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
-    "compilerOptions": {
-        "paths": {
-            "@/*": ["./src/*"]
-        },
-        "resolveJsonModule": true, // JSON 파일을 모듈로 가져올 수 있도록 설정
-        "esModuleInterop": true // CommonJS 모듈 호환성 활성화
-    }
+  "files": [],
+  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "resolveJsonModule": true, // JSON 파일을 모듈로 가져올 수 있도록 설정
+    "esModuleInterop": true // CommonJS 모듈 호환성 활성화
+  }
 }

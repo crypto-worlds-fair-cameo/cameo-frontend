@@ -1,45 +1,33 @@
 {
-    "$schema": "./node_modules/oxlint/configuration_schema.json",
-    "plugins": [
-        "typescript",
-        "react",
-        "unicorn",
-        "oxc"
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "unicorn", "oxc"],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "error",
+    "react/only-export-components": [
+      "error",
+      {
+        "allowConstantExport": true
+      }
     ],
-    "categories": {
-        "correctness": "error"
+    "typescript/no-explicit-any": "error"
+  },
+  "ignorePatterns": ["dist"],
+  "overrides": [
+    {
+      "files": ["src/shared/ui/**/*.{ts,tsx}", "**/*.test.tsx"],
+      "rules": {
+        "react/only-export-components": "off"
+      }
     },
-    "rules": {
-        "react/rules-of-hooks": "error",
-        "react/exhaustive-deps": "error",
-        "react/only-export-components": [
-            "error",
-            {
-                "allowConstantExport": true
-            }
-        ],
-        "typescript/no-explicit-any": "error"
-    },
-    "ignorePatterns": [
-        "dist"
-    ],
-    "overrides": [
-        {
-            "files": [
-                "src/shared/ui/**/*.{ts,tsx}",
-                "**/*.test.tsx"
-            ],
-            "rules": {
-                "react/only-export-components": "off"
-            }
-        },
-        {
-            "files": [
-                "src/app/router/route-config.tsx"
-            ],
-            "rules": {
-                "react/only-export-components": "off"
-            }
-        }
-    ]
+    {
+      "files": ["src/app/router/route-config.tsx"],
+      "rules": {
+        "react/only-export-components": "off"
+      }
+    }
+  ]
 }
