@@ -10,7 +10,7 @@ const SurfaceCard = ({ children, className }: SurfaceCardProps) => {
   return (
     <section
       className={cn(
-        'rounded-[28px] border border-border/70 bg-card/90 p-6 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] backdrop-blur',
+        'rounded-[var(--radius-card)] border border-border bg-card p-6 shadow-[var(--shadow-card)]',
         className
       )}
     >

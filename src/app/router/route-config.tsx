@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { House } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
+const UiPage = lazy(() => import('@/pages/ui/UiPage'));
 const HomePage = lazy(() => import('@/pages/home/HomePage'));
 const NotFoundPage = lazy(() => import('@/pages/not-found/NotFoundPage'));
 
@@ -22,6 +23,14 @@ export interface AppRouteDefinition {
 }
 
 export const appRoutes: AppRouteDefinition[] = [
+  {
+    path: '/ui',
+    title: '공통 UI',
+    description: 'Cameo 공통 디자인 토큰과 컴포넌트 카탈로그',
+    element: <UiPage />,
+    noIndex: true,
+    showInNavigation: true,
+  },
   {
     path: '/',
     title: '시작 가이드',

@@ -1,9 +1,6 @@
 .layout-shell {
   min-height: 100dvh;
-  background:
-    radial-gradient(circle at top left, rgba(14, 165, 233, 0.12), transparent 24rem),
-    radial-gradient(circle at top right, rgba(99, 102, 241, 0.1), transparent 22rem),
-    linear-gradient(180deg, rgba(248, 250, 252, 0.95), rgba(241, 245, 249, 0.96));
+  background: var(--background);
 }
 
 .layout-shell[data-mode='mobile'] {
