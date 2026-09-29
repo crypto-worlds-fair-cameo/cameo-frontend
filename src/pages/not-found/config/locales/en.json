@@ -1,6 +1,6 @@
 {
   "label": "Page not found",
-  "title": "This route is not defined in the starter.",
-  "description": "Add a route or return to the start guide to continue building your application.",
-  "home": "Go to start guide"
+  "title": "Page not found",
+  "description": "The page may have moved or been deleted. Please check the address.",
+  "home": "Go home"
 }

@@ -1,4 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { CircleAlert } from 'lucide-react';
+import { Button } from '@/shared/ui/button';
+import { ErrorState } from '@/shared/ui/error-state/ErrorState';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -30,26 +33,21 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     if (!this.state.failed) return this.props.children;
 
     return (
-      <section role="alert" className="mx-auto max-w-xl space-y-4 p-8">
-        <h1 className="text-2xl font-semibold">
-          {this.props.scope === 'app'
-            ? '앱을 표시하지 못했습니다.'
-            : '페이지를 표시하지 못했습니다.'}
-        </h1>
-        <p>새로고침하거나 홈으로 이동해 다시 시도해 주세요.</p>
-        <div className="flex flex-wrap gap-4">
-          <button
-            type="button"
-            className="rounded border px-4 py-2"
-            onClick={() => window.location.reload()}
-          >
-            새로고침
-          </button>
-          <a className="rounded border px-4 py-2" href="/">
-            홈으로 이동
-          </a>
-        </div>
-      </section>
+      <ErrorState
+        role="alert"
+        fullScreen={this.props.scope === 'app'}
+        symbol={<CircleAlert />}
+        title={this.props.scope === 'app' ? '앱을 표시하지 못했어요' : '페이지를 표시하지 못했어요'}
+        description="새로고침 후 다시 시도해 주세요."
+        actions={
+          <>
+            <Button onClick={() => window.location.reload()}>새로고침</Button>
+            <Button variant="secondary" asChild>
+              <a href="/">홈으로 이동</a>
+            </Button>
+          </>
+        }
+      />
     );
   }
 }
