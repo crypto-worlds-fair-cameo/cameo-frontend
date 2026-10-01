@@ -1,4 +1,3 @@
-import { LanguageSelect } from './LanguageSelect';
 import { useMobileNavigation } from '../model/useMobileNavigation';
 import type { MenuItem } from '@/app/menu/index';
 import { Button } from '@/shared/ui/button';
@@ -25,7 +24,7 @@ const Header = ({ menuItems, showSidebar = false }: HeaderProps) => {
   return (
     <header className="layout-header">
       <div className="layout-header-inner">
-        <div className="flex items-center gap-3">
+        <div className="layout-header-brand flex min-w-0 items-center gap-3">
           {showSidebar && (
             <div className="hidden md:block">
               <SidebarTrigger />
@@ -36,8 +35,8 @@ const Header = ({ menuItems, showSidebar = false }: HeaderProps) => {
 
         <HeaderNav menuItems={menuItems} />
 
-        <div className="flex items-center gap-2">
-          <LanguageSelect />
+        <div className="layout-header-actions flex items-center gap-2">
+          <Button variant="primary">Connect Wallet</Button>
           <div className="flex items-center gap-2 lg:hidden">
             {showSidebar && <SidebarTrigger className="hidden sm:inline-flex md:hidden" />}
             <Sheet open={navigation.open} onOpenChange={navigation.setOpen}>
