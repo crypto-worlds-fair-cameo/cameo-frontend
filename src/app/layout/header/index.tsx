@@ -29,6 +29,7 @@ const Header = ({ menuItems, showSidebar = false }: HeaderProps) => {
   const navigation = useMobileNavigation();
   const openModal = useModalStore(state => state.openModal);
   const { t } = useTranslation('wallet');
+  const { t: tNavigation } = useTranslation('navigation');
   const auth = useWalletAuthentication();
   const walletLabel = auth.walletAddress
     ? `${auth.walletAddress.slice(0, 4)}…${auth.walletAddress.slice(-4)}`
@@ -102,7 +103,7 @@ const Header = ({ menuItems, showSidebar = false }: HeaderProps) => {
             {showSidebar && <SidebarTrigger className="hidden sm:inline-flex md:hidden" />}
             <Sheet open={navigation.open} onOpenChange={navigation.setOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Open navigation">
+                <Button variant="ghost" size="icon" aria-label={tNavigation('open')}>
                   <Menu className="size-5" />
                 </Button>
               </SheetTrigger>
@@ -112,7 +113,7 @@ const Header = ({ menuItems, showSidebar = false }: HeaderProps) => {
                     <HeaderLogo onNavigate={navigation.close} />
                   </SheetTitle>
                   <SheetDescription className="sr-only">
-                    페이지를 선택해 이동하세요.
+                    {tNavigation('description')}
                   </SheetDescription>
                 </SheetHeader>
                 <HeaderNav menuItems={menuItems} stacked onNavigate={navigation.close} />

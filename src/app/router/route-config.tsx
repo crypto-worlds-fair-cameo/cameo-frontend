@@ -1,17 +1,19 @@
 import { lazy } from 'react';
-import { siteConfig, layoutPresets } from '../config/site';
 import type { ReactNode } from 'react';
 import { House } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import type { MenuTranslationKey } from '@/app/menu/Menu.types';
 
 const UiPage = lazy(() => import('@/pages/ui/UiPage'));
-const HomePage = lazy(() => import('@/pages/home/HomePage'));
+const MainCanvasPage = lazy(() => import('@/pages/main-canvas/MainCanvasPage'));
+const SeasonCanvasPage = lazy(() => import('@/pages/season-canvas/SeasonCanvasPage'));
 const NotFoundPage = lazy(() => import('@/pages/not-found/NotFoundPage'));
 
 export interface AppRouteDefinition {
   path: string;
   title: string;
   description: string;
+  translationKey?: MenuTranslationKey;
   seoTitle?: string;
   seoDescription?: string;
   seoKeywords?: string;
@@ -26,6 +28,7 @@ export const appRoutes: AppRouteDefinition[] = [
   {
     path: '/ui',
     title: '공통 UI',
+    translationKey: 'ui',
     description: 'Cameo 공통 디자인 토큰과 컴포넌트 카탈로그',
     element: <UiPage />,
     noIndex: true,
@@ -33,22 +36,23 @@ export const appRoutes: AppRouteDefinition[] = [
   },
   {
     path: '/',
-    title: '시작 가이드',
-    description: '보일러플레이트 구조와 다음 프로젝트 시작 체크리스트를 확인합니다.',
-    seoTitle: 'React Nest Boilerplate',
-    seoDescription:
-      'React Nest Boilerplate starter overview with layout presets, routing structure, shared UI conventions, and project startup guidance.',
-    seoKeywords:
-      'React Nest Boilerplate, frontend starter, route config, layout preset, React Vite starter',
+    title: '메인 캔버스',
+    translationKey: 'mainCanvas',
+    description: '메인 캔버스 페이지',
+    seoTitle: '메인 캔버스',
+    seoDescription: '메인 캔버스 페이지',
     icon: House,
-    element: (
-      <HomePage
-        repositoryLabel={siteConfig.repositoryLabel}
-        description={siteConfig.description}
-        activePresetKey={siteConfig.layoutPreset}
-        layoutPresets={layoutPresets}
-      />
-    ),
+    element: <MainCanvasPage />,
+    showInNavigation: true,
+  },
+  {
+    path: '/season-canvas',
+    title: '시즌 캔버스',
+    translationKey: 'seasonCanvas',
+    description: '시즌 캔버스 페이지',
+    seoTitle: '시즌 캔버스',
+    seoDescription: '시즌 캔버스 페이지',
+    element: <SeasonCanvasPage />,
     showInNavigation: true,
   },
 ];

@@ -5,6 +5,8 @@ import notFoundKo from '@/pages/not-found/config/locales/ko.json';
 import notFoundEn from '@/pages/not-found/config/locales/en.json';
 import walletKo from '../layout/header/config/locales/ko.json';
 import walletEn from '../layout/header/config/locales/en.json';
+import navigationKo from '../menu/config/locales/ko.json';
+import navigationEn from '../menu/config/locales/en.json';
 
 export const languages = [
   { code: 'ko', label: '한국어' },
@@ -12,8 +14,8 @@ export const languages = [
 ] as const;
 export const languageStorageKey = 'app.language';
 export const resources = {
-  ko: { common: commonKo, notFound: notFoundKo, wallet: walletKo },
-  en: { common: commonEn, notFound: notFoundEn, wallet: walletEn },
+  ko: { common: commonKo, notFound: notFoundKo, wallet: walletKo, navigation: navigationKo },
+  en: { common: commonEn, notFound: notFoundEn, wallet: walletEn, navigation: navigationEn },
 };
 
 export const i18nOptions = {
@@ -23,7 +25,7 @@ export const i18nOptions = {
   fallbackLng: 'en',
   load: 'languageOnly',
   defaultNS: 'common',
-  ns: ['common', 'notFound', 'wallet'],
+  ns: ['common', 'notFound', 'wallet', 'navigation'],
   initAsync: false,
   interpolation: { escapeValue: false },
   detection: {
