@@ -22,17 +22,19 @@ src/
 │   │   ├── model/              # 홈 콘텐츠 조회 모델
 │   │   └── api/                # Promise 요청·타입·query key·조회 훅
 │   └── not-found/NotFoundPage.tsx
+├── entities/
+│   └── session/                 # 공유 세션 타입·조회·query key
 └── shared/
     ├── api/http-client.ts       # Axios 기본 설정
     ├── lib/                    # cn·범용 훅
     └── ui/                     # 기존 primitive·범용 조합 UI
 ```
 
-`vite-env.d.ts`와 `types/global.d.ts`는 빌드용 타입 선언입니다. 실제 공유 도메인·행동이 없으므로 `entities`·`features`는 만들지 않았습니다. 두 화면이 같은 도메인 개념 또는 행동을 공유할 때 스킬 기준으로 승격합니다.
+`vite-env.d.ts`와 `types/global.d.ts`는 빌드용 타입 선언입니다. 헤더와 전역 지갑 다이얼로그가 공유하는 세션 타입·조회·query key는 `entities/session`이 소유하며, 공개 `index.ts`를 통해 사용합니다. 헤더 전용 지갑 인증은 `app/layout/header`의 `ui`, `model`, `api`, `lib`, `config`에 모읍니다. 아직 별도의 `features`는 만들지 않았습니다.
 
 ## 의존 방향
 
-- `app → pages → shared`, `app → shared` 방향을 유지합니다.
+- `app → pages, entities, shared`, `pages → entities, shared`, `entities → shared` 방향을 유지합니다.
 - 페이지는 다른 페이지 내부나 `app`을 import하지 않습니다. 홈의 브랜드 설명·프리셋 표시는 라우트가 props로 전달합니다.
 - `shared`는 페이지·앱·제품 정책을 알지 않습니다. 모달과 로딩의 범용 UI 상태는 각각 `shared/ui/modal/model`, `shared/ui/loading/model`에 있습니다. 앱은 해당 전역 UI를 마운트합니다.
 - 같은 페이지 안에서는 실제 구현 파일을 직접 참조합니다. 필요 없는 barrel·빈 역할 폴더·중간 wrapper는 만들지 않습니다.
@@ -43,6 +45,8 @@ src/
 페이지 진입점은 `pages/<page>/<Name>Page.tsx`입니다. 별도 UI는 `ui`, 상태·화면 동작은 `model`, 요청·전송 타입·query/mutation·캐시 정책은 `api`, 순수 계산은 `lib`에 둡니다. 사용하는 역할만 만듭니다.
 
 홈은 `HomePage → useHomeContent → useHomePageQuery → getHomePageContent` 흐름입니다. 현재 요청 함수는 로컬 샘플 콘텐츠를 반환하며 백엔드 요청을 하지 않습니다. 실제 API를 붙일 때 페이지 소유 `api` 함수에서 `shared/api/http-client`를 사용합니다. 서버 결과를 로컬 store에 복사하지 않습니다. 오류는 로딩/데이터 유무보다 먼저 구분합니다.
+
+세션의 서버 상태는 `entities/session/api/session.queries.ts`의 React Query 캐시가 관리합니다. 헤더의 `api/wallet-auth.api.ts`는 챌린지·로그인·로그아웃 요청을, `api/wallet-auth.mutations.ts`는 mutation과 세션 캐시 갱신을 소유합니다. `lib/wallet-standard.ts`는 공식 패키지를 통한 지갑 탐지·`solana:signIn` 호출·Base64 변환·`standard:disconnect`를, `model/useWalletAuthentication.ts`는 중복 실행 방지·오류 표시·성공 후 다이얼로그 닫기를 담당합니다. 로그인 함수와 mutation은 선택한 지갑 이름을 받습니다. 현재 UI는 Phantom만 표시하며, 다른 지갑을 추가해도 동일한 연결 흐름을 사용합니다. 인증 응답을 Zustand나 브라우저 저장소에 복사하지 않습니다. 챌린지는 일회용이므로 인증 mutation을 자동 재시도하지 않습니다.
 
 ## 라우팅·레이아웃
 

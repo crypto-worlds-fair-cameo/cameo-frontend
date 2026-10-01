@@ -16,6 +16,7 @@ import HeaderNav from '@/app/layout/header/HeaderNav';
 import { useModalStore } from '@/shared/ui/modal/model/modalStore';
 import { WalletConnectContent, WalletConnectTitle } from './ui/WalletConnectContent';
 import { useTranslation } from 'react-i18next';
+import { useWalletAuthentication } from './model/useWalletAuthentication';
 
 interface HeaderProps {
   menuItems: MenuItem[];
@@ -26,6 +27,10 @@ const Header = ({ menuItems, showSidebar = false }: HeaderProps) => {
   const navigation = useMobileNavigation();
   const openModal = useModalStore(state => state.openModal);
   const { t } = useTranslation('wallet');
+  const auth = useWalletAuthentication();
+  const walletLabel = auth.walletAddress
+    ? `${auth.walletAddress.slice(0, 4)}…${auth.walletAddress.slice(-4)}`
+    : t('connected');
   return (
     <header className="layout-header">
       <div className="layout-header-inner">
@@ -43,7 +48,12 @@ const Header = ({ menuItems, showSidebar = false }: HeaderProps) => {
         <div className="layout-header-actions flex items-center gap-2">
           <Button
             variant="primary"
+            className="max-w-[min(55vw,14rem)]"
             aria-haspopup="dialog"
+            aria-label={
+              auth.walletAddress ? t('connectedWallet', { address: auth.walletAddress }) : undefined
+            }
+            loading={auth.checkingSession || auth.isPending}
             onClick={event =>
               openModal({
                 title: <WalletConnectTitle />,
@@ -53,7 +63,7 @@ const Header = ({ menuItems, showSidebar = false }: HeaderProps) => {
               })
             }
           >
-            {t('connect')}
+            <span className="truncate">{auth.session ? walletLabel : t('connect')}</span>
           </Button>
           <div className="flex items-center gap-2 lg:hidden">
             {showSidebar && <SidebarTrigger className="hidden sm:inline-flex md:hidden" />}

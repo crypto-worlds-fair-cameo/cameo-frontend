@@ -50,6 +50,12 @@ npm run dev
 
 초기 표시 언어는 저장된 설정과 관계없이 영어로 지정합니다. `ko`, `en` 번역과 `LanguageSelect` 컴포넌트는 유지하지만 화면에는 언어 전환 버튼을 표시하지 않습니다. 언어 선택 UI를 연결할 때 `i18nOptions.lng`의 고정값을 제거하면 저장된 `app.language` 선택을 사용할 수 있습니다. 번역은 지갑 연결 다이얼로그·언어 선택기·404·공통 로딩·다이얼로그 닫기 라벨에 적용되어 있으며 홈 전체 콘텐츠 번역은 포함하지 않습니다. 번역 JSON을 추가한 뒤 [i18n 설정](src/app/i18n/config.ts)의 `resources`와 namespace 목록에 등록하세요.
 
+지갑 로그인은 헤더의 **Connect Wallet → Connect with Phantom**으로 시작합니다. `@wallet-standard/app`으로 등록된 지갑을 탐지하고, 서버에서 받은 `signInInput`을 선택한 지갑의 `solana:signIn`에 그대로 전달합니다. 표준 응답의 `account.address`를 주소 문자열로 사용하고, 원본 메시지·서명을 표준 Base64로 인코딩해 `/auth/login`에 제출합니다. 로그인 후 헤더에 지갑 주소가 표시되며, 새로고침 시 `/auth/me`로 세션을 복원합니다. 주소 버튼의 **Disconnect Wallet**은 `/auth/logout`으로 세션을 해제하고, 지갑이 지원하면 `standard:disconnect`로 연결을 정리합니다. 인증은 서버 쿠키를 사용하고 브라우저 저장소에 인증 토큰을 저장하지 않습니다.
+
+현재 다이얼로그에는 Phantom 버튼만 표시합니다. 인증 함수와 mutation은 지갑 이름을 받아 처리하므로, 다른 지갑을 추가할 때 같은 흐름을 사용할 수 있습니다. 연결할 지갑은 Solana 체인과 `solana:signIn` 기능을 지원해야 합니다. 지갑 연동 코드는 `app/layout/header/lib/wallet-standard.ts`가 소유하며, Phantom의 직접 provider API는 호출하지 않습니다.
+
+로컬 인증 연결은 `VITE_API_URL=http://localhost:5000`과 `http://localhost:5173`을 사용합니다. 백엔드가 이 프론트 Origin을 허용해야 하며, 인증 요청은 `withCredentials: true`로 연결 쿠키·세션 쿠키를 주고받습니다. 데스크톱에서는 Phantom 확장 프로그램, 모바일에서는 Wallet Standard의 `solana:signIn`을 등록하는 지갑 내부 브라우저가 필요합니다. 일반 모바일 브라우저의 딥링크 연결은 포함하지 않습니다.
+
 ## 5. 첫 페이지와 API 연결
 
 `src/pages/orders-list/OrdersListPage.tsx`처럼 페이지 진입점을 만들고, `src/app/router/route-config.tsx`에 lazy import와 route를 등록합니다. 현재 저장소에는 페이지 생성 스크립트가 없습니다.

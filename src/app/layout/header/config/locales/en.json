@@ -1,8 +1,31 @@
 {
   "connect": "Connect Wallet",
+  "connecting": "Connecting…",
+  "connected": "Wallet Connected",
+  "connectedWallet": "Connected wallet: {{address}}",
+  "disconnect": "Disconnect Wallet",
+  "disconnecting": "Disconnecting…",
+  "installPhantom": "Install Phantom",
   "dialog": {
     "title": "Connect your wallet",
     "description": "Choose a wallet to connect.",
-    "phantom": "Connect with Phantom"
+    "phantom": "Connect with Phantom",
+    "connectedTitle": "Wallet connected",
+    "connectedDescription": "You are signed in with your wallet."
+  },
+  "errors": {
+    "notInstalled": "{{walletName}} was not found. Install the extension or open this site in the wallet browser, then try again.",
+    "unsupported": "{{walletName}} does not support Solana wallet sign-in. Update your wallet and try again.",
+    "invalidWalletResponse": "{{walletName}} returned an invalid sign-in response. Please try again.",
+    "rejected": "The signature request was declined. You can try again when you are ready.",
+    "requestPending": "A wallet request is already open. Complete it in your wallet, then try again.",
+    "challengeInvalid": "The sign-in request expired or was already used. Please try again with a new request.",
+    "signatureInvalid": "Your wallet signature could not be verified. Please try again.",
+    "originNotAllowed": "Sign-in is not available from this site address.",
+    "userUnavailable": "This account cannot sign in.",
+    "rateLimited": "Too many requests. Please wait a moment before trying again.",
+    "network": "Could not reach the server. Check your connection and try again.",
+    "session": "Could not check your session. Please try connecting again.",
+    "failed": "Could not complete the wallet request. Please try again."
   }
 }
