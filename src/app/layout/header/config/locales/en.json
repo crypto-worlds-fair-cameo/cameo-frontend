@@ -7,6 +7,15 @@
   "disconnect": "Disconnect Wallet",
   "disconnecting": "Disconnecting…",
   "installPhantom": "Install Phantom",
+  "nickname": {
+    "title": "Change your nickname",
+    "label": "Nickname",
+    "placeholder": "Enter your nickname",
+    "hint": "{{count}}/20",
+    "complete": "Done",
+    "updated": "Profile updated!",
+    "saving": "Saving…"
+  },
   "dialog": {
     "title": "Connect your wallet",
     "description": "Choose a wallet to connect.",
@@ -15,6 +24,8 @@
     "connectedDescription": "You are signed in with your wallet."
   },
   "errors": {
+    "nicknameInvalid": "Enter a nickname with 1–20 characters, excluding leading and trailing spaces.",
+    "sessionExpired": "Your session expired. Please connect your wallet again.",
     "notInstalled": "{{walletName}} was not found. Install the extension or open this site in the wallet browser, then try again.",
     "unsupported": "{{walletName}} does not support Solana wallet sign-in. Update your wallet and try again.",
     "invalidWalletResponse": "{{walletName}} returned an invalid sign-in response. Please try again.",

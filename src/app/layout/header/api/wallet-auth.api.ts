@@ -25,6 +25,10 @@ interface Challenge {
   signInInput: SignInInput;
 }
 
+interface WalletLoginResponse extends AuthenticatedSession {
+  isNewUser: boolean;
+}
+
 export interface LoginBody {
   challengeId: string;
   address: string;
@@ -34,7 +38,7 @@ export interface LoginBody {
 
 const credentials = { withCredentials: true } as const;
 
-export async function authenticateWallet(walletName: string): Promise<AuthenticatedSession> {
+export async function authenticateWallet(walletName: string): Promise<WalletLoginResponse> {
   const wallet = getWalletForSignIn(walletName);
   // Each attempt needs its own challenge; never retry a consumed signature.
   const challenge = await axiosInstance.post<ApiResponse<Challenge>>(
@@ -43,7 +47,7 @@ export async function authenticateWallet(walletName: string): Promise<Authentica
     credentials
   );
   const proof = await signInWithWallet(wallet, challenge.data.data.signInInput);
-  const response = await axiosInstance.post<ApiResponse<AuthenticatedSession>>(
+  const response = await axiosInstance.post<ApiResponse<WalletLoginResponse>>(
     '/auth/login',
     { challengeId: challenge.data.data.challengeId, ...proof } satisfies LoginBody,
     credentials
@@ -53,4 +57,14 @@ export async function authenticateWallet(walletName: string): Promise<Authentica
 
 export async function logout(): Promise<void> {
   await axiosInstance.post('/auth/logout', undefined, credentials);
+}
+
+export async function setDisplayName(displayName: string) {
+  const response = await axiosInstance.patch<ApiResponse<{ id: string; displayName: string }>>(
+    '/users/me/display-name',
+    { displayName },
+    credentials
+  );
+  if (response.status !== 200) throw new Error('Unexpected nickname update response');
+  return response.data.data;
 }

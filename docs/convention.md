@@ -48,7 +48,13 @@ src/
 
 세션의 서버 상태는 `entities/session/api/session.queries.ts`의 React Query 캐시가 관리합니다. 헤더의 `api/wallet-auth.api.ts`는 챌린지·로그인·로그아웃 요청을, `api/wallet-auth.mutations.ts`는 mutation과 세션 캐시 갱신을 소유합니다. `lib/wallet-standard.ts`는 공식 패키지를 통한 지갑 탐지·`solana:signIn` 호출·Base64 변환·`standard:disconnect`를, `model/useWalletAuthentication.ts`는 중복 실행 방지·오류 표시·성공 후 다이얼로그 닫기를 담당합니다. 로그인 함수와 mutation은 선택한 지갑 이름을 받습니다. 현재 UI는 Phantom만 표시하며, 다른 지갑을 추가해도 동일한 연결 흐름을 사용합니다. 인증 응답을 Zustand나 브라우저 저장소에 복사하지 않습니다. 챌린지는 일회용이므로 인증 mutation을 자동 재시도하지 않습니다.
 
+지갑 로그인 응답의 `isNewUser`가 `true`이면 닉네임 변경 모달을 즉시 엽니다. 로그인 결과는 `mutateAsync`로 기다리며, 지갑 선택 모달이 요청 중 닫혀 컴포넌트가 해제되어도 신규 사용자 모달을 엽니다. 기존 사용자는 로그인 모달을 닫고 현재 프로필을 유지합니다. 서버가 자동 생성한 닉네임이나 null 여부로 신규 사용자를 추정하지 않으며, `/auth/me`로 세션을 복원할 때는 닉네임 모달을 자동으로 열지 않습니다. `isNewUser`는 이번 로그인 결과에서만 사용하고 세션 캐시에는 `user`와 `session`만 저장합니다. 기존 `PATCH /users/me/display-name`으로 앞뒤 공백을 제거한 1~20자 닉네임을 저장하며 중복은 허용합니다. 글자 수는 서버와 동일하게 Unicode code point로 계산합니다. 모달에는 설명문과 취소 버튼 없이 글자 수와 `Done` 버튼을 표시합니다. 닉네임 입력 상태는 `model/useNicknameRegistration.ts`, 폼 UI는 `ui/NicknameRegistration.tsx`가 소유합니다. 닉네임 저장 mutation도 세션 변경 key로 중복 실행과 조회 경쟁을 방지하고 저장 성공 시 해당 사용자의 세션 캐시를 갱신합니다.
+
+닉네임 저장 API가 HTTP 200을 반환하면 입력 모달을 체크 아이콘과 `Profile updated!` 문구가 있는 완료 화면으로 전환하고 표시 1초 후 자동으로 닫습니다. 완료 화면을 수동으로 닫거나 다른 모달로 이동하면 타이머를 정리하며 다른 모달을 닫지 않습니다. 실패하면 입력값과 오류를 유지하며, 요청 중 모달을 닫거나 다른 모달로 이동했다면 완료 화면을 새로 열지 않습니다.
+
 ## 라우팅·레이아웃
+
+헤더의 최초 세션 조회 중에는 지갑 연결 버튼 대신 버튼과 같은 크기의 스켈레톤을 표시합니다. 조회가 끝나면 로그인된 사용자는 프로필 버튼을, 비로그인 사용자는 지갑 연결 버튼을 표시합니다. 세션 캐시가 있는 상태에서 다시 조회할 때는 기존 버튼을 유지합니다.
 
 `app/router/route-config.tsx`가 URL·lazy 페이지·메뉴 표시·SEO 메타의 기준입니다. `navigationItems → app/menu/Menu.data.ts → Layout/Header/Menu`로 연결하고 메뉴 배열을 중복 정의하지 않습니다. 기존 SEO 필드는 메타데이터이며 별도 DOM 동기화 구현을 의미하지 않습니다.
 
