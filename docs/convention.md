@@ -65,7 +65,7 @@ src/
 
 React 19·Vite·TypeScript·Tailwind v4·React Query·Zustand·Radix를 사용합니다. API 기본 URL은 `VITE_API_URL || /api`입니다. Provider 순서는 ThemeProvider → QueryClientProvider이며 StrictMode는 기본으로 활성화하지 않습니다.
 
-코드 포맷은 공통 UI를 포함해 `.prettierrc`의 2칸 들여쓰기와 세미콜론 기준으로 통일합니다. `npm run format`으로 적용하고 `npm run format:check`로 검사합니다. 변경 후 `npm run lint`, `npm run build`를 실행하고 홈·404·내비게이션 및 변경한 상태 흐름을 브라우저에서 확인합니다. Vitest·Testing Library·jsdom 테스트를 `npm test`로 실행합니다.
+코드 포맷은 공통 UI를 포함해 `.prettierrc`의 2칸 들여쓰기와 세미콜론 기준으로 통일합니다. `npm run format`으로 적용하고 `npm run format:check`로 검사합니다. 변경 후 `npm run lint`, `npm run build`를 실행하고 홈·404·내비게이션 및 변경한 상태 흐름을 브라우저에서 확인합니다. 프론트의 `.test.*` 파일은 삭제했으며 기존 Vitest·Testing Library·jsdom 설정은 유지합니다.
 
 ## 공통 오류·로딩·탐색 수명주기
 
@@ -87,8 +87,8 @@ try {
 - `app/layout/model/useMobileNavigation.ts`는 모바일 메뉴 상태를 소유합니다. 같은 URL을 포함한 메뉴·로고 선택, 외부 경로 변경, Escape 닫기를 처리합니다. 페이지에서 메뉴 store를 조작하지 않습니다.
 - `app/layout/model/useRouteScroll.ts`는 web의 window와 mobile 프리셋의 main ref를 실제 스크롤 소유자로 사용합니다. PUSH/REPLACE는 맨 위, POP은 history entry별 저장 위치로 복원합니다. 최근 100개 위치를 앱 레이아웃 수명 동안 보관하며 첫 진입은 현재 위치를 유지합니다. 새로고침을 넘는 영구 저장은 하지 않습니다.
 - 지연 콘텐츠가 짧으면 ResizeObserver/MutationObserver로 복원을 재시도합니다. 성공·사용자 입력·다음 이동·unmount 시 관찰을 정리합니다. 브라우저 자동 복원과 중복되지 않도록 마운트 동안 manual 모드로 전환하고 종료 시 원래 설정을 복구합니다.
-- `npm test`는 Vitest·Testing Library·jsdom으로 오류 격리/복구, 페이지 상태 유지, 동시 로딩, 메뉴 닫기, 스크롤 history·지연·취소·정리를 검사합니다. jsdom은 실제 레이아웃이 없으므로 스크롤 변경은 브라우저에서도 확인합니다.
+- 현재 자동 테스트 파일은 없습니다. 오류 격리/복구, 페이지 상태 유지, 동시 로딩, 메뉴 닫기와 스크롤 history 등 변경한 흐름을 브라우저에서 확인합니다.
 
 ## i18n
 
-초기화와 namespace 조립은 `app/i18n`, 범용 번역은 `shared/i18n/locales`, 페이지 번역은 `pages/<page>/config/locales`가 소유합니다. UI는 `react-i18next`의 `useTranslation(namespace)`을 사용하고 페이지에서 app 인스턴스를 import하지 않습니다. 번역과 namespace 등록은 [i18n 설정](../src/app/i18n/config.ts)을 참고하세요.
+초기화와 namespace 조립은 `app/i18n`, 범용 번역은 `shared/i18n/locales`, 페이지 번역은 `pages/<page>/config/locales`가 소유합니다. 지갑 연결 문구의 `wallet` namespace는 `app/layout/header/config/locales`가 소유합니다. UI는 `react-i18next`의 `useTranslation(namespace)`을 사용하고 페이지에서 app 인스턴스를 import하지 않습니다. 초기 표시는 `i18nOptions.lng`으로 영어를 고정하고, ko/en 번역을 유지합니다. 언어 전환 UI는 아직 표시하지 않습니다. 번역과 namespace 등록은 [i18n 설정](../src/app/i18n/config.ts)을 참고하세요.

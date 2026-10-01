@@ -34,7 +34,7 @@ Node 버전은 `.nvmrc`의 **24.21.0**을 기준으로 합니다. `cp`는 `.env`
 | 페이지·메뉴·메타데이터      | `src/app/router/route-config.tsx` | 첫 화면과 메뉴 구성                       |
 | 브라우저 제목               | `index.html`                      | 프로젝트 제목                             |
 | 전역 디자인 토큰            | `src/app/styles/app.css`          | 사전 설계한 색상·타이포그래피             |
-| 지원 언어·기본 언어         | `src/app/i18n/config.ts`          | 기본 제공 `ko`, `en`과 한국어 fallback    |
+| 지원 언어·기본 언어         | `src/app/i18n/config.ts`          | `ko`, `en` 지원·영어 기본값               |
 
 `VITE_API_URL`에는 실제 서버 주소와 API 경로 접두사가 있다면 해당 경로까지 포함합니다. 환경변수 변경 후 개발 서버를 다시 시작하세요. `VITE_` 값은 브라우저 번들에 노출되므로 비밀키를 넣지 않습니다.
 
@@ -48,7 +48,7 @@ npm run dev
 
 터미널에 표시된 주소(기본 `http://localhost:5173`)에서 홈·없는 경로의 404·모바일 메뉴를 확인합니다. 포트가 달라지면 서버 CORS 주소도 변경합니다.
 
-헤더에서 한국어·영어를 선택하면 설정이 저장됩니다. 현재 번역 예제는 언어 선택기·404·공통 로딩에 적용되어 있으며 홈 전체 콘텐츠 번역은 포함하지 않습니다. 번역 JSON을 추가한 뒤 [i18n 설정](src/app/i18n/config.ts)의 `resources`와 namespace 목록에 등록하세요.
+초기 표시 언어는 저장된 설정과 관계없이 영어로 지정합니다. `ko`, `en` 번역과 `LanguageSelect` 컴포넌트는 유지하지만 화면에는 언어 전환 버튼을 표시하지 않습니다. 언어 선택 UI를 연결할 때 `i18nOptions.lng`의 고정값을 제거하면 저장된 `app.language` 선택을 사용할 수 있습니다. 번역은 지갑 연결 다이얼로그·언어 선택기·404·공통 로딩·다이얼로그 닫기 라벨에 적용되어 있으며 홈 전체 콘텐츠 번역은 포함하지 않습니다. 번역 JSON을 추가한 뒤 [i18n 설정](src/app/i18n/config.ts)의 `resources`와 namespace 목록에 등록하세요.
 
 ## 5. 첫 페이지와 API 연결
 
@@ -72,13 +72,12 @@ API 요청에는 `src/shared/api/http-client.ts`의 `axiosInstance`를 사용합
 ```bash
 npm run format:check
 npm run lint
-npm test
 npm run build
 npm run preview
 ```
 
 `build`는 TypeScript 검사와 프로덕션 번들 생성을 수행합니다. `preview`는 빌드 결과의 로컬 확인용이며 운영 서버가 아닙니다. 배포 대상은 `dist/`이고, BrowserRouter를 사용하므로 직접 URL 접근 시 `index.html`로 연결하는 SPA fallback을 호스팅에 설정합니다.
 
-의존성은 `package-lock.json`과 함께 관리하고 재설치는 `npm ci`를 사용합니다. 린트는 Oxlint, 테스트는 Vitest입니다. 구현 규칙과 공통 오류·로딩·스크롤 사용법은 [convention.md](docs/convention.md), 설계 기준은 [page-first 스킬](.agents/skills/react-page-first-architecture/SKILL.md)을 참고하세요.
+의존성은 `package-lock.json`과 함께 관리하고 재설치는 `npm ci`를 사용합니다. 린트는 Oxlint입니다. 프론트의 `.test.*` 파일은 삭제했으며 기존 Vitest 설정은 유지합니다. 구현 규칙과 공통 오류·로딩·스크롤 사용법은 [convention.md](docs/convention.md), 설계 기준은 [page-first 스킬](.agents/skills/react-page-first-architecture/SKILL.md)을 참고하세요.
 
 코드 포맷은 `.prettierrc`의 2칸 들여쓰기·작은따옴표·세미콜론·LF 기준을 사용합니다. `npm run format`으로 적용하고 `npm run format:check`로 검사합니다. 스킬·에이전트 설정, 생성물, lockfile은 `.prettierignore`에서 제외합니다. `package-lock.json`은 npm이 관리하며 반드시 함께 커밋합니다.

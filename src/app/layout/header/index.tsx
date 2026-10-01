@@ -13,6 +13,9 @@ import { SidebarTrigger } from '@/shared/ui/sidebar';
 import { Menu } from 'lucide-react';
 import HeaderLogo from '@/app/layout/header/HeaderLogo';
 import HeaderNav from '@/app/layout/header/HeaderNav';
+import { useModalStore } from '@/shared/ui/modal/model/modalStore';
+import { WalletConnectContent, WalletConnectTitle } from './ui/WalletConnectContent';
+import { useTranslation } from 'react-i18next';
 
 interface HeaderProps {
   menuItems: MenuItem[];
@@ -21,6 +24,8 @@ interface HeaderProps {
 
 const Header = ({ menuItems, showSidebar = false }: HeaderProps) => {
   const navigation = useMobileNavigation();
+  const openModal = useModalStore(state => state.openModal);
+  const { t } = useTranslation('wallet');
   return (
     <header className="layout-header">
       <div className="layout-header-inner">
@@ -36,7 +41,20 @@ const Header = ({ menuItems, showSidebar = false }: HeaderProps) => {
         <HeaderNav menuItems={menuItems} />
 
         <div className="layout-header-actions flex items-center gap-2">
-          <Button variant="primary">Connect Wallet</Button>
+          <Button
+            variant="primary"
+            aria-haspopup="dialog"
+            onClick={event =>
+              openModal({
+                title: <WalletConnectTitle />,
+                titleClassName: 'pr-12',
+                content: <WalletConnectContent />,
+                returnFocusElement: event.currentTarget,
+              })
+            }
+          >
+            {t('connect')}
+          </Button>
           <div className="flex items-center gap-2 lg:hidden">
             {showSidebar && <SidebarTrigger className="hidden sm:inline-flex md:hidden" />}
             <Sheet open={navigation.open} onOpenChange={navigation.setOpen}>

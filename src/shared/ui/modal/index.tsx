@@ -9,11 +9,19 @@ import { useModalStore } from '@/shared/ui/modal/model/modalStore';
  * };
  */
 export const GlobalModal = () => {
-  const { isModalOpen, title, titleClassName, content, closeModal } = useModalStore();
+  const { isModalOpen, title, titleClassName, content, returnFocusElement, closeModal } =
+    useModalStore();
 
   return (
     <Dialog open={isModalOpen} onOpenChange={closeModal}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent
+        onCloseAutoFocus={event => {
+          if (returnFocusElement?.isConnected) {
+            event.preventDefault();
+            returnFocusElement.focus();
+          }
+        }}
+      >
         <DialogTitle className={titleClassName}>{title}</DialogTitle>
         {content}
       </DialogContent>

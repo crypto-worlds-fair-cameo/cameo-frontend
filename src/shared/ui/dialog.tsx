@@ -1,5 +1,6 @@
 import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { useTranslation } from 'react-i18next';
 import { XIcon } from 'lucide-react';
 
 import { cn } from '@/shared/lib/utils';
@@ -70,6 +71,8 @@ function DialogCloseButton({
   className,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Close>) {
+  const { t } = useTranslation('common');
+
   return (
     <DialogPrimitive.Close
       {...props}
@@ -77,7 +80,7 @@ function DialogCloseButton({
       className={cn('cameo-dialog-close', className)}
     >
       <XIcon size={20} aria-hidden="true" />
-      <span className="sr-only">닫기</span>
+      <span className="sr-only">{t('close')}</span>
     </DialogPrimitive.Close>
   );
 }

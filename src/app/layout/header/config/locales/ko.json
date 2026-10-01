@@ -1,0 +1,8 @@
+{
+  "connect": "지갑 연결",
+  "dialog": {
+    "title": "지갑 연결",
+    "description": "연결할 지갑을 선택하세요.",
+    "phantom": "Phantom 연결"
+  }
+}

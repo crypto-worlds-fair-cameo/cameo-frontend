@@ -1,0 +1,8 @@
+{
+  "connect": "Connect Wallet",
+  "dialog": {
+    "title": "Connect your wallet",
+    "description": "Choose a wallet to connect.",
+    "phantom": "Connect with Phantom"
+  }
+}
