@@ -1,0 +1,18 @@
+{
+  "label": "주 메뉴",
+  "open": "메뉴 열기",
+  "description": "페이지를 선택해 이동하세요.",
+  "workspace": "작업 공간",
+  "ui": {
+    "title": "공통 UI",
+    "description": "Cameo 공통 디자인 토큰과 컴포넌트 카탈로그"
+  },
+  "mainCanvas": {
+    "title": "메인 캔버스",
+    "description": "메인 캔버스 페이지"
+  },
+  "seasonCanvas": {
+    "title": "시즌 캔버스",
+    "description": "시즌 캔버스 페이지"
+  }
+}

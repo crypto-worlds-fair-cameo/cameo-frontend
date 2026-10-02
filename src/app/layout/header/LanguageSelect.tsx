@@ -6,7 +6,7 @@ export function LanguageSelect() {
   return (
     <select
       aria-label={t('language')}
-      value={i18n.resolvedLanguage ?? 'ko'}
+      value={i18n.resolvedLanguage ?? 'en'}
       onChange={event => {
         void i18n.changeLanguage(event.target.value);
       }}

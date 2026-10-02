@@ -3,17 +3,20 @@ import { create } from 'zustand';
 let timer: number | null = null;
 interface ModalState {
   isModalOpen: boolean;
-  title?: string;
+  title?: React.ReactNode;
   titleClassName?: string;
   content: React.ReactNode | null;
+  returnFocusElement: HTMLElement | null;
   openModal: ({
     title,
     titleClassName,
     content,
+    returnFocusElement,
   }: {
-    title?: string;
+    title?: React.ReactNode;
     titleClassName?: string;
     content: React.ReactNode;
+    returnFocusElement?: HTMLElement | null;
   }) => void;
   closeModal: () => void;
 }
@@ -22,20 +25,23 @@ export const useModalStore = create<ModalState>((set, get) => ({
   title: '',
   titleClassName: '',
   content: null,
+  returnFocusElement: null,
   openModal: ({
     title,
     titleClassName,
     content,
+    returnFocusElement = null,
   }: {
-    title?: string;
+    title?: React.ReactNode;
     titleClassName?: string;
     content: React.ReactNode;
+    returnFocusElement?: HTMLElement | null;
   }) => {
     if (timer !== null) {
       window.clearTimeout(timer);
       timer = null;
     }
-    set({ isModalOpen: true, title, titleClassName, content });
+    set({ isModalOpen: true, title, titleClassName, content, returnFocusElement });
   },
   closeModal: () => {
     set({ isModalOpen: false });
