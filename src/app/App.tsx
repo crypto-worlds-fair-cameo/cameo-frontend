@@ -7,6 +7,7 @@ import { GlobalToast } from '@/shared/ui/toast/index';
 import Layout from '@/app/layout/Layout';
 import { activeLayoutPreset } from '@/app/config/site';
 import { appRoutes, fallbackRoute } from '@/app/router/route-config';
+import CanvasPage from '@/pages/canvas/CanvasPage';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
       <AppProviders>
         <BrowserRouter>
           <Routes>
+            <Route path="/" element={<CanvasPage />} />
             <Route element={<Layout {...activeLayoutPreset} />}>
               {appRoutes.map(route => (
                 <Route key={route.path} path={route.path} element={route.element} />

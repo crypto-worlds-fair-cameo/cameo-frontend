@@ -32,14 +32,12 @@ export const appRoutes: AppRouteDefinition[] = [
     showInNavigation: true,
   },
   {
-    path: '/',
-    title: '시작 가이드',
-    description: '보일러플레이트 구조와 다음 프로젝트 시작 체크리스트를 확인합니다.',
-    seoTitle: 'React Nest Boilerplate',
-    seoDescription:
-      'React Nest Boilerplate starter overview with layout presets, routing structure, shared UI conventions, and project startup guidance.',
-    seoKeywords:
-      'React Nest Boilerplate, frontend starter, route config, layout preset, React Vite starter',
+    path: '/guide',
+    title: '안내',
+    description: '제한된 획 수 규칙으로 모두가 함께 완성하는 실시간 협업 캔버스',
+    seoTitle: 'Cameo',
+    seoDescription: '제한된 획 수 규칙으로 모두가 함께 완성하는 실시간 협업 캔버스',
+    seoKeywords: 'Cameo, Solana, 협업 캔버스, 시즌 도화지',
     icon: House,
     element: (
       <HomePage
@@ -59,10 +57,9 @@ export const fallbackRoute: AppRouteDefinition = {
   path: '*',
   title: '찾을 수 없음',
   description: '정의되지 않은 경로에 대한 기본 fallback 페이지입니다.',
-  seoTitle: 'Page Not Found | React Nest Boilerplate',
-  seoDescription:
-    'The requested page could not be found in the React Nest Boilerplate frontend starter.',
-  seoKeywords: 'React Nest Boilerplate, page not found, 404',
+  seoTitle: '페이지를 찾을 수 없음 | Cameo',
+  seoDescription: '요청한 페이지를 Cameo에서 찾을 수 없습니다.',
+  seoKeywords: 'Cameo, page not found, 404',
   noIndex: true,
   element: <NotFoundPage />,
 };

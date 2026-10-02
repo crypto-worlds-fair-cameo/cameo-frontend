@@ -43,11 +43,10 @@ export const layoutPresets = {
 export type LayoutPresetKey = keyof typeof layoutPresets;
 
 export const siteConfig = {
-  name: 'React Nest Boilerplate',
-  shortName: 'RNB',
-  description:
-    '구조가 먼저 보이고, 프론트와 백엔드를 분리 배포할 수 있도록 정리된 실전형 시작 템플릿입니다.',
-  repositoryLabel: '프로젝트 스타터',
+  name: 'Cameo',
+  shortName: 'C',
+  description: '제한된 획 수 규칙으로 모두가 함께 완성하는 실시간 협업 캔버스',
+  repositoryLabel: 'Solana 협업 캔버스',
   layoutPreset: 'web' as LayoutPresetKey,
 } as const;
 

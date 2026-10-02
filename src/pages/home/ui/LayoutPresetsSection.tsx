@@ -20,9 +20,8 @@ const LayoutPresetsSection = ({ activePresetKey, layoutPresets }: LayoutPresetsS
       <div className="space-y-2">
         <h2 className="text-2xl font-semibold tracking-tight">레이아웃 프리셋</h2>
         <p className="text-sm leading-7 text-muted-foreground">
-          현재 기본 프리셋은 <strong>{layoutPresets[activePresetKey]?.label}</strong>
-          입니다. 새 프로젝트에서는 `siteConfig.layoutPreset` 값만 바꿔도 전체 쉘 구성이 같이
-          바뀝니다.
+          현재 셸은 <strong>{layoutPresets[activePresetKey]?.label}</strong>
+          입니다. `siteConfig.layoutPreset`을 바꾸면 헤더, 사이드바, 푸터 구성이 함께 바뀝니다.
         </p>
       </div>
       <Grid minItemWidth={220} gap={16}>
