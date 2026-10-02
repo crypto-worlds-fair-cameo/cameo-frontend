@@ -9,6 +9,27 @@ it('uses the same stroke look for preview and drawing', () => {
   expect(strokeAlpha('airbrush', 80)).toBeCloseTo(0.44);
 });
 
+it('lets practice keep many strokes without touching the main stroke', () => {
+  const { result } = renderHook(() => useCanvasStudio());
+
+  act(() => {
+    result.current.beginStroke({ x: 0, y: 0 });
+    result.current.extendStroke({ x: 8, y: 4 });
+    result.current.endStroke();
+    result.current.setPracticeMode(true);
+    result.current.beginStroke({ x: 1, y: 1 });
+    result.current.extendStroke({ x: 6, y: 9 });
+    result.current.endStroke();
+    result.current.beginStroke({ x: 2, y: 3 });
+    result.current.extendStroke({ x: 7, y: 5 });
+    result.current.endStroke();
+  });
+
+  expect(result.current.stroke?.points).toHaveLength(2);
+  expect(result.current.practiceStrokes).toHaveLength(2);
+  expect(result.current.canDraw).toBe(true);
+});
+
 it('keeps only the first finished stroke', () => {
   const { result } = renderHook(() => useCanvasStudio());
 

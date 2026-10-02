@@ -5,14 +5,26 @@ import { paintSpace } from './paintSpace';
 
 type Studio = ReturnType<typeof useCanvasStudio>;
 
-export function SpaceCanvas({ studio }: { studio: Studio }) {
+export function SpaceCanvas({
+  studio,
+  canPaint,
+  onBlockedPaint,
+}: {
+  studio: Studio;
+  canPaint: boolean;
+  onBlockedPaint?: () => void;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const studioRef = useRef(studio);
+  const canPaintRef = useRef(canPaint);
+  const blockedRef = useRef(onBlockedPaint);
   const mode = useRef<'draw' | 'orbit' | null>(null);
   const orbit = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     studioRef.current = studio;
+    canPaintRef.current = canPaint;
+    blockedRef.current = onBlockedPaint;
   });
 
   useEffect(() => {
@@ -65,6 +77,10 @@ export function SpaceCanvas({ studio }: { studio: Studio }) {
           const hit = groundFromEvent(event);
           const studioNow = studioRef.current;
           if (hit && studioNow.canDraw && insideWorld(hit.x, hit.z)) {
+            if (!canPaintRef.current) {
+              blockedRef.current?.();
+              return;
+            }
             mode.current = 'draw';
             studioNow.beginStroke({ x: hit.x, y: hit.z });
           } else {

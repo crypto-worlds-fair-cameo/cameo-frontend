@@ -27,7 +27,9 @@ export function MiniMap({ studio }: { studio: Studio }) {
     <div className="minimap-frame" aria-hidden="true">
       <svg viewBox="-5000 -5000 10000 10000">
         <rect x={-5000} y={-5000} width={10000} height={10000} fill="#fff" />
-        {studio.stroke && <DrawPath stroke={studio.stroke} />}
+        {studio.practice
+          ? studio.practiceStrokes.map(stroke => <DrawPath key={stroke.id} stroke={stroke} />)
+          : studio.stroke && <DrawPath stroke={studio.stroke} />}
       </svg>
     </div>
   );

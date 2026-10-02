@@ -5,6 +5,8 @@ type Scene = {
   camera: CameraPose;
   stroke: Stroke | null;
   draft: Stroke | null;
+  practice?: boolean;
+  practiceStrokes?: Stroke[];
 };
 
 const groundPoint = (pose: CameraPose, viewW: number, viewH: number, x: number, z: number) =>
@@ -80,13 +82,19 @@ export const paintSpace = (canvas: HTMLCanvasElement, scene: Scene) => {
     groundPoint(camera, viewW, viewH, -HALF, HALF),
   ];
   if (trace(ctx, corners, true)) {
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = scene.practice ? '#f7f7f7' : '#ffffff';
     ctx.fill();
     ctx.strokeStyle = '#8e8e8e';
     ctx.lineWidth = 1.5;
     ctx.stroke();
   }
 
-  if (scene.stroke) drawStroke(ctx, scene.stroke, camera, viewW, viewH);
+  if (scene.practice) {
+    for (const stroke of scene.practiceStrokes ?? []) {
+      drawStroke(ctx, stroke, camera, viewW, viewH);
+    }
+  } else if (scene.stroke) {
+    drawStroke(ctx, scene.stroke, camera, viewW, viewH);
+  }
   if (scene.draft) drawStroke(ctx, scene.draft, camera, viewW, viewH);
 };

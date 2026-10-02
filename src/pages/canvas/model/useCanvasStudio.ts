@@ -70,13 +70,17 @@ export function useCanvasStudio() {
   const [pan, setPan] = useState(() => centeredPan(100));
   const [draft, setDraft] = useState<Stroke | null>(null);
   const [stroke, setStroke] = useState<Stroke | null>(null);
+  const [practice, setPractice] = useState(false);
+  const [practiceStrokes, setPracticeStrokes] = useState<Stroke[]>([]);
   const draftRef = useRef<Stroke | null>(null);
+  const practiceRef = useRef(false);
+  const practiceStrokesRef = useRef<Stroke[]>([]);
   const zoomRef = useRef(100);
   const panRef = useRef(centeredPan(100));
   const [camera, setCamera] = useState<CameraPose>(CAMERA_HOME);
   const cameraRef = useRef(CAMERA_HOME);
 
-  const canDraw = useMemo(() => stroke == null, [stroke]);
+  const canDraw = useMemo(() => practice || stroke == null, [practice, stroke]);
 
   const setChannel = (channel: 'r' | 'g' | 'b', value: number) => {
     const current = hexToRgb(color);
@@ -85,7 +89,8 @@ export function useCanvasStudio() {
   };
 
   const beginStroke = (point: Point) => {
-    if (stroke || draftRef.current) return;
+    if (draftRef.current) return;
+    if (!practiceRef.current && stroke) return;
     const next = {
       id: nextId(),
       points: [point],
@@ -108,9 +113,29 @@ export function useCanvasStudio() {
 
   const endStroke = () => {
     const current = draftRef.current;
-    if (current && current.points.length >= 2) setStroke(current);
     draftRef.current = null;
     setDraft(null);
+    if (!current || current.points.length < 2) return;
+    if (practiceRef.current) {
+      const next = [...practiceStrokesRef.current, current];
+      practiceStrokesRef.current = next;
+      setPracticeStrokes(next);
+      return;
+    }
+    if (!stroke) setStroke(current);
+  };
+
+  const setPracticeMode = (on: boolean) => {
+    draftRef.current = null;
+    setDraft(null);
+    practiceRef.current = on;
+    setPractice(on);
+  };
+
+  const discardStroke = () => {
+    draftRef.current = null;
+    setDraft(null);
+    setStroke(null);
   };
 
   const panBy = (dx: number, dy: number) => {
@@ -176,6 +201,8 @@ export function useCanvasStudio() {
     pan,
     draft,
     stroke,
+    practice,
+    practiceStrokes,
     canDraw,
     setColor,
     setOpacity,
@@ -187,6 +214,8 @@ export function useCanvasStudio() {
     beginStroke,
     extendStroke,
     endStroke,
+    discardStroke,
+    setPracticeMode,
     panBy,
     recenter,
     camera,
