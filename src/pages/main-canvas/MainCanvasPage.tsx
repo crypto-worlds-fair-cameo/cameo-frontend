@@ -17,6 +17,7 @@ import { useCanvasConnection } from './model/useCanvasConnection';
  * 작업 공간의 크기와 devicePixelRatio로 정하므로 원본 크기의 버퍼를 만들지 않는다.
  */
 const MainCanvasPage = () => {
+  // 이 페이지가 소켓 하나를 소유하고, 서버 이벤트로 갱신된 상태와 수동 재시도를 안내 UI에 연결한다.
   const { connection, retry } = useCanvasConnection();
   return (
     <CanvasViewport worldWidth={10_000} worldHeight={10_000}>
