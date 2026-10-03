@@ -1,0 +1,26 @@
+{
+  "workspace": "Main canvas workspace",
+  "preparing": "Preparing canvas",
+  "blankCanvas": "Blank shared canvas, {{width}} by {{height}} pixels",
+  "unsupported": "Your browser cannot display this canvas.",
+  "initializationError": "The canvas could not be displayed. Please try again.",
+  "retry": "Try again",
+  "connection": {
+    "connecting": "Connecting",
+    "ready": "Ready",
+    "reconnecting": "Reconnecting",
+    "failed": "Connection failed",
+    "ending": "Waiting for disconnect",
+    "count_one": "{{count}} connection",
+    "count_other": "{{count}} connections",
+    "retryProgress": "Retry {{count}}/{{max}}",
+    "server_shutdown": "The server is shutting down. Reconnecting shortly.",
+    "connection_policy": "The server is closing this connection. Automatic retries have stopped.",
+    "connection_error": "Could not connect to the server.",
+    "ready_timeout": "The server is taking too long to get ready. Reconnecting.",
+    "attempt_timeout": "The connection is taking too long. Retrying.",
+    "reset_timeout": "The server did not close the connection in time. Reconnecting shortly.",
+    "retry_limit": "Could not connect after 3 retries. Try again or come back later.",
+    "protocol_error": "Please check the server connection protocol."
+  }
+}

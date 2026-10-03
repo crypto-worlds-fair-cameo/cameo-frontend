@@ -7,6 +7,8 @@ import walletKo from '../layout/header/config/locales/ko.json';
 import walletEn from '../layout/header/config/locales/en.json';
 import navigationKo from '../menu/config/locales/ko.json';
 import navigationEn from '../menu/config/locales/en.json';
+import mainCanvasKo from '@/pages/main-canvas/config/locales/ko.json';
+import mainCanvasEn from '@/pages/main-canvas/config/locales/en.json';
 
 export const languages = [
   { code: 'ko', label: '한국어' },
@@ -14,8 +16,20 @@ export const languages = [
 ] as const;
 export const languageStorageKey = 'app.language';
 export const resources = {
-  ko: { common: commonKo, notFound: notFoundKo, wallet: walletKo, navigation: navigationKo },
-  en: { common: commonEn, notFound: notFoundEn, wallet: walletEn, navigation: navigationEn },
+  ko: {
+    common: commonKo,
+    notFound: notFoundKo,
+    wallet: walletKo,
+    navigation: navigationKo,
+    mainCanvas: mainCanvasKo,
+  },
+  en: {
+    common: commonEn,
+    notFound: notFoundEn,
+    wallet: walletEn,
+    navigation: navigationEn,
+    mainCanvas: mainCanvasEn,
+  },
 };
 
 export const i18nOptions = {
@@ -25,7 +39,7 @@ export const i18nOptions = {
   fallbackLng: 'en',
   load: 'languageOnly',
   defaultNS: 'common',
-  ns: ['common', 'notFound', 'wallet', 'navigation'],
+  ns: ['common', 'notFound', 'wallet', 'navigation', 'mainCanvas'],
   initAsync: false,
   interpolation: { escapeValue: false },
   detection: {

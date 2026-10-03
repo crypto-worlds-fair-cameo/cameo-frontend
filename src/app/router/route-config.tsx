@@ -22,6 +22,8 @@ export interface AppRouteDefinition {
   icon?: LucideIcon;
   element: ReactNode;
   showInNavigation?: boolean;
+  // 지정된 라우트에만 작업 영역 레이아웃을 적용한다. 미지정 라우트는 기본 레이아웃을 쓴다.
+  contentLayout?: 'canvas';
 }
 
 export const appRoutes: AppRouteDefinition[] = [
@@ -43,6 +45,7 @@ export const appRoutes: AppRouteDefinition[] = [
     seoDescription: '메인 캔버스 페이지',
     icon: House,
     element: <MainCanvasPage />,
+    contentLayout: 'canvas',
     showInNavigation: true,
   },
   {

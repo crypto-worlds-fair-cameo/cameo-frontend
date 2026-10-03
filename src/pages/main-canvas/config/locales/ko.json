@@ -1,0 +1,25 @@
+{
+  "workspace": "메인 캔버스 작업 영역",
+  "preparing": "캔버스 준비 중",
+  "blankCanvas": "{{width}} × {{height}} 픽셀 크기의 빈 공유 도화지",
+  "unsupported": "이 브라우저에서는 캔버스를 표시할 수 없습니다.",
+  "initializationError": "캔버스를 표시하지 못했습니다. 다시 시도해 주세요.",
+  "retry": "다시 시도",
+  "connection": {
+    "connecting": "연결 중",
+    "ready": "준비 완료",
+    "reconnecting": "재연결 중",
+    "failed": "연결 실패",
+    "ending": "연결 종료 대기 중",
+    "count": "연결 {{count}}개",
+    "retryProgress": "재시도 {{count}}/{{max}}회",
+    "server_shutdown": "서버 종료 안내를 받았습니다. 잠시 후 다시 연결합니다.",
+    "connection_policy": "서버 정책에 따라 연결이 종료됩니다. 자동 재시도를 중단했습니다.",
+    "connection_error": "서버에 연결하지 못했습니다.",
+    "ready_timeout": "서버의 준비 응답이 지연되어 다시 연결합니다.",
+    "attempt_timeout": "연결 응답이 지연되어 다시 시도합니다.",
+    "reset_timeout": "연결 종료가 지연되어 이전 연결을 정리했습니다. 잠시 후 다시 연결합니다.",
+    "retry_limit": "3회 재시도 후에도 연결하지 못했습니다. 다시 시도하거나 잠시 후 접속해 주세요.",
+    "protocol_error": "서버의 연결 규격을 확인해 주세요."
+  }
+}
