@@ -5,13 +5,17 @@
   "unsupported": "이 브라우저에서는 캔버스를 표시할 수 없습니다.",
   "initializationError": "캔버스를 표시하지 못했습니다. 다시 시도해 주세요.",
   "retry": "다시 시도",
+  "stats": {
+    "title": "통계",
+    "activeUsers": "접속 중인 사용자",
+    "unavailable": "접속 중인 사용자 수를 확인할 수 없습니다"
+  },
   "connection": {
     "connecting": "연결 중",
     "ready": "준비 완료",
     "reconnecting": "재연결 중",
     "failed": "연결 실패",
     "ending": "연결 종료 대기 중",
-    "count": "연결 {{count}}개",
     "retryProgress": "재시도 {{count}}/{{max}}회",
     "server_shutdown": "서버 종료 안내를 받았습니다. 잠시 후 다시 연결합니다.",
     "connection_policy": "서버 정책에 따라 연결이 종료됩니다. 자동 재시도를 중단했습니다.",

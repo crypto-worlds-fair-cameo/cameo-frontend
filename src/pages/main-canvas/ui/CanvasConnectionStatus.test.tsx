@@ -4,6 +4,16 @@ import { initialCanvasConnection } from '../model/canvasConnection';
 import { CanvasConnectionStatus } from './CanvasConnectionStatus';
 
 describe('canvas connection recovery controls', () => {
+  it('leaves a healthy connection to the active users display', () => {
+    render(
+      <CanvasConnectionStatus
+        connection={{ ...initialCanvasConnection, status: 'ready', connectionCount: 42 }}
+        onRetry={vi.fn()}
+      />
+    );
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
   it('explains exhausted retries and offers a working manual retry', () => {
     const onRetry = vi.fn();
     render(
