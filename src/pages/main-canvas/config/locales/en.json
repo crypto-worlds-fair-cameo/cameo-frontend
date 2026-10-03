@@ -5,14 +5,17 @@
   "unsupported": "Your browser cannot display this canvas.",
   "initializationError": "The canvas could not be displayed. Please try again.",
   "retry": "Try again",
+  "stats": {
+    "title": "Stats",
+    "activeUsers": "Active Users",
+    "unavailable": "Active user count unavailable"
+  },
   "connection": {
     "connecting": "Connecting",
     "ready": "Ready",
     "reconnecting": "Reconnecting",
     "failed": "Connection failed",
     "ending": "Waiting for disconnect",
-    "count_one": "{{count}} connection",
-    "count_other": "{{count}} connections",
     "retryProgress": "Retry {{count}}/{{max}}",
     "server_shutdown": "The server is shutting down. Reconnecting shortly.",
     "connection_policy": "The server is closing this connection. Automatic retries have stopped.",
