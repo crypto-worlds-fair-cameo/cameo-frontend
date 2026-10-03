@@ -31,11 +31,20 @@
 }
 
 .canvas-right-area {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
   flex: 0 0 240px;
   min-width: 0;
+  min-height: 0;
   padding: var(--space-4);
   overflow-y: auto;
   border-left: 1px solid var(--color-gray-200);
+}
+
+/* 우측 패널과 모드 버튼은 공간이 부족해도 줄어들지 않고 영역 안에서 스크롤한다. */
+.canvas-right-area > * {
+  flex-shrink: 0;
 }
 
 .canvas-stats-panel {

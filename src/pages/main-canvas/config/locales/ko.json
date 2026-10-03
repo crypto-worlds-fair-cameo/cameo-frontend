@@ -5,6 +5,7 @@
   "unsupported": "이 브라우저에서는 캔버스를 표시할 수 없습니다.",
   "initializationError": "캔버스를 표시하지 못했습니다. 다시 시도해 주세요.",
   "retry": "다시 시도",
+  "practiceMode": "연습 모드",
   "stats": {
     "title": "통계",
     "activeUsers": "접속 중인 사용자",

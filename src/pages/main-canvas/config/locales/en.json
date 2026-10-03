@@ -5,6 +5,7 @@
   "unsupported": "Your browser cannot display this canvas.",
   "initializationError": "The canvas could not be displayed. Please try again.",
   "retry": "Try again",
+  "practiceMode": "Practice mode",
   "stats": {
     "title": "Stats",
     "activeUsers": "Active Users",
