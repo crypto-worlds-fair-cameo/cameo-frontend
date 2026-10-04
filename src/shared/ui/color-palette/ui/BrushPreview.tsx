@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { PreviewBox } from '@/shared/ui/preview-box';
 import type { BrushSettings } from '../model/brushSettings';
 
-/** 선택한 색상·종류·크기·불투명도를 실제 드로잉과 독립된 샘플 선으로 표시한다. */
+/** 선택한 색상·종류·크기를 실제 드로잉과 독립된 샘플 선으로 표시한다. */
 export function BrushPreview({ value }: { value: BrushSettings }) {
   const { t } = useTranslation('common');
   const filterId = useId();
@@ -21,7 +21,6 @@ export function BrushPreview({ value }: { value: BrushSettings }) {
           brush: t(`colorPalette.${value.brushType}`),
           color: value.color,
           size: value.brushSize,
-          opacity: value.opacity,
         })}
       >
         <defs>
@@ -35,7 +34,6 @@ export function BrushPreview({ value }: { value: BrushSettings }) {
           stroke={value.color}
           strokeWidth={value.brushSize / 2}
           strokeLinecap={linecap}
-          opacity={value.opacity / 100}
           filter={filter}
         />
       </svg>

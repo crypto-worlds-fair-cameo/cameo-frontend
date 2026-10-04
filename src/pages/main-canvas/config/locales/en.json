@@ -2,29 +2,55 @@
   "workspace": "Main canvas workspace",
   "preparing": "Preparing canvas",
   "blankCanvas": "Blank shared canvas, {{width}} by {{height}} pixels",
+  "canvasLabel": "Drawing canvas, {{width}} by {{height}} pixels",
   "unsupported": "Your browser cannot display this canvas.",
   "initializationError": "The canvas could not be displayed. Please try again.",
   "retry": "Try again",
-  "practiceMode": "Practice mode",
+  "changeToPracticeMode": "Change to Practice mode",
+  "changeToDrawMode": "Change to Draw mode",
+  "strokeNotice": {
+    "description": "One stroke per account, forever.",
+    "practiceDescription": "Practice freely, just for you."
+  },
+  "strokeCompleted": {
+    "title": "Your one stroke has been used",
+    "description": "This account has used its one lifetime stroke. You can continue drawing in practice mode."
+  },
+  "strokeLimit": {
+    "title": "Stroke already used",
+    "description": "This account has already used its one stroke.",
+    "confirm": "OK"
+  },
   "stats": {
     "title": "Stats",
-    "activeUsers": "Active Users",
-    "unavailable": "Active user count unavailable"
+    "activeUsers": "Connections",
+    "unavailable": "Connection count unavailable"
   },
   "connection": {
     "connecting": "Connecting",
+    "initializing": "Preparing connection",
     "ready": "Ready",
     "reconnecting": "Reconnecting",
     "failed": "Connection failed",
     "ending": "Waiting for disconnect",
-    "retryProgress": "Retry {{count}}/{{max}}",
+    "retryProgress": "Retry {{count}}",
     "server_shutdown": "The server is shutting down. Reconnecting shortly.",
     "connection_policy": "The server is closing this connection. Automatic retries have stopped.",
     "connection_error": "Could not connect to the server.",
     "ready_timeout": "The server is taking too long to get ready. Reconnecting.",
     "attempt_timeout": "The connection is taking too long. Retrying.",
-    "reset_timeout": "The server did not close the connection in time. Reconnecting shortly.",
-    "retry_limit": "Could not connect after 3 retries. Try again or come back later.",
+    "server_disconnect": "The server repeatedly closed the connection before it was ready.",
     "protocol_error": "Please check the server connection protocol."
+  },
+  "sync": {
+    "recovering": "Loading the shared drawing…",
+    "auth": "Connect your wallet to draw on the shared canvas. Practice mode is available without signing in.",
+    "strokeAlreadyUsed": "This previously used stroke cannot be recovered. Transmission has stopped; practice mode is still available.",
+    "capacity": "The server storage queue is temporarily full. Keeping your drawing and retrying automatically.",
+    "storageRetry": "Stroke storage is temporarily unavailable. Keeping your drawing and retrying automatically.",
+    "retrying": "Retrying the same stroke chunk…",
+    "saving": "Saving your stroke…",
+    "pendingCapacity": "Too many points are waiting to be sent. Drawing transmission has stopped.",
+    "error": "The drawing could not be synchronized. The confirmed drawing is preserved."
   }
 }

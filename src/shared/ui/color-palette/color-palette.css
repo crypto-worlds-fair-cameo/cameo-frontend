@@ -63,7 +63,8 @@
 
 .color-palette-swatches {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  /* 색상 버튼은 최소 28px을 확보하고 패널 폭에 맞게 줄바꿈하며 남은 너비를 나눠 쓴다. */
+  grid-template-columns: repeat(auto-fit, minmax(28px, 1fr));
   gap: 6px;
   padding: 2px;
 }

@@ -8,11 +8,10 @@ import { CanvasConnectionStatus } from './CanvasConnectionStatus';
 
 interface CanvasStatsPanelProps {
   connection: CanvasConnectionState;
-  onRetry: () => void;
 }
 
 /** 페이지 소켓의 최신 연결 수를 Stats에 표시하고, 연결 복구 안내를 같은 패널에 둔다. */
-export function CanvasStatsPanel({ connection, onRetry }: CanvasStatsPanelProps) {
+export function CanvasStatsPanel({ connection }: CanvasStatsPanelProps) {
   const { t } = useTranslation('mainCanvas');
   // 준비 완료 상태에서만 서버 연결 수를 표시하고, 그 외에는 이전 값 대신 미확인 표시를 쓴다.
   // 현재 서버 값은 고유 사용자 수가 아니라 탭·기기를 포함한 활성 연결 수다.
@@ -43,8 +42,8 @@ export function CanvasStatsPanel({ connection, onRetry }: CanvasStatsPanelProps)
           </dl>
         </CollapsibleContent>
       </Collapsible>
-      {/* 통계가 접혀 있어도 장애 사유와 수동 재시도는 계속 사용할 수 있게 둔다. */}
-      <CanvasConnectionStatus connection={connection} onRetry={onRetry} />
+      {/* 통계가 접혀 있어도 자동 복구 상태와 장애 사유를 계속 표시한다. */}
+      <CanvasConnectionStatus connection={connection} />
     </Card>
   );
 }

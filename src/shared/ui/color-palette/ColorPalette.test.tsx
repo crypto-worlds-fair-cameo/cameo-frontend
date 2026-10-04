@@ -10,7 +10,6 @@ const initial: BrushSettings = {
   color: '#ED4242',
   brushType: 'round',
   brushSize: 12,
-  opacity: 100,
 };
 
 function Harness() {
@@ -106,7 +105,7 @@ describe('color palette settings', () => {
     }
   );
 
-  it('reflects brush shape, size and zero opacity in the preview', async () => {
+  it('reflects brush shape and size in the preview', async () => {
     const user = userEvent.setup();
     render(<Harness />);
     await user.click(screen.getByRole('button', { name: '평붓' }));
@@ -114,11 +113,9 @@ describe('color palette settings', () => {
     fireEvent.change(screen.getByRole('slider', { name: '브러시 크기' }), {
       target: { value: '100' },
     });
-    fireEvent.change(screen.getByRole('slider', { name: '불투명도' }), { target: { value: '0' } });
     const path = screen.getByRole('img', { name: /브러시 미리보기/ }).querySelector('path');
     expect(path?.getAttribute('stroke-linecap')).toBe('square');
     expect(path?.getAttribute('stroke-width')).toBe('50');
-    expect(path?.getAttribute('opacity')).toBe('0');
     await user.click(screen.getByRole('button', { name: '에어브러시' }));
     expect(
       screen
@@ -131,13 +128,17 @@ describe('color palette settings', () => {
   it('preserves settings when the panel and custom section are collapsed', async () => {
     const user = userEvent.setup();
     render(<Harness />);
-    fireEvent.change(screen.getByRole('slider', { name: '불투명도' }), { target: { value: '35' } });
+    fireEvent.change(screen.getByRole('slider', { name: '브러시 크기' }), {
+      target: { value: '35' },
+    });
     await user.click(screen.getByRole('button', { name: '직접 설정' }));
     expect(screen.queryByRole('textbox', { name: 'HEX 색상' })).toBeNull();
     await user.click(screen.getByRole('button', { name: '컬러 팔레트' }));
-    expect(screen.queryByRole('slider', { name: '불투명도' })).toBeNull();
+    expect(screen.queryByRole('slider', { name: '브러시 크기' })).toBeNull();
     await user.click(screen.getByRole('button', { name: '컬러 팔레트' }));
-    expect((screen.getByRole('slider', { name: '불투명도' }) as HTMLInputElement).value).toBe('35');
+    expect((screen.getByRole('slider', { name: '브러시 크기' }) as HTMLInputElement).value).toBe(
+      '35'
+    );
   });
 
   it('renders English control names when the language changes', async () => {

@@ -15,8 +15,7 @@
     "flat": "Flat Brush",
     "airbrush": "Airbrush",
     "brushSize": "Brush Size",
-    "opacity": "Opacity",
     "preview": "Preview",
-    "previewLabel": "Brush preview: {{brush}}, {{color}}, {{size}}px, {{opacity}}% opacity"
+    "previewLabel": "Brush preview: {{brush}}, {{color}}, {{size}}px"
   }
 }

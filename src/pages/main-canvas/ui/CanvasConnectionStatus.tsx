@@ -1,47 +1,31 @@
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/shared/ui/button';
 import type { CanvasConnectionState } from '../model/canvasConnection';
-import { MAX_CANVAS_RETRIES } from '../config/canvasConnectionPolicy';
 
 interface CanvasConnectionStatusProps {
   connection: CanvasConnectionState;
-  onRetry: () => void;
 }
 
-/** 연결 중·장애 안내를 Stats에 표시하고, 허용된 수동 재시도 요청을 페이지에 돌려준다. */
-export function CanvasConnectionStatus({ connection, onRetry }: CanvasConnectionStatusProps) {
+/** 자동 접속, 준비 대기와 복구 실패 안내를 통계 패널에 표시한다. */
+export function CanvasConnectionStatus({ connection }: CanvasConnectionStatusProps) {
   const { t } = useTranslation('mainCanvas');
-  const { status, notice, transportConnected, retryCount } = connection;
-  // 정상 연결에서는 Stats의 활성 수만 표시하며, 별도 안내가 있는 상태는 아래 복구 UI를 유지한다.
+  const { status, notice, retryCount } = connection;
+  // 정상 연결은 통계의 연결 수로 나타내고 연결 안내는 숨긴다.
   if (status === 'ready' && !notice) return null;
-  // 연결이 실제로 끝난 일반 실패만 수동 재시도를 제공하며, 규격 오류는 재접속 버튼을 숨긴다.
-  const canRetry = status === 'failed' && !transportConnected && notice !== 'protocol_error';
-  // 종료 안내를 받은 연결이 유지되면 종료 대기로 표시하고, 그 외에는 전달받은 status를 표시한다.
-  const ending =
-    transportConnected && (notice === 'server_shutdown' || notice === 'connection_policy');
 
   return (
     <div className="canvas-connection" data-status={status}>
       <div role="status" aria-live="polite" aria-atomic="true">
         <p className="canvas-connection-label">
           <span className="canvas-connection-dot" aria-hidden="true" />
-          {t(`connection.${ending ? 'ending' : status}`)}
-          {/* 종료 대기가 아닌 재연결에서 실제 재시도가 시작됐을 때만 사용 횟수와 한도를 표시한다. */}
-          {status === 'reconnecting' && !ending && retryCount > 0 && (
-            <span>
-              {t('connection.retryProgress', { count: retryCount, max: MAX_CANVAS_RETRIES })}
-            </span>
+          {t(`connection.${status}`)}
+          {/* 자동 복구가 실제 시작된 이후에만 진행 중인 재시도 횟수를 표시한다. */}
+          {status === 'reconnecting' && retryCount > 0 && (
+            <span>{t('connection.retryProgress', { count: retryCount })}</span>
           )}
         </p>
-        {/* 종료·오류 사유가 있으면 해당 안내를 추가하고, 사유가 없으면 상태 문구만 표시한다. */}
+        {/* 서버 또는 네트워크 사유가 있을 때 상태 아래에 해당 안내를 덧붙인다. */}
         {notice && <p className="canvas-connection-notice">{t(`connection.${notice}`)}</p>}
       </div>
-      {/* 재시도 가능한 실패에서만 버튼을 표시하며, 클릭 시 상위 페이지의 연결 제어 함수를 호출한다. */}
-      {canRetry && (
-        <Button variant="secondary" size="sm" onClick={onRetry}>
-          {t('retry')}
-        </Button>
-      )}
     </div>
   );
 }

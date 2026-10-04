@@ -15,8 +15,7 @@
     "flat": "평붓",
     "airbrush": "에어브러시",
     "brushSize": "브러시 크기",
-    "opacity": "불투명도",
     "preview": "미리보기",
-    "previewLabel": "브러시 미리보기: {{brush}}, {{color}}, {{size}}px, 불투명도 {{opacity}}%"
+    "previewLabel": "브러시 미리보기: {{brush}}, {{color}}, {{size}}px"
   }
 }

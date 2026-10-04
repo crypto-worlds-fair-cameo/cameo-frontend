@@ -18,7 +18,7 @@ interface ColorPaletteProps {
 
 /**
  * 페이지가 소유한 브러시 설정을 편집하고 샘플 선에 반영한다.
- * color는 #RRGGBB, brushSize는 1~100px, opacity는 0~100으로 전달한다.
+ * color는 #RRGGBB, brushSize는 1~100px로 전달한다.
  * 설정값을 저장하거나 캔버스·서버에 그림을 보내는 책임은 사용 페이지에 있다.
  */
 export function ColorPalette({ value, onValueChange, defaultOpen = true }: ColorPaletteProps) {
@@ -145,16 +145,6 @@ export function ColorPalette({ value, onValueChange, defaultOpen = true }: Color
               step={1}
               unit="px"
               onValueChange={brushSize => update({ brushSize })}
-            />
-            <Slider
-              label={t('colorPalette.opacity')}
-              aria-label={t('colorPalette.opacity')}
-              value={value.opacity}
-              min={0}
-              max={100}
-              step={1}
-              unit="%"
-              onValueChange={opacity => update({ opacity })}
             />
             <div className="color-palette-preview">
               <p>{t('colorPalette.preview')}</p>
