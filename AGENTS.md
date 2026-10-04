@@ -8,7 +8,7 @@ React, TypeScript, Vite, Tailwind CSS를 사용하는 페이지 중심 프론트
 - `src/pages/<page>/`: 페이지 진입점과 해당 페이지의 `ui`, `model`, `api`, `config` 모듈.
 - `src/shared/`: 재사용 UI, HTTP 클라이언트, 유틸리티와 공통 번역.
 - `src/test/setup.ts`: 공통 테스트 설정. 테스트 파일은 대상 구현 옆에 둡니다.
-- `public/`: 정적 이미지와 폰트. `docs/`: 프로젝트, 디자인과 코드 작성 지침.
+- `public/`: 정적 이미지와 폰트. `docs/convention.md`: 코드 작성 지침.
 
 의존 방향은 `app → pages → shared`를 유지합니다. 다른 페이지의 내부 모듈을 가져오지 않습니다. 구조를 변경하기 전에 `docs/convention.md`를 확인합니다.
 
