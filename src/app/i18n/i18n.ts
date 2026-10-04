@@ -6,7 +6,7 @@ import { i18nOptions } from './config';
 export const i18n = createInstance();
 
 function syncDocumentLanguage() {
-  const language = i18n.resolvedLanguage ?? 'ko';
+  const language = i18n.resolvedLanguage ?? 'en';
   document.documentElement.lang = language;
   document.documentElement.dir = i18n.dir(language);
 }

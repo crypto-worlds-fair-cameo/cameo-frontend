@@ -1,0 +1,259 @@
+.main-canvas-layout {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* 왼쪽 영역은 도구 패널들을 세로로 쌓고, 높이가 넘치면 영역 안에서만 스크롤한다. */
+.canvas-left-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 0 0 280px;
+  min-width: 0;
+  min-height: 0;
+  padding: var(--space-4);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--color-gray-100);
+  border-right: none;
+  scrollbar-width: none;
+}
+
+/* 좁거나 낮은 화면에서도 모든 패널에 접근할 수 있게 스크롤은 유지하고 스크롤바만 숨긴다. */
+.canvas-left-sidebar::-webkit-scrollbar {
+  display: none;
+}
+
+.canvas-left-sidebar > * {
+  flex-shrink: 0;
+}
+
+.canvas-right-area {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 0 0 240px;
+  min-width: 0;
+  min-height: 0;
+  padding: var(--space-4);
+  overflow-y: auto;
+  border-left: 1px solid var(--color-gray-200);
+}
+
+/* 우측 패널과 모드 버튼은 공간이 부족해도 줄어들지 않고 영역 안에서 스크롤한다. */
+.canvas-right-area > * {
+  flex-shrink: 0;
+}
+
+.canvas-stats-panel {
+  padding: var(--space-4);
+  border-color: var(--color-gray-200);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: calc(var(--text-body) - 1px);
+  line-height: 1.4;
+}
+
+.canvas-stats-trigger {
+  justify-content: space-between;
+  width: 100%;
+  padding: 0;
+  color: var(--text-primary);
+  font-size: var(--text-body-lg);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.canvas-stats-trigger svg {
+  width: 14px;
+  height: 14px;
+  color: var(--text-disabled);
+  transition: transform var(--duration-fast);
+}
+
+.canvas-stats-trigger[data-state='closed'] svg {
+  transform: rotate(-90deg);
+}
+
+.canvas-stats-metric {
+  margin: var(--space-3) 0 0;
+}
+
+.canvas-stats-metric dt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: inherit;
+  font-weight: 600;
+}
+
+.canvas-stats-metric dd {
+  margin: var(--space-1) 0 0;
+  overflow-wrap: anywhere;
+  font-family: var(--font-data);
+  font-size: var(--text-title);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.canvas-stats-dot {
+  flex-shrink: 0;
+  width: var(--space-2);
+  height: var(--space-2);
+  border-radius: 50%;
+  background: var(--color-gray-400);
+}
+
+.canvas-stats-panel[data-status='ready'] .canvas-stats-dot {
+  background: var(--color-status-active);
+}
+
+.canvas-stats-panel[data-status='failed'] .canvas-stats-dot {
+  background: var(--color-accent-red);
+}
+
+/* 버튼과 규칙 안내를 한 블록으로 묶고, 안내가 도화지의 높이를 차지하지 않게 한다. */
+.canvas-mode-control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.canvas-mode-control > button {
+  width: 100%;
+}
+
+.canvas-stroke-notice {
+  margin: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.canvas-viewport {
+  --canvas-paper: var(--background);
+  --canvas-border: var(--color-gray-200);
+  position: relative;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--color-gray-100);
+}
+
+/* 연습 모드는 도화지 주변만 연노랑으로 표시하고 도화지 색은 유지한다. */
+.main-canvas-layout[data-mode='practice'] .canvas-viewport {
+  background: #fff9db;
+}
+
+.drawing-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.drawing-canvas.has-brush-cursor {
+  cursor: none;
+}
+
+.canvas-brush-cursor {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  overflow: visible;
+  pointer-events: none;
+}
+
+.canvas-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--text-primary);
+}
+
+.canvas-connection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-gray-200);
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+}
+
+.canvas-connection-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.canvas-connection-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-gray-400);
+}
+
+.canvas-connection[data-status='ready'] .canvas-connection-dot {
+  background: var(--color-status-active);
+}
+
+.canvas-connection[data-status='failed'] .canvas-connection-dot {
+  background: var(--color-accent-red);
+}
+
+.canvas-connection-notice {
+  margin: var(--space-1) 0 0;
+  color: var(--text-secondary);
+}
+
+/* 좁은 화면에서는 왼쪽 도구 영역과 Stats를 위·아래로 배치하고, 긴 내용은 각 영역 안에서 스크롤한다. */
+@media (max-width: 767px) {
+  .main-canvas-layout {
+    flex-direction: column;
+  }
+
+  .canvas-left-sidebar {
+    flex: 0 1 auto;
+    max-height: 45%;
+    padding: var(--space-3);
+    border-right: 0;
+    border-bottom: 1px solid var(--color-gray-200);
+  }
+
+  .canvas-right-area {
+    flex: 0 1 auto;
+    max-height: 25%;
+    border-left: 0;
+    border-top: 1px solid var(--color-gray-200);
+    padding: var(--space-3);
+  }
+}
+.canvas-sync-status {
+  padding: var(--space-3);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}

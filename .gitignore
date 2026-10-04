@@ -51,3 +51,6 @@ coverage
 # Local
 *.local
 .vite
+
+# Agent skills
+/.agents/skills/

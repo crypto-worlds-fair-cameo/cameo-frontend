@@ -1,5 +1,21 @@
 {
   "language": "Language",
   "loading": "Loading",
-  "loadingPage": "Loading page"
+  "loadingPage": "Loading page",
+  "close": "Close",
+  "colorPalette": {
+    "title": "Color Palette",
+    "presets": "Preset colors",
+    "color": "Color {{color}}",
+    "custom": "Custom",
+    "hex": "HEX color",
+    "invalidHex": "Enter # followed by six HEX digits, for example #ED4242.",
+    "brushType": "Brush type",
+    "round": "Round Brush",
+    "flat": "Flat Brush",
+    "airbrush": "Airbrush",
+    "brushSize": "Brush Size",
+    "preview": "Preview",
+    "previewLabel": "Brush preview: {{brush}}, {{color}}, {{size}}px"
+  }
 }

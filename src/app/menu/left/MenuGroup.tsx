@@ -13,6 +13,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/shared/ui/collapsible';
 import type { MenuItem } from '@/app/menu/index';
 import { ChevronRight, CircleSmall } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface MenuGroupProps {
   label?: string;
@@ -21,6 +22,13 @@ interface MenuGroupProps {
 
 const MenuGroup = ({ label, menuItems }: MenuGroupProps) => {
   const { pathname } = useLocation();
+  const { t } = useTranslation('navigation');
+  const getTitle = (item: MenuItem) =>
+    item.translationKey ? t(`${item.translationKey}.title`) : item.title;
+  const getDescription = (item: MenuItem) =>
+    item.translationKey
+      ? t(`${item.translationKey}.description`)
+      : (item.description ?? item.title);
 
   const isActive = (path: string) => {
     return path === '/' ? pathname === path : pathname.startsWith(path);
@@ -37,12 +45,12 @@ const MenuGroup = ({ label, menuItems }: MenuGroupProps) => {
                 <SidebarMenuItem key={menu.path}>
                   <SidebarMenuButton
                     asChild
-                    tooltip={menu.description ?? menu.title}
+                    tooltip={getDescription(menu)}
                     isActive={isActive(menu.path)}
                   >
                     <NavLink to={menu.path}>
                       {(menu.icon && <menu.icon />) || <CircleSmall />}
-                      <span>{menu.title}</span>
+                      <span>{getTitle(menu)}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -59,11 +67,11 @@ const MenuGroup = ({ label, menuItems }: MenuGroupProps) => {
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton
-                      tooltip={menu.description ?? menu.title}
+                      tooltip={getDescription(menu)}
                       isActive={isActive(menu.path)}
                     >
                       {(menu.icon && <menu.icon />) || <CircleSmall />}
-                      <span>{menu.title}</span>
+                      <span>{getTitle(menu)}</span>
                       <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
@@ -74,7 +82,7 @@ const MenuGroup = ({ label, menuItems }: MenuGroupProps) => {
                         <SidebarMenuSubItem key={child.path}>
                           <SidebarMenuSubButton asChild isActive={isActive(child.path)}>
                             <NavLink to={child.path}>
-                              <span>{child.title}</span>
+                              <span>{getTitle(child)}</span>
                             </NavLink>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>

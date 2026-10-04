@@ -48,7 +48,7 @@ export const siteConfig = {
   description:
     '구조가 먼저 보이고, 프론트와 백엔드를 분리 배포할 수 있도록 정리된 실전형 시작 템플릿입니다.',
   repositoryLabel: '프로젝트 스타터',
-  layoutPreset: 'web' as LayoutPresetKey,
+  layoutPreset: 'landing' as LayoutPresetKey,
 } as const;
 
 export const activeLayoutPreset = layoutPresets[siteConfig.layoutPreset];

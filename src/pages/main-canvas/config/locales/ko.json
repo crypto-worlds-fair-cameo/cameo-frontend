@@ -1,0 +1,56 @@
+{
+  "workspace": "메인 캔버스 작업 영역",
+  "preparing": "캔버스 준비 중",
+  "blankCanvas": "{{width}} × {{height}} 픽셀 크기의 빈 공유 도화지",
+  "canvasLabel": "{{width}} × {{height}} 픽셀 크기의 도화지",
+  "unsupported": "이 브라우저에서는 캔버스를 표시할 수 없습니다.",
+  "initializationError": "캔버스를 표시하지 못했습니다. 다시 시도해 주세요.",
+  "retry": "다시 시도",
+  "changeToPracticeMode": "연습 모드로 전환",
+  "changeToDrawMode": "그리기 모드로 전환",
+  "strokeNotice": {
+    "description": "계정당 평생 한 획만 그릴 수 있어요.",
+    "practiceDescription": "나에게만 보이는 연습을 반복할 수 있어요."
+  },
+  "strokeCompleted": {
+    "title": "한 획을 소진했습니다",
+    "description": "이 계정의 평생 한 번뿐인 획을 소진했습니다. 연습 모드에서는 계속 그릴 수 있습니다."
+  },
+  "strokeLimit": {
+    "title": "획 사용 완료",
+    "description": "이 계정은 이미 한 획을 소진했습니다.",
+    "confirm": "확인"
+  },
+  "stats": {
+    "title": "통계",
+    "activeUsers": "연결 수",
+    "unavailable": "연결 수를 확인할 수 없습니다"
+  },
+  "connection": {
+    "connecting": "연결 중",
+    "initializing": "연결 준비 중",
+    "ready": "준비 완료",
+    "reconnecting": "재연결 중",
+    "failed": "연결 실패",
+    "ending": "연결 종료 대기 중",
+    "retryProgress": "재시도 {{count}}회",
+    "server_shutdown": "서버 종료 안내를 받았습니다. 잠시 후 다시 연결합니다.",
+    "connection_policy": "서버 정책에 따라 연결이 종료됩니다. 자동 재시도를 중단했습니다.",
+    "connection_error": "서버에 연결하지 못했습니다.",
+    "ready_timeout": "서버의 준비 응답이 지연되어 다시 연결합니다.",
+    "attempt_timeout": "연결 응답이 지연되어 다시 시도합니다.",
+    "server_disconnect": "서버가 준비 응답 없이 연결을 반복해서 종료했습니다.",
+    "protocol_error": "서버의 연결 규격을 확인해 주세요."
+  },
+  "sync": {
+    "recovering": "공유 그림을 불러오는 중입니다…",
+    "auth": "공유 캔버스에 그리려면 지갑을 연결해 주세요. 연습 모드는 로그인 없이 사용할 수 있습니다.",
+    "strokeAlreadyUsed": "이미 사용한 과거 획을 복구할 수 없어 재전송을 중단했습니다. 연습 모드는 계속 사용할 수 있습니다.",
+    "capacity": "서버 저장 대기열이 잠시 가득 찼습니다. 그림을 유지하며 자동으로 재전송합니다.",
+    "storageRetry": "획 저장이 일시적으로 지연됐습니다. 그림을 유지하며 자동으로 재전송합니다.",
+    "retrying": "같은 획 묶음을 다시 전송하는 중입니다…",
+    "saving": "획을 저장하는 중입니다…",
+    "pendingCapacity": "전송 대기 중인 좌표가 너무 많아 전송을 중단했습니다.",
+    "error": "그림을 동기화하지 못했습니다. 확정된 그림은 유지됩니다."
+  }
+}

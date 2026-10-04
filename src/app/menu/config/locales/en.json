@@ -1,0 +1,18 @@
+{
+  "label": "Main navigation",
+  "open": "Open navigation",
+  "description": "Choose a page to navigate to.",
+  "workspace": "Workspace",
+  "ui": {
+    "title": "UI Catalog",
+    "description": "Cameo design tokens and component catalog"
+  },
+  "mainCanvas": {
+    "title": "Main Canvas",
+    "description": "Main canvas page"
+  },
+  "seasonCanvas": {
+    "title": "Season Canvas",
+    "description": "Season canvas page"
+  }
+}
