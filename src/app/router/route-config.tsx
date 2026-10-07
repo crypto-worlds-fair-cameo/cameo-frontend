@@ -4,7 +4,6 @@ import { House } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { MenuTranslationKey } from '@/app/menu/Menu.types';
 
-const UiPage = lazy(() => import('@/pages/ui/UiPage'));
 const MainCanvasPage = lazy(() => import('@/pages/main-canvas/MainCanvasPage'));
 const SeasonCanvasPage = lazy(() => import('@/pages/season-canvas/SeasonCanvasPage'));
 const SeasonWorkspacePage = lazy(() => import('@/pages/season-canvas/SeasonWorkspacePage'));
@@ -34,15 +33,6 @@ export const appRoutes: AppRouteDefinition[] = [
     description: '시즌별 실시간 관람과 그리기',
     element: <SeasonWorkspacePage />,
     contentLayout: 'canvas',
-  },
-  {
-    path: '/ui',
-    title: '공통 UI',
-    translationKey: 'ui',
-    description: 'Cameo 공통 디자인 토큰과 컴포넌트 카탈로그',
-    element: <UiPage />,
-    noIndex: true,
-    showInNavigation: true,
   },
   {
     path: '/',
