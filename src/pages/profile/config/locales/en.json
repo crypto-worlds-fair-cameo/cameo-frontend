@@ -1,0 +1,84 @@
+{
+  "loading": "Loading profile",
+  "fallbackName": "Account",
+  "sampleNotice": "Joined date, balance, transactions and season lists are sample data until the APIs are connected.",
+  "comingSoon": "This will work once the API is connected.",
+  "navigation": {
+    "label": "Profile sections",
+    "profile": "Profile",
+    "seasons": "My Seasons",
+    "joined": "Joined Canvases"
+  },
+  "header": {
+    "edit": "Edit",
+    "joinedCanvases": "Joined Canvases"
+  },
+  "summary": {
+    "joined": "Joined",
+    "balance": "Balance"
+  },
+  "status": {
+    "active": "Active",
+    "ended": "Ended"
+  },
+  "transactions": {
+    "title": "Transactions",
+    "empty": "No transactions yet."
+  },
+  "seasons": {
+    "title": "My Seasons",
+    "newSeason": "New Season",
+    "empty": "You haven't created a season yet.",
+    "participants_one": "{{count}} participant",
+    "participants_other": "{{count}} participants",
+    "minted": "minted",
+    "createNft": "Create NFT",
+    "viewNft": "View NFT"
+  },
+  "joined": {
+    "title": "Joined Canvases",
+    "empty": "You haven't joined a canvas yet.",
+    "browse": "Browse seasons",
+    "strokes_one": "{{count}} stroke",
+    "strokes_other": "{{count}} strokes"
+  },
+  "activityError": {
+    "message": "Your activity could not be loaded.",
+    "retry": "Try again"
+  },
+  "signedOut": {
+    "title": "Connect your wallet",
+    "description": "Use Connect Wallet at the top right to see your profile."
+  },
+  "error": {
+    "title": "Your profile could not be loaded",
+    "description": "Please try again in a moment.",
+    "retry": "Try again"
+  },
+  "edit": {
+    "title": "Edit Profile",
+    "description": "Change your profile image and nickname.",
+    "imageLabel": "Profile Image",
+    "imageHint": "JPG or PNG, up to 2MB",
+    "imageSelected": "New image selected (preview only)",
+    "changeImage": "Change Image",
+    "imageErrors": {
+      "type": "Use a JPG or PNG image.",
+      "size": "File is too large. Max 2MB."
+    },
+    "nickname": "Nickname",
+    "nicknameHint": "Write it in under 20 characters.",
+    "nicknameTooLong": "Use 20 characters or fewer.",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "saved": "Profile updated",
+    "errors": {
+      "invalid": "Use 1 to 20 characters.",
+      "sessionExpired": "Your session expired. Please connect your wallet again.",
+      "rateLimited": "Too many requests. Please try again shortly.",
+      "network": "Could not reach the server. Check your connection.",
+      "failed": "Your profile could not be saved. Please try again."
+    }
+  }
+}

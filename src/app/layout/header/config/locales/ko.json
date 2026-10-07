@@ -4,6 +4,9 @@
   "connected": "지갑 연결됨",
   "account": "지갑 계정",
   "connectedWallet": "연결된 지갑: {{address}}",
+  "menu": {
+    "profile": "프로필"
+  },
   "disconnect": "지갑 연결 해제",
   "disconnecting": "연결 해제 중…",
   "installPhantom": "Phantom 설치",

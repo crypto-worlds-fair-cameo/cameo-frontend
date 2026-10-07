@@ -7,6 +7,7 @@ import type { MenuTranslationKey } from '@/app/menu/Menu.types';
 const MainCanvasPage = lazy(() => import('@/pages/main-canvas/MainCanvasPage'));
 const SeasonCanvasPage = lazy(() => import('@/pages/season-canvas/SeasonCanvasPage'));
 const SeasonWorkspacePage = lazy(() => import('@/pages/season-canvas/SeasonWorkspacePage'));
+const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'));
 const NotFoundPage = lazy(() => import('@/pages/not-found/NotFoundPage'));
 
 export interface AppRouteDefinition {
@@ -55,6 +56,14 @@ export const appRoutes: AppRouteDefinition[] = [
     seoDescription: '시즌 캔버스 페이지',
     element: <SeasonCanvasPage />,
     showInNavigation: true,
+  },
+  {
+    // 시안의 상단 메뉴에는 없으므로 메뉴에 표시하지 않는다. 진입 버튼 위치는 별도로 정한다.
+    path: '/profile',
+    title: '프로필',
+    description: '내 프로필, 만든 시즌과 참여한 캔버스',
+    element: <ProfilePage />,
+    noIndex: true,
   },
 ];
 

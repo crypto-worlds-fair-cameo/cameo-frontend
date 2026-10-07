@@ -4,6 +4,9 @@
   "connected": "Wallet Connected",
   "account": "Wallet Account",
   "connectedWallet": "Connected wallet: {{address}}",
+  "menu": {
+    "profile": "Profile"
+  },
   "disconnect": "Disconnect Wallet",
   "disconnecting": "Disconnecting…",
   "installPhantom": "Install Phantom",
