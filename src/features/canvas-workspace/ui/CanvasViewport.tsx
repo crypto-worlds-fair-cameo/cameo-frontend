@@ -13,6 +13,7 @@ interface CanvasViewportProps {
   brushSettings: BrushSettings;
   mode: CanvasMode;
   drawingModel: CanvasDrawingModel;
+  workspaceLabel?: string;
   children?: ReactNode;
 }
 
@@ -23,6 +24,7 @@ export function CanvasViewport({
   brushSettings,
   mode,
   drawingModel,
+  workspaceLabel,
   children,
 }: CanvasViewportProps) {
   const { t } = useTranslation('mainCanvas');
@@ -34,7 +36,7 @@ export function CanvasViewport({
       ref={containerRef}
       className="canvas-viewport cameo-light"
       role="region"
-      aria-label={t('workspace')}
+      aria-label={workspaceLabel ?? t('workspace')}
       aria-busy={!view}
     >
       {/* 측정 전에는 배율을 계산할 수 없으므로, 유효한 view가 생긴 뒤 canvas를 마운트한다. */}

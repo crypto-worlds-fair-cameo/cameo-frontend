@@ -9,6 +9,8 @@ import navigationKo from '../menu/config/locales/ko.json';
 import navigationEn from '../menu/config/locales/en.json';
 import mainCanvasKo from '@/pages/main-canvas/config/locales/ko.json';
 import mainCanvasEn from '@/pages/main-canvas/config/locales/en.json';
+import seasonCanvasKo from '@/pages/season-canvas/config/locales/ko.json';
+import seasonCanvasEn from '@/pages/season-canvas/config/locales/en.json';
 
 export const languages = [
   { code: 'ko', label: '한국어' },
@@ -22,6 +24,7 @@ export const resources = {
     wallet: walletKo,
     navigation: navigationKo,
     mainCanvas: mainCanvasKo,
+    seasonCanvas: seasonCanvasKo,
   },
   en: {
     common: commonEn,
@@ -29,6 +32,7 @@ export const resources = {
     wallet: walletEn,
     navigation: navigationEn,
     mainCanvas: mainCanvasEn,
+    seasonCanvas: seasonCanvasEn,
   },
 };
 
@@ -39,7 +43,7 @@ export const i18nOptions = {
   fallbackLng: 'en',
   load: 'languageOnly',
   defaultNS: 'common',
-  ns: ['common', 'notFound', 'wallet', 'navigation', 'mainCanvas'],
+  ns: ['common', 'notFound', 'wallet', 'navigation', 'mainCanvas', 'seasonCanvas'],
   initAsync: false,
   interpolation: { escapeValue: false },
   detection: {

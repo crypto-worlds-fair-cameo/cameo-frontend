@@ -4,13 +4,13 @@ import { useIsMobile } from '@/shared/lib/hooks/use-mobile';
 import { Button } from '@/shared/ui/button';
 import { ColorPalette } from '@/shared/ui/color-palette/ColorPalette';
 import { defaultBrushSettings } from '@/shared/ui/color-palette/model/brushSettings';
-import { CanvasViewport } from './ui/CanvasViewport';
+import { CanvasViewport } from '@/features/canvas-workspace';
 import { CanvasStatsPanel } from './ui/CanvasStatsPanel';
-import { useCanvasRealtime } from './model/useCanvasRealtime';
+import { useCanvasRealtime } from '@/features/canvas-workspace';
 import { CanvasSyncStatus } from './ui/CanvasSyncStatus';
 import { CanvasStrokeLimitDialog } from './ui/CanvasStrokeLimitDialog';
 import { CanvasStrokeNotice } from './ui/CanvasStrokeNotice';
-import { useCanvasMode } from './model/useCanvasMode';
+import { useCanvasMode } from '@/features/canvas-workspace';
 
 /**
  * 메인 캔버스의 진입점. 도화지 크기를 정하고 페이지 내부 UI를 조립한다.

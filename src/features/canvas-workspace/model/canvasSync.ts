@@ -1,4 +1,4 @@
-import type { CanvasSocket, CanvasReady } from '../api/canvasSocket';
+import type { CanvasSocket, CanvasReady, SeasonStateEvent } from '../api/canvasSocket';
 import { appendStroke, syncCanvas, CanvasRequestError } from '../api/canvasRequests';
 import {
   APPEND_BYTE_LIMIT,
@@ -7,6 +7,9 @@ import {
   type AppendStrokeInput,
   type StrokePreview,
   type SyncCanvasInput,
+  type CanvasKey,
+  type CanvasTarget,
+  MAIN_CANVAS_TARGET,
 } from '../api/canvasProtocol';
 import type { CanvasDrawingTransport, CanvasStroke } from './useCanvasDrawing';
 
@@ -66,8 +69,11 @@ export function createCanvasSync(
   onInputReset: () => void,
   requests = { append: appendStroke, sync: syncCanvas },
   onLiveInputInterrupted: () => void = () => {},
-  onStrokeLimitAttempt: () => void = () => {}
+  onStrokeLimitAttempt: () => void = () => {},
+  canvasKey: CanvasKey = 'main'
 ) {
+  let target: CanvasTarget = { ...MAIN_CANVAS_TARGET, canvasKey };
+  let terminalBoundary: { epoch: string; head: string } | undefined;
   let state: CanvasSyncState = { ...initialCanvasSync };
   let socket: CanvasSocket | undefined;
   let generation = 0;
@@ -87,12 +93,44 @@ export function createCanvasSync(
   const buffers = new Map<string, Map<string, StrokePreview>>();
   // 사용 확정은 연결·그림 epoch와 별개로 보관해 재접속이나 계정 전환으로 횟수를 돌려주지 않는다.
   const usedAccounts = new Set<string>();
+  const exhaustedAccounts = new Set<string>();
+  const requestTimes = { append: [] as number[], sync: [] as number[] };
+  const rateWaits = new Map<ReturnType<typeof setTimeout>, () => void>();
+
+  /** 각 이벤트의 1초 제한을 지키고, ACK 전 동일 이벤트는 sending/recovering으로 직렬화한다. */
+  function waitForRate(event: 'append' | 'sync'): Promise<void> | undefined {
+    const times = requestTimes[event];
+    const maximum = event === 'append' ? 30 : 5;
+    if (!disposed && available) {
+      const now = Date.now();
+      while (times.length && times[0] <= now - 1000) times.shift();
+      if (times.length < maximum) {
+        times.push(now);
+        return;
+      }
+      return new Promise<void>(resolve => {
+        const timer = setTimeout(
+          () => {
+            rateWaits.delete(timer);
+            const next = waitForRate(event);
+            if (next) void next.then(resolve);
+            else resolve();
+          },
+          times[0] + 1001 - now
+        );
+        rateWaits.set(timer, resolve);
+      });
+    }
+  }
 
   /** 입력 배열을 복사해 진행 중인 입력이 과거의 화면 스냅샷을 바꾸지 않게 한다. */
   function publish(patch: Partial<CanvasSyncState> = {}) {
     if (disposed) return;
     const next = { ...state, ...patch };
-    const strokeUsed = next.userId !== undefined && usedAccounts.has(next.userId);
+    // 시즌은 남은 획 수를 추측하지 않고 서버의 한도 거절 뒤에 새 입력을 닫는다.
+    const strokeUsed =
+      next.userId !== undefined &&
+      (canvasKey === 'main' ? usedAccounts : exhaustedAccounts).has(next.userId);
     state = {
       ...next,
       strokeUsed,
@@ -137,13 +175,17 @@ export function createCanvasSync(
   }
 
   /** 현재 세대에서 연속된 방송만 적용하고, 누락된 순서 다음 좌표는 버퍼에 남긴다. */
-  function applyBuffered() {
+  function applyBuffered(
+    through = terminalBoundary && terminalBoundary.epoch === state.epoch
+      ? terminalBoundary.head
+      : undefined
+  ) {
     if (!state.epoch) return;
     const buffer = buffers.get(state.epoch);
     if (!buffer) return;
     const applied: StrokePreview[] = [];
     let cursor = BigInt(state.lastAppliedSequence);
-    while (buffer.has(String(cursor + 1n))) {
+    while (buffer.has(String(cursor + 1n)) && (through === undefined || cursor < BigInt(through))) {
       const preview = buffer.get(String(++cursor))!;
       buffer.delete(preview.sequence);
       applied.push(preview);
@@ -163,9 +205,9 @@ export function createCanvasSync(
   }
 
   /** 방송·ACK·복구 페이지를 같은 입구에서 중복 제거한다. */
-  function acceptPreview(payload: unknown) {
+  function acceptPreview(payload: unknown, fromSync = false) {
     if (disposed || !available) return;
-    if (!isStrokePreview(payload)) {
+    if (!isStrokePreview(payload, target)) {
       publish({
         status: 'failed',
         canDraw: false,
@@ -174,6 +216,12 @@ export function createCanvasSync(
       return;
     }
     const preview = payload;
+    // 최종 경계를 넘는 방송은 현재 그림에 포함하지 않는다. 경계 이하의 늦은 방송은 유지한다.
+    if (
+      terminalBoundary?.epoch === preview.epoch &&
+      BigInt(preview.sequence) > BigInt(terminalBoundary.head)
+    )
+      return;
     if (
       preview.epoch === state.epoch &&
       BigInt(preview.sequence) <= BigInt(state.lastAppliedSequence)
@@ -185,11 +233,13 @@ export function createCanvasSync(
       buffers.set(preview.epoch, buffer);
     }
     if (!buffer.has(preview.sequence)) buffer.set(preview.sequence, preview);
-    applyBuffered();
+    // 복구 중 실시간 방송은 고정 head 페이지 적용이 끝날 때까지 버퍼에 남긴다.
+    if (!recovering || fromSync) applyBuffered(fromSync ? recoveryJob?.head : undefined);
     // 세대가 다르거나 순서가 비면 마지막으로 연속 반영한 순서부터 복구한다.
     if (
-      preview.epoch !== state.epoch ||
-      BigInt(preview.sequence) > BigInt(state.lastAppliedSequence) + 1n
+      !fromSync &&
+      (preview.epoch !== state.epoch ||
+        BigInt(preview.sequence) > BigInt(state.lastAppliedSequence) + 1n)
     ) {
       void recover();
     }
@@ -208,7 +258,10 @@ export function createCanvasSync(
       retry: null,
       submissionStatus: 'idle',
       // 사용 제한 오류와 계정의 차감은 저장된 그림의 새 세대에서도 유지한다.
-      error: ['STROKE_LIMIT_REACHED', 'STROKE_ALREADY_USED'].includes(state.error?.code ?? '')
+      error: (canvasKey === 'main'
+        ? ['STROKE_LIMIT_REACHED', 'STROKE_ALREADY_USED']
+        : ['STROKE_LIMIT_REACHED']
+      ).includes(state.error?.code ?? '')
         ? state.error
         : null,
       canDraw: drawingAllowed,
@@ -226,6 +279,12 @@ export function createCanvasSync(
     recovering = false;
     recoveryAgain = false;
     recoveryJob = undefined;
+    for (const [timer, resolve] of rateWaits) {
+      clearTimeout(timer);
+      resolve();
+    }
+    rateWaits.clear();
+    requestTimes.append.length = requestTimes.sync.length = 0;
     // 끊기기 전의 미확인 묶음과 좌표는 보관하되 새 오프라인 입력은 같은 획에 섞지 않는다.
     for (const item of pending.values()) item.ended = true;
     onLiveInputInterrupted();
@@ -263,7 +322,13 @@ export function createCanvasSync(
             token: generation,
             connection: socket,
             epoch: state.epoch,
-            cursor: state.lastAppliedSequence,
+            cursor:
+              terminalBoundary && terminalBoundary.epoch !== state.epoch
+                ? '0'
+                : state.lastAppliedSequence,
+            ...(terminalBoundary && terminalBoundary.epoch === state.epoch
+              ? { head: terminalBoundary.head }
+              : {}),
           };
     recoveryJob = job;
     let completed = false;
@@ -276,7 +341,10 @@ export function createCanvasSync(
           ...(job.epoch === undefined ? {} : { epoch: job.epoch }),
           ...(job.head === undefined ? {} : { throughSequence: job.head }),
         };
-        const page = await requests.sync(job.connection, input);
+        const rateWait = waitForRate('sync');
+        if (rateWait) await rateWait;
+        if (!current(job.token)) return;
+        const page = await requests.sync(job.connection, input, target);
         if (!current(job.token)) return;
         const expectedCursor = page.reset ? 0n : BigInt(job.cursor);
         if (
@@ -293,18 +361,26 @@ export function createCanvasSync(
         // 페이지 성공 때마다 복구 작업 cursor를 갱신해 중간 실패 뒤에도 같은 head부터 이어 간다.
         job.epoch = page.epoch;
         job.head = page.headSequence;
-        for (const preview of page.previews) acceptPreview(preview);
+        for (const preview of page.previews) acceptPreview(preview, true);
         job.cursor = page.nextSequence;
         if (!page.hasMore) break;
       }
       recoveryJob = undefined;
       completed = true;
-      publish({ status: 'ready' });
+      publish({ status: 'ready', canDraw: drawingAllowed && !state.error });
       flush();
     } catch (error) {
       if (!current(job.token)) return;
       const code = error instanceof CanvasRequestError ? error.code : 'ACK_TIMEOUT';
-      if (['RATE_LIMITED', 'ACK_TIMEOUT', 'DISCONNECTED', 'REALTIME_UNAVAILABLE'].includes(code)) {
+      if (
+        [
+          'RATE_LIMITED',
+          'ACK_TIMEOUT',
+          'DISCONNECTED',
+          'CANVAS_CAPACITY_REACHED',
+          'REALTIME_UNAVAILABLE',
+        ].includes(code)
+      ) {
         // 일시 실패는 고정 head와 현재 cursor를 보관하고, 타이머 하나로 같은 페이지를 재시도한다.
         if (!recoveryTimer)
           recoveryTimer = setTimeout(() => {
@@ -326,6 +402,7 @@ export function createCanvasSync(
     } finally {
       if (current(job.token)) {
         recovering = false;
+        if (completed) applyBuffered();
         // 고정 head 조회가 끝난 뒤 대기 중이던 gap·poll 요청을 최신 cursor로 한 번만 실행한다.
         if (completed) {
           const again = recoveryAgain;
@@ -339,15 +416,28 @@ export function createCanvasSync(
 
   /** 준비 응답 후 먼저 서버 세대를 확인하고, 같은 사용자·세대의 미확인 묶음만 이어 보낸다. */
   function ready(connection: CanvasSocket, payload: CanvasReady) {
+    if (payload.canvasKey !== canvasKey) return;
     interrupted();
     socket = connection;
     available = true;
     const userId = payload.viewer.status === 'authenticated' ? payload.viewer.userId : undefined;
     const sameUser = state.userId === userId;
     if (!sameUser && pending.size) clearPending();
-    drawingAllowed = payload.canDraw && userId !== undefined;
+    if (payload.canvasKey !== 'main') {
+      target = { canvasKey, width: payload.season.width, height: payload.season.height };
+      // 재연결 ready는 종료 상태도 새 sync로 확인하며 이전 프로세스 head는 폐기한다.
+      terminalBoundary = undefined;
+    }
+    drawingAllowed =
+      payload.canDraw &&
+      userId !== undefined &&
+      (payload.canvasKey === 'main' || payload.season.status === 'active');
     const error =
-      sameUser && ['STROKE_LIMIT_REACHED', 'STROKE_ALREADY_USED'].includes(state.error?.code ?? '')
+      sameUser &&
+      (canvasKey === 'main'
+        ? ['STROKE_LIMIT_REACHED', 'STROKE_ALREADY_USED']
+        : ['STROKE_LIMIT_REACHED']
+      ).includes(state.error?.code ?? '')
         ? state.error
         : null;
     publish({
@@ -434,7 +524,10 @@ export function createCanvasSync(
     sending = true;
     const token = generation;
     try {
-      const response = await requests.append(socket, request.input);
+      const rateWait = waitForRate('append');
+      if (rateWait) await rateWait;
+      if (!current(token)) return;
+      const response = await requests.append(socket, request.input, target);
       if (!current(token)) return;
       // 같은 요청에 대한 ACK가 아니면 로컬 전송 cursor를 진행하지 않는다.
       const preview = response.preview;
@@ -507,9 +600,23 @@ export function createCanvasSync(
           void flush();
         }, 1000);
       } else {
+        // 시즌의 이미 등록된 획 ID는 계정 전체 한도와 다르다. 그 요청을 끝내고 서버 그림을 복구한다.
+        if (canvasKey !== 'main' && code === 'STROKE_ALREADY_USED') {
+          clearPending();
+          publish({
+            status: 'recovering',
+            error: null,
+            retry: null,
+            canDraw: false,
+            submissionStatus: 'idle',
+          });
+          void recover();
+          return;
+        }
         // 획 제한이나 과거 획 거절도 계정의 사용 확정이므로 ready.canDraw로 다시 풀지 않는다.
         if (['STROKE_LIMIT_REACHED', 'STROKE_ALREADY_USED'].includes(code))
           usedAccounts.add(item.userId);
+        if (code === 'STROKE_LIMIT_REACHED') exhaustedAccounts.add(item.userId);
         // 영구 거절은 이전 확정 그림을 남긴 채 미확정 전송만 중단한다.
         stopTransmission(
           code,
@@ -559,6 +666,28 @@ export function createCanvasSync(
       !state.error &&
       state.userId !== undefined
     );
+  }
+
+  /** 종료 입력을 끊고 승인된 부분 획을 이벤트의 head까지 복구한다. */
+  function seasonState(event: SeasonStateEvent) {
+    if (event.canvasKey !== canvasKey || disposed || !available) return;
+    // active 이벤트에는 개인 권한이 없으므로 기존 false를 true로 바꾸지 않는다.
+    if (event.status === 'active') return;
+    drawingAllowed = false;
+    terminalBoundary = { epoch: event.epoch, head: event.headSequence };
+    clearPending();
+    publish({ canDraw: false, submissionStatus: 'idle' });
+    // 진행 중인 이전 head 조회가 끝나면 최종 head를 대상으로 다시 조회한다.
+    recoveryAgain = recovering || Boolean(recoveryTimer);
+    if (!recovering && !recoveryTimer) recoveryJob = undefined;
+    void recover();
+  }
+
+  /** 새 세션에는 같은 사용자라도 이전 쿠키의 미확정 전송을 넘기지 않는다. */
+  function resetSession() {
+    interrupted();
+    clearPending();
+    publish({ userId: undefined, canDraw: false, error: null, submissionStatus: 'idle' });
   }
 
   const transport: CanvasDrawingTransport = {
@@ -628,6 +757,8 @@ export function createCanvasSync(
     interrupted,
     acceptPreview,
     recover,
+    seasonState,
+    resetSession,
     transport,
     /** 화면 이탈 뒤에는 타이머와 이전 연결의 응답이 상태를 갱신하지 않는다. */
     dispose() {

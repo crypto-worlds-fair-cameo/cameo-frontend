@@ -7,6 +7,8 @@ import {
   type AppendStrokeResult,
   type CanvasSyncPage,
   type SyncCanvasInput,
+  MAIN_CANVAS_TARGET,
+  type CanvasTarget,
 } from './canvasProtocol';
 
 export class CanvasRequestError extends Error {
@@ -38,7 +40,8 @@ function readAck(response: unknown): unknown {
 /** 접속 중일 때만 전송해 Socket.IO의 오프라인 기본 버퍼를 사용하지 않는다. */
 export async function appendStroke(
   socket: CanvasSocket,
-  input: AppendStrokeInput
+  input: AppendStrokeInput,
+  target: CanvasTarget = MAIN_CANVAS_TARGET
 ): Promise<AppendStrokeResult> {
   if (!socket.connected) throw new CanvasRequestError('DISCONNECTED', 'Canvas is disconnected.');
   let response: unknown;
@@ -48,7 +51,11 @@ export async function appendStroke(
     throw new CanvasRequestError('ACK_TIMEOUT', 'Canvas acknowledgement timed out.');
   }
   const data = readAck(response);
-  if (!isRecord(data) || typeof data.accepted !== 'boolean' || !isStrokePreview(data.preview)) {
+  if (
+    !isRecord(data) ||
+    typeof data.accepted !== 'boolean' ||
+    !isStrokePreview(data.preview, target)
+  ) {
     throw new CanvasRequestError('INVALID_RESPONSE', 'Canvas append response is invalid.');
   }
   return data as unknown as AppendStrokeResult;
@@ -57,7 +64,8 @@ export async function appendStroke(
 /** 저장된 그림과 아직 저장되지 않은 좌표를 페이지로 읽고, 검증된 순서만 복구 모델에 넘긴다. */
 export async function syncCanvas(
   socket: CanvasSocket,
-  input: SyncCanvasInput
+  input: SyncCanvasInput,
+  target: CanvasTarget = MAIN_CANVAS_TARGET
 ): Promise<CanvasSyncPage> {
   if (!socket.connected) throw new CanvasRequestError('DISCONNECTED', 'Canvas is disconnected.');
   let response: unknown;
@@ -67,7 +75,7 @@ export async function syncCanvas(
     throw new CanvasRequestError('ACK_TIMEOUT', 'Canvas acknowledgement timed out.');
   }
   const data = readAck(response);
-  if (!isCanvasSyncPage(data))
+  if (!isCanvasSyncPage(data, target))
     throw new CanvasRequestError('INVALID_RESPONSE', 'Canvas sync response is invalid.');
   return data;
 }

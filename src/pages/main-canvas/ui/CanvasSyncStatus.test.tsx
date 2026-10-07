@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { initialCanvasSync } from '../model/canvasSync';
+import { initialCanvasSync } from '@/features/canvas-workspace';
 import { CanvasSyncStatus } from './CanvasSyncStatus';
 
 describe('canvas account stroke guidance', () => {

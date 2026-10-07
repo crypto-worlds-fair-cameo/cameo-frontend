@@ -40,7 +40,10 @@
     "ready_timeout": "The server is taking too long to get ready. Reconnecting.",
     "attempt_timeout": "The connection is taking too long. Retrying.",
     "server_disconnect": "The server repeatedly closed the connection before it was ready.",
-    "protocol_error": "Please check the server connection protocol."
+    "protocol_error": "Please check the server connection protocol.",
+    "canvas_unavailable": "Canvas is unavailable.",
+    "invalid_canvas_key": "Invalid canvas address.",
+    "realtime_unavailable": "Realtime service is temporarily unavailable."
   },
   "sync": {
     "recovering": "Loading the shared drawing…",

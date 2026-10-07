@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import type { CanvasSyncState } from '../model/canvasSync';
+import type { CanvasSyncState } from '@/features/canvas-workspace';
 
 /** 연결 상태와 별도로 그림 복구·그리기 권한·서버 거절을 안내한다. */
 export function CanvasSyncStatus({ sync }: { sync: CanvasSyncState }) {

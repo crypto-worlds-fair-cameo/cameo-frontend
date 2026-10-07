@@ -1,3 +1,24 @@
+export type CanvasKey = 'main' | `season:${string}`;
+export interface CanvasTarget {
+  canvasKey: CanvasKey;
+  width: number;
+  height: number;
+}
+export const MAIN_CANVAS_TARGET: CanvasTarget = {
+  canvasKey: 'main',
+  width: 10_000,
+  height: 10_000,
+};
+
+/** 서버 UUID v4를 가진 시즌과 main만 연결 대상으로 사용한다. */
+export function isCanvasKey(value: unknown): value is CanvasKey {
+  return (
+    value === 'main' ||
+    (typeof value === 'string' &&
+      /^season:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value))
+  );
+}
+
 /** 서버 버전 1의 원본 좌표·브러시·ACK 계약이다. UI의 불투명도 설정과는 분리한다. */
 export interface StrokePoint {
   x: number;
@@ -24,7 +45,7 @@ export interface AppendStrokeInput {
 }
 
 export interface StrokePreview extends AppendStrokeInput {
-  canvasKey: 'main';
+  canvasKey: CanvasKey;
   userId: string;
   epoch: string;
   sequence: string;
@@ -44,7 +65,7 @@ export interface SyncCanvasInput {
 }
 
 export interface CanvasSyncPage {
-  canvasKey: 'main';
+  canvasKey: CanvasKey;
   epoch: string;
   reset: boolean;
   previews: StrokePreview[];
@@ -78,10 +99,13 @@ function finite(value: unknown, min: number, max: number): value is number {
 }
 
 /** 지원하는 브러시와 좌표 묶음만 렌더러에 전달한다. */
-export function isStrokePreview(value: unknown): value is StrokePreview {
+export function isStrokePreview(
+  value: unknown,
+  target: CanvasTarget = MAIN_CANVAS_TARGET
+): value is StrokePreview {
   if (
     !isRecord(value) ||
-    value.canvasKey !== 'main' ||
+    value.canvasKey !== target.canvasKey ||
     typeof value.epoch !== 'string' ||
     !/^[0-9a-f-]{36}$/i.test(value.epoch) ||
     !isSequence(value.sequence) ||
@@ -116,10 +140,10 @@ export function isStrokePreview(value: unknown): value is StrokePreview {
   for (const point of value.points) {
     if (
       !isRecord(point) ||
-      !finite(point.x, 0, 10000) ||
-      point.x >= 10000 ||
-      !finite(point.y, 0, 10000) ||
-      point.y >= 10000
+      !finite(point.x, 0, target.width) ||
+      point.x >= target.width ||
+      !finite(point.y, 0, target.height) ||
+      point.y >= target.height
     )
       return false;
     if (brush.type === 'airbrush' || point.t !== undefined) {
@@ -131,10 +155,13 @@ export function isStrokePreview(value: unknown): value is StrokePreview {
 }
 
 /** 복구 페이지 안의 순서가 연속이고 동일 세대인지 확인한다. */
-export function isCanvasSyncPage(value: unknown): value is CanvasSyncPage {
+export function isCanvasSyncPage(
+  value: unknown,
+  target: CanvasTarget = MAIN_CANVAS_TARGET
+): value is CanvasSyncPage {
   if (
     !isRecord(value) ||
-    value.canvasKey !== 'main' ||
+    value.canvasKey !== target.canvasKey ||
     typeof value.epoch !== 'string' ||
     !/^[0-9a-f-]{36}$/i.test(value.epoch) ||
     typeof value.reset !== 'boolean' ||
@@ -149,7 +176,7 @@ export function isCanvasSyncPage(value: unknown): value is CanvasSyncPage {
   let previous: bigint | undefined;
   for (const preview of value.previews) {
     if (
-      !isStrokePreview(preview) ||
+      !isStrokePreview(preview, target) ||
       preview.epoch !== value.epoch ||
       (previous !== undefined && BigInt(preview.sequence) !== previous + 1n)
     )

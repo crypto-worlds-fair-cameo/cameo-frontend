@@ -40,7 +40,10 @@
     "ready_timeout": "서버의 준비 응답이 지연되어 다시 연결합니다.",
     "attempt_timeout": "연결 응답이 지연되어 다시 시도합니다.",
     "server_disconnect": "서버가 준비 응답 없이 연결을 반복해서 종료했습니다.",
-    "protocol_error": "서버의 연결 규격을 확인해 주세요."
+    "protocol_error": "서버의 연결 규격을 확인해 주세요.",
+    "canvas_unavailable": "캔버스에 접근할 수 없습니다.",
+    "invalid_canvas_key": "캔버스 주소가 올바르지 않습니다.",
+    "realtime_unavailable": "실시간 연결을 잠시 사용할 수 없습니다."
   },
   "sync": {
     "recovering": "공유 그림을 불러오는 중입니다…",

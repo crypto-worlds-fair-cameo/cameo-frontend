@@ -54,3 +54,8 @@ coverage
 
 # Agent skills
 /.agents/skills/
+
+# Local planning and browser verification artifacts
+/docs/superpowers/
+/.playwright-cli/
+/output/playwright/

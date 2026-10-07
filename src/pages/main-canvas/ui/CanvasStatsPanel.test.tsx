@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { initialCanvasConnection } from '../model/canvasConnection';
+import { initialCanvasConnection } from '@/features/canvas-workspace';
 import { CanvasStatsPanel } from './CanvasStatsPanel';
 
 describe('canvas stats presence', () => {

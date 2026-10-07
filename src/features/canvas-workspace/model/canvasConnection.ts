@@ -5,11 +5,14 @@ import {
   isCanvasReady,
   isCanvasReset,
   isSocketProtocolError,
+  isSeasonState,
+  type SeasonStateEvent,
   type CanvasReady,
   type CanvasReset,
   type CanvasSocket,
   type CanvasViewer,
 } from '../api/canvasSocket';
+import type { CanvasKey } from '../api/canvasProtocol';
 import {
   CANVAS_ATTEMPT_TIMEOUT_MS,
   CANVAS_READY_TIMEOUT_MS,
@@ -40,6 +43,7 @@ export interface CanvasConnectionHandlers {
   onReady?: (socket: CanvasSocket, ready: CanvasReady) => void;
   onInterrupted?: () => void;
   onPreview?: (payload: unknown) => void;
+  onSeasonState?: (payload: SeasonStateEvent) => void;
 }
 
 export const initialCanvasConnection: CanvasConnectionState = {
@@ -58,9 +62,10 @@ export const initialCanvasConnection: CanvasConnectionState = {
  */
 export function openCanvasConnection(
   onChange: (state: CanvasConnectionState) => void,
-  handlers: CanvasConnectionHandlers = {}
+  handlers: CanvasConnectionHandlers = {},
+  canvasKey: CanvasKey = 'main'
 ) {
-  const socket = createCanvasSocket();
+  const socket = createCanvasSocket(canvasKey);
   let state = { ...initialCanvasConnection };
   let disposed = false;
   let terminal = false;
@@ -173,7 +178,7 @@ export function openCanvasConnection(
     // 현재 연결이 준비 응답을 기다리지 않으면 늦거나 중복된 ready를 무시한다.
     if (disposed || terminal || !socket.connected || !awaitingReady) return;
     // 지원하지 않는 버전 또는 잘못된 권한 응답은 복구 대신 실패로 종료한다.
-    if (!isCanvasReady(payload)) {
+    if (!isCanvasReady(payload, canvasKey)) {
       fail('protocol_error');
       return;
     }
@@ -196,7 +201,8 @@ export function openCanvasConnection(
   // 준비 완료 후 받은 연결 수만 현재 통계에 반영한다.
   socket.on('canvas:presence', payload => {
     // 준비 전, 실패, 정리 후 또는 잘못된 응답은 통계에 반영하지 않는다.
-    if (disposed || terminal || state.status !== 'ready' || !isCanvasPresence(payload)) return;
+    if (disposed || terminal || state.status !== 'ready' || !isCanvasPresence(payload, canvasKey))
+      return;
     update({ connectionCount: payload.connectionCount });
   });
 
@@ -205,6 +211,14 @@ export function openCanvasConnection(
     // 사용 가능한 연결에서 온 획만 전달하고 이전 연결의 이벤트는 버린다.
     if (disposed || terminal || state.status !== 'ready') return;
     handlers.onPreview?.(payload);
+  });
+
+  // 상태는 해당 시즌의 연결 소유자에게만 전달한다. 종료는 새 입력 권한부터 닫는다.
+  socket.on('season:state', payload => {
+    if (disposed || terminal || state.status !== 'ready' || !isSeasonState(payload, canvasKey))
+      return;
+    if (payload.status !== 'active') update({ canDraw: false });
+    handlers.onSeasonState?.(payload);
   });
 
   // reset은 실제 disconnect를 기다리지 않고 즉시 연결을 닫아 이전 권한을 무효화한다.

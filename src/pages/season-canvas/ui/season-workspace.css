@@ -1,0 +1,47 @@
+.season-workspace-panel {
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.season-workspace-panel h1 {
+  margin: 0 0 var(--space-3);
+  font-size: 20px;
+  font-weight: 700;
+}
+.season-workspace-panel dl {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
+}
+.season-workspace-panel dt {
+  color: var(--text-secondary);
+}
+.season-workspace-panel dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.season-workspace-panel p {
+  margin: var(--space-2) 0;
+}
+.season-workspace-back {
+  color: var(--text-primary);
+  text-decoration: underline;
+  font-size: 13px;
+}
+.season-workspace-rule {
+  color: var(--text-secondary);
+}
+.season-workspace-error {
+  padding: var(--space-6);
+  overflow: auto;
+}
+/* 작은 화면에서도 상태와 참가 버튼을 내부 스크롤로 읽고 도화지 높이를 확보한다. */
+@media (max-width: 767px) {
+  .season-workspace .canvas-left-sidebar {
+    max-height: 35%;
+  }
+  .season-workspace .canvas-right-area {
+    max-height: 35%;
+  }
+}
