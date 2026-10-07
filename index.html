@@ -3,6 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="theme-color" content="#171717" />
+    <!-- 빌드본에서 shared/ui 스타일이 Tailwind 기본 스타일보다 먼저 로드돼도 우선순위가 뒤집히지 않도록 레이어 순서를 먼저 고정한다. -->
+    <style>
+      @layer theme, base, components, utilities;
+    </style>
     <link rel="stylesheet" href="/fonts/fonts.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>React Nest Boilerplate</title>
