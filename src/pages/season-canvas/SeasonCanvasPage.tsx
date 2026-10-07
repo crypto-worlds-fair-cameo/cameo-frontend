@@ -38,13 +38,9 @@ const SeasonCanvasPage = () => {
   return (
     <div className="season-page">
       <header className="season-hero">
-        <div>
-          <p className="season-hero__eyebrow">SOLANATON</p>
-          <h1 ref={headingRef} tabIndex={-1}>
-            {t('title')}
-          </h1>
-          <p>{t('intro')}</p>
-        </div>
+        <h1 ref={headingRef} tabIndex={-1}>
+          {t('title')}
+        </h1>
         {scope.sessionQuery.isLoading && !scope.sessionQuery.data ? (
           <Skeleton className="season-create-skeleton" />
         ) : (
@@ -60,28 +56,25 @@ const SeasonCanvasPage = () => {
           </Button>
         )}
       </header>
-      <p className="season-phase-notice">{t('phaseNotice')}</p>
-      {scope.sessionQuery.isError ? (
+      {scope.sessionQuery.isError && (
         <div className="season-inline-alert" role="alert">
           <span>{t('sessionError')}</span>
           <Button size="sm" variant="secondary" onClick={() => void scope.sessionQuery.refetch()}>
             {t('retry')}
           </Button>
         </div>
-      ) : !scope.session && scope.isReady ? (
-        <p className="season-login-notice">{t('loginRequired')}</p>
-      ) : null}
+      )}
       <div className="season-filter" role="group" aria-label={t('filters.label')}>
         {filters.map(filter => (
-          <Button
+          <button
             key={filter ?? 'all'}
-            size="sm"
-            variant={list.status === filter ? 'primary' : 'secondary'}
+            type="button"
+            className="season-filter__item"
             aria-pressed={list.status === filter}
             onClick={() => list.setStatus(filter)}
           >
             {t(`filters.${filter ?? 'all'}`)}
-          </Button>
+          </button>
         ))}
       </div>
       {!scope.isReady ? (

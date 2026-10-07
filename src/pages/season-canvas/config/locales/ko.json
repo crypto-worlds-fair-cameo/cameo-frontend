@@ -1,9 +1,8 @@
 {
   "title": "시즌 캔버스",
   "intro": "공개 시즌을 만들고 진행 상태를 확인할 수 있습니다.",
-  "phaseNotice": "무료 공개 시즌입니다. 캔버스를 관람하거나 진행 중인 시즌에 참가해 그릴 수 있습니다.",
   "create": "시즌 개설",
-  "loginRequired": "시즌을 개설하려면 헤더에서 지갑으로 로그인하세요.",
+  "previewUnavailable": "이미지 없음",
   "sessionChecking": "로그인 상태 확인 중",
   "sessionError": "로그인 상태를 확인하지 못했습니다. 다시 시도해 주세요.",
   "retry": "다시 시도",
@@ -21,6 +20,8 @@
     "cancelled": "취소"
   },
   "card": {
+    "remaining": "{{count}}자리 남음",
+    "daysRemaining": "예정 종료까지 {{count}}일",
     "participants": "누적 참가 {{count}} / {{capacity}}명",
     "size": "{{width}} × {{height}} px",
     "strokes": "1인당 {{count}}획",
@@ -44,6 +45,10 @@
     "pagination": "시즌 목록 페이지 이동"
   },
   "detail": {
+    "eyebrow": "시즌 정보",
+    "period": "기간",
+    "brushStrokes": "획 제한",
+    "close": "닫기",
     "title": "시즌 정보",
     "loading": "최신 시즌 정보를 불러오는 중입니다.",
     "notFound": "시즌을 찾을 수 없거나 접근할 수 없습니다.",

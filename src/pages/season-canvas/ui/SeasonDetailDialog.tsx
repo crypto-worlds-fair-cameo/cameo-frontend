@@ -1,4 +1,4 @@
-import { useEffect, useRef, type RefObject } from 'react';
+import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import type { UseQueryResult } from '@tanstack/react-query';
@@ -6,6 +6,7 @@ import { Button } from '@/shared/ui/button';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -15,9 +16,9 @@ import {
 import { Skeleton } from '@/shared/ui/skeleton';
 import { SeasonRequestError, type Season } from '../api/seasons.types';
 import type { SeasonErrorKey } from '../lib/seasonErrors';
-import { formatSeasonDate } from '../lib/seasonDate';
+import { formatSeasonDateTime } from '../lib/seasonDate';
 import type { SeasonManageAction } from '../model/useSeasonDetail';
-import { SeasonStatusBadge } from './SeasonStatusBadge';
+import { SeasonPreview } from './SeasonPreview';
 
 interface SeasonDetailDialogProps {
   selectedId: string | null;
@@ -37,14 +38,15 @@ interface SeasonDetailDialogProps {
 }
 
 export function SeasonDetailDialog(props: SeasonDetailDialogProps) {
-  const { t, i18n } = useTranslation('seasonCanvas');
+  const { t } = useTranslation('seasonCanvas');
   const cachedSeason = props.query.data;
   const notFound =
     props.query.error instanceof SeasonRequestError &&
     (props.query.error.statusCode === 404 || props.query.error.code === 'SEASON_NOT_FOUND');
   // 404는 취소된 시즌의 접근 제한일 수 있으므로 오래된 상세를 현재 정보처럼 표시하지 않는다.
   const season = notFound ? undefined : cachedSeason;
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  // 404가 아니면 목록의 미리보기로 제목을 먼저 보여 주고, 조회된 상세로 갱신한다.
+  const summary = notFound ? undefined : (season ?? props.preview);
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
   const endButtonRef = useRef<HTMLButtonElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -67,90 +69,108 @@ export function SeasonDetailDialog(props: SeasonDetailDialogProps) {
         <DialogContent
           ref={contentRef}
           tabIndex={-1}
-          className="season-dialog"
-          showCloseButton={!props.isManaging}
+          className="season-dialog season-detail-dialog"
+          showCloseButton={false}
           onCloseAutoFocus={event => {
             event.preventDefault();
             restoreFocus(props.restoreFocusTo.current, props.fallbackFocusTo.current);
           }}
         >
-          <DialogHeader>
-            <DialogTitle>{season?.title ?? props.preview?.title ?? t('detail.title')}</DialogTitle>
-            <DialogDescription>
-              {season?.description ?? props.preview?.description ?? t('detail.descriptionEmpty')}
-            </DialogDescription>
-          </DialogHeader>
-          {props.query.isLoading && !season ? (
-            <div aria-busy="true">
-              <Skeleton className="season-detail__skeleton" />
-              <p>{t('detail.loading')}</p>
-            </div>
-          ) : props.query.isError && !season ? (
-            <div className="season-detail__error" role="alert">
-              <p>{notFound ? t('detail.notFound') : t('detail.error')}</p>
-              <Button variant="secondary" size="sm" onClick={() => void props.query.refetch()}>
-                {t('detail.refresh')}
-              </Button>
-            </div>
-          ) : season ? (
-            <>
-              {props.query.isRefetchError && (
-                <div className="season-inline-alert" role="alert">
-                  <span>{t('list.stale')}</span>
+          <div className="season-detail-layout">
+            <SeasonPreview status={summary?.status} className="season-detail__preview" />
+            <div className="season-detail__info">
+              <DialogHeader className="season-detail__heading">
+                <p className="season-detail__eyebrow">{t('detail.eyebrow')}</p>
+                <DialogTitle>{summary?.title ?? t('detail.title')}</DialogTitle>
+                <DialogDescription>
+                  {summary?.description || t('detail.descriptionEmpty')}
+                </DialogDescription>
+              </DialogHeader>
+              {/* 최초 조회 중에는 로딩을, 상세 없이 실패하면 재시도를, 조회 성공 시에는 정보를 보여 준다. */}
+              {props.query.isLoading && !season ? (
+                <div aria-busy="true">
+                  <Skeleton className="season-detail__skeleton" />
+                  <p>{t('detail.loading')}</p>
+                </div>
+              ) : props.query.isError && !season ? (
+                <div className="season-detail__error" role="alert">
+                  <p>{notFound ? t('detail.notFound') : t('detail.error')}</p>
                   <Button variant="secondary" size="sm" onClick={() => void props.query.refetch()}>
-                    {t('retry')}
+                    {t('detail.refresh')}
                   </Button>
                 </div>
+              ) : season ? (
+                <>
+                  {/* 기존 상세를 유지한 재조회가 실패하면 오래된 정보임을 안내한다. */}
+                  {props.query.isRefetchError && (
+                    <div className="season-inline-alert" role="alert">
+                      <span>{t('list.stale')}</span>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => void props.query.refetch()}
+                      >
+                        {t('retry')}
+                      </Button>
+                    </div>
+                  )}
+                  <SeasonDetail season={season} />
+                </>
+              ) : null}
+              {/* 관리 요청의 실패는 상세 정보 옆에 남겨 다시 확인할 수 있게 한다. */}
+              {props.manageError && (
+                <p className="season-detail__error" role="alert">
+                  {t(`errors.${props.manageError}`)}
+                </p>
               )}
-              <SeasonDetail season={season} locale={i18n.language} timezone={timezone} />
-            </>
-          ) : null}
-          {props.manageError && (
-            <p className="season-detail__error" role="alert">
-              {t(`errors.${props.manageError}`)}
-            </p>
-          )}
-          {season && (
-            <DialogFooter>
-              {props.canInteract && !props.query.isError && (
-                <Button asChild variant="secondary">
-                  <Link to={`/season-canvas/${season.id}`}>{t('workspace.watch')}</Link>
-                </Button>
-              )}
-              {season.canCancel && (
-                <Button
-                  ref={cancelButtonRef}
-                  variant="destructive"
-                  disabled={
-                    !props.canInteract ||
-                    props.query.isError ||
-                    props.query.isFetching ||
-                    props.isRefreshingManagement
-                  }
-                  loading={props.isRefreshingManagement}
-                  onClick={() => void props.onOpenManage('cancel')}
-                >
-                  {t('detail.cancel')}
-                </Button>
-              )}
-              {season.canEnd && (
-                <Button
-                  ref={endButtonRef}
-                  variant="destructive"
-                  disabled={
-                    !props.canInteract ||
-                    props.query.isError ||
-                    props.query.isFetching ||
-                    props.isRefreshingManagement
-                  }
-                  loading={props.isRefreshingManagement}
-                  onClick={() => void props.onOpenManage('end')}
-                >
-                  {t('detail.end')}
-                </Button>
-              )}
-            </DialogFooter>
-          )}
+              <DialogFooter className="season-detail__actions">
+                {/* 확인된 상세와 세션 경계가 준비됐을 때만 캔버스 관람 링크를 제공한다. */}
+                {season && props.canInteract && !props.query.isError && (
+                  <Button asChild variant="web3">
+                    <Link to={`/season-canvas/${season.id}`}>{t('workspace.watch')}</Link>
+                  </Button>
+                )}
+                {/* 서버가 제공한 관리 권한에 따라 취소·조기 종료 버튼을 표시한다. */}
+                {season?.canCancel && (
+                  <Button
+                    ref={cancelButtonRef}
+                    variant="destructive"
+                    disabled={
+                      !props.canInteract ||
+                      props.query.isError ||
+                      props.query.isFetching ||
+                      props.isRefreshingManagement
+                    }
+                    loading={props.isRefreshingManagement}
+                    onClick={() => void props.onOpenManage('cancel')}
+                  >
+                    {t('detail.cancel')}
+                  </Button>
+                )}
+                {season?.canEnd && (
+                  <Button
+                    ref={endButtonRef}
+                    variant="destructive"
+                    disabled={
+                      !props.canInteract ||
+                      props.query.isError ||
+                      props.query.isFetching ||
+                      props.isRefreshingManagement
+                    }
+                    loading={props.isRefreshingManagement}
+                    onClick={() => void props.onOpenManage('end')}
+                  >
+                    {t('detail.end')}
+                  </Button>
+                )}
+                <DialogClose asChild>
+                  <Button variant="secondary" disabled={props.isManaging}>
+                    {t('detail.close')}
+                  </Button>
+                </DialogClose>
+              </DialogFooter>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
       <ConfirmDialog
@@ -181,47 +201,34 @@ function restoreFocus(target: HTMLElement | null, fallback: HTMLElement | null) 
   });
 }
 
-function SeasonDetail({
-  season,
-  locale,
-  timezone,
-}: {
-  season: Season;
-  locale: string;
-  timezone: string;
-}) {
+/** 최신 상세의 기간, 1인당 획 제한과 누적 참가 인원을 간결한 정보 행으로 표시한다. */
+function SeasonDetail({ season }: { season: Season }) {
   const { t } = useTranslation('seasonCanvas');
-  const facts: { label: string; value: string }[] = [
+  // 조기 종료일을 기간에 반영하고, null 획 제한은 무제한으로 표시한다.
+  const periodEnd = season.forceEndedAt ?? season.endsAt;
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const facts: { label: string; value: ReactNode }[] = [
     {
-      label: t('detail.participants'),
-      value: t('units.people', { count: season.participantCount }),
+      label: t('detail.period'),
+      value: (
+        <span className="season-detail__period" title={t('detail.timezone', { timezone })}>
+          <time dateTime={season.startsAt}>{formatSeasonDateTime(season.startsAt)}</time>
+          <span>-</span>
+          <time dateTime={periodEnd}>{formatSeasonDateTime(periodEnd)}</time>
+        </span>
+      ),
     },
-    { label: t('detail.capacity'), value: t('units.people', { count: season.capacity }) },
-    { label: t('detail.dimensions'), value: `${season.width} × ${season.height} px` },
     {
-      label: t('detail.strokeLimit'),
+      label: t('detail.brushStrokes'),
       value:
         season.strokeLimitPerUser === null
-          ? t('units.unlimited')
-          : t('units.strokes', { count: season.strokeLimitPerUser }),
+          ? t('card.unlimited')
+          : t('card.strokes', { count: season.strokeLimitPerUser }),
     },
-    { label: t('detail.startsAt'), value: formatSeasonDate(season.startsAt, locale) },
-    { label: t('detail.scheduledEnd'), value: formatSeasonDate(season.endsAt, locale) },
-    { label: t('detail.createdAt'), value: formatSeasonDate(season.createdAt, locale) },
+    { label: t('detail.capacity'), value: `${season.participantCount}/${season.capacity}` },
   ];
-  if (season.forceEndedAt)
-    facts.splice(6, 0, {
-      label: t('detail.actualEnd'),
-      value: formatSeasonDate(season.forceEndedAt, locale),
-    });
-  if (season.cancelledAt)
-    facts.splice(6, 0, {
-      label: t('detail.cancelledAt'),
-      value: formatSeasonDate(season.cancelledAt, locale),
-    });
   return (
     <div className="season-detail">
-      <SeasonStatusBadge status={season.status} />
       <dl>
         {facts.map(fact => (
           <div key={fact.label}>
@@ -230,7 +237,6 @@ function SeasonDetail({
           </div>
         ))}
       </dl>
-      <p className="season-detail__timezone">{t('detail.timezone', { timezone })}</p>
     </div>
   );
 }

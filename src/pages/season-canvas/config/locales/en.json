@@ -1,9 +1,8 @@
 {
   "title": "Season Canvas",
   "intro": "Create public seasons and follow their progress.",
-  "phaseNotice": "Free, public seasons. Watch a canvas, or join an active season to draw.",
   "create": "Create season",
-  "loginRequired": "Sign in with your wallet from the header to create a season.",
+  "previewUnavailable": "No image",
   "sessionChecking": "Checking sign-in status",
   "sessionError": "We could not verify your sign-in status. Try again.",
   "retry": "Try again",
@@ -21,6 +20,8 @@
     "cancelled": "Cancelled"
   },
   "card": {
+    "remaining": "{{count}} left",
+    "daysRemaining": "{{count}} days until the scheduled end",
     "participants": "Registered: {{count}} / {{capacity}}",
     "size": "{{width}} × {{height}} px",
     "strokes": "{{count}} strokes per person",
@@ -44,6 +45,10 @@
     "pagination": "Season list pagination"
   },
   "detail": {
+    "eyebrow": "Season Info",
+    "period": "Day",
+    "brushStrokes": "Brush Strokes",
+    "close": "Close",
     "title": "Season information",
     "loading": "Loading the latest season information.",
     "notFound": "This season could not be found or is not accessible.",
