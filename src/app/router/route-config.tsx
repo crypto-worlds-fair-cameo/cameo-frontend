@@ -7,6 +7,7 @@ import type { MenuTranslationKey } from '@/app/menu/Menu.types';
 const UiPage = lazy(() => import('@/pages/ui/UiPage'));
 const MainCanvasPage = lazy(() => import('@/pages/main-canvas/MainCanvasPage'));
 const SeasonCanvasPage = lazy(() => import('@/pages/season-canvas/SeasonCanvasPage'));
+const SeasonWorkspacePage = lazy(() => import('@/pages/season-canvas/SeasonWorkspacePage'));
 const NotFoundPage = lazy(() => import('@/pages/not-found/NotFoundPage'));
 
 export interface AppRouteDefinition {
@@ -27,6 +28,13 @@ export interface AppRouteDefinition {
 }
 
 export const appRoutes: AppRouteDefinition[] = [
+  {
+    path: '/season-canvas/:seasonId',
+    title: '시즌 캔버스 작업 공간',
+    description: '시즌별 실시간 관람과 그리기',
+    element: <SeasonWorkspacePage />,
+    contentLayout: 'canvas',
+  },
   {
     path: '/ui',
     title: '공통 UI',

@@ -2,7 +2,7 @@ import '@/app/layout/layout.css';
 import { Suspense, useEffect, useRef } from 'react';
 import { ErrorBoundary } from '../errors/ErrorBoundary';
 import { useRouteScroll } from './model/useRouteScroll';
-import { Outlet, useLocation } from 'react-router';
+import { Outlet, useLocation, matchPath } from 'react-router';
 import { RouteLoading } from '@/shared/ui/loading/index';
 import { menuConfig } from '@/app/menu/Menu.data';
 import Footer from '@/app/layout/Footer';
@@ -35,7 +35,8 @@ const Layout = ({
   const { key, pathname } = useLocation();
   // 페이지가 app을 참조하지 않도록, 바깥 레이아웃 선택은 app의 라우트 메타데이터로 관리한다.
   const isCanvas = appRoutes.some(
-    route => route.path === pathname && route.contentLayout === 'canvas'
+    route =>
+      matchPath({ path: route.path, end: true }, pathname) && route.contentLayout === 'canvas'
   );
   // 캔버스는 기기 종류와 관계없이 화면 높이를 고정한다. 기존 mobile 모드의 문서 스크롤
   // 잠금과 main 스크롤 소유권을 재사용하고, 캔버스 전용 CSS에서 main의 스크롤도 막는다.

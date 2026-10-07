@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import type { CanvasMode } from '../model/useCanvasMode';
+import type { CanvasMode } from '@/features/canvas-workspace';
 
 /** 모드 전환 버튼 아래에서 실제 그리기와 연습의 규칙을 짧게 안내한다. */
 export function CanvasStrokeNotice({ mode }: { mode: CanvasMode }) {

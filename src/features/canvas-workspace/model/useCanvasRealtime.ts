@@ -1,12 +1,35 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { BrushSettings } from '@/shared/ui/color-palette/model/brushSettings';
 import { useCanvasConnection } from './useCanvasConnection';
 import { createCanvasSync, initialCanvasSync } from './canvasSync';
 import { useCanvasDrawing, type CanvasDrawingTransport } from './useCanvasDrawing';
 import type { CanvasMode } from './useCanvasMode';
+import type { CanvasKey } from '../api/canvasProtocol';
+import type { CanvasReady, SeasonStateEvent } from '../api/canvasSocket';
+
+export interface CanvasRealtimeOptions {
+  canvasKey?: CanvasKey;
+  reconnectVersion?: number;
+  sessionVersion?: number;
+  enabled?: boolean;
+  allowLiveInput?: boolean;
+  onReady?: (ready: CanvasReady) => void;
+  onSeasonState?: (event: SeasonStateEvent) => void;
+  onError?: (code: string) => void;
+}
 
 /** 페이지의 연결과 그림 복구를 소유하고, 연습 입력은 전송 경로에 넣지 않는다. */
-export function useCanvasRealtime(brush: BrushSettings, mode: CanvasMode) {
+export function useCanvasRealtime(
+  brush: BrushSettings,
+  mode: CanvasMode,
+  options: CanvasRealtimeOptions = {}
+) {
+  const canvasKey = options.canvasKey ?? 'main';
+  const callbacksRef = useRef(options);
+  useLayoutEffect(() => {
+    callbacksRef.current = options;
+  }, [options]);
+  const [dimensions, setDimensions] = useState({ width: 10_000, height: 10_000 });
   const ownerRef = useRef<ReturnType<typeof createCanvasSync> | null>(null);
   const [sync, setSync] = useState(initialCanvasSync);
   const [strokeNotice, setStrokeNotice] = useState<'limit' | 'completed' | null>(null);
@@ -16,6 +39,8 @@ export function useCanvasRealtime(brush: BrushSettings, mode: CanvasMode) {
   const transport = useMemo<CanvasDrawingTransport>(
     () => ({
       start: stroke => {
+        // 참가 중·세션 변경 직후에는 effect 정리 전이라도 이전 ready로 새 입력을 만들지 않는다.
+        if (callbacksRef.current.allowLiveInput === false) return false;
         // 준비·권한·횟수 검사를 통과한 획만 시작하며 첫 좌표를 즉시 전송한다.
         if (!ownerRef.current?.transport.start(stroke)) return false;
         activeStrokeIdRef.current = stroke.clientStrokeId!;
@@ -29,7 +54,7 @@ export function useCanvasRealtime(brush: BrushSettings, mode: CanvasMode) {
         // 정상 포인터 종료에만 알림을 열며, 첫 ACK가 와도 그리는 도중에는 열지 않는다.
         if (activeStrokeIdRef.current !== id) return;
         activeStrokeIdRef.current = null;
-        setStrokeNotice('completed');
+        if (canvasKey === 'main') setStrokeNotice('completed');
         ownerRef.current?.transport.finish(id);
       },
       cancel: id => {
@@ -38,9 +63,15 @@ export function useCanvasRealtime(brush: BrushSettings, mode: CanvasMode) {
         ownerRef.current?.transport.cancel(id);
       },
     }),
-    []
+    [canvasKey]
   );
-  const drawingModel = useCanvasDrawing(brush, mode, 10_000, 10_000, transport);
+  const drawingModel = useCanvasDrawing(
+    brush,
+    mode,
+    dimensions.width,
+    dimensions.height,
+    transport
+  );
   const { resetDrawing, interruptLiveStroke } = drawingModel;
 
   /** 알림 닫기는 그림·전송·사용 횟수를 바꾸지 않는다. */
@@ -50,6 +81,7 @@ export function useCanvasRealtime(brush: BrushSettings, mode: CanvasMode) {
 
   useEffect(() => {
     let previousUserId: string | undefined;
+    let previousErrorCode: string | undefined;
     // 소켓 effect보다 먼저 복구 소유자를 만들고, 정리된 소유자의 비동기 결과는 버린다.
     const owner = createCanvasSync(
       next => {
@@ -59,7 +91,12 @@ export function useCanvasRealtime(brush: BrushSettings, mode: CanvasMode) {
           if (previousUserId !== next.userId) setStrokeNotice(null);
           previousUserId = next.userId;
           // 영구 거절이면 완료 안내를 닫고 기존 오류 또는 획 제한 안내를 표시한다.
-          if (next.error) setStrokeNotice(current => (current === 'completed' ? null : current));
+          if (next.error) {
+            setStrokeNotice(current => (current === 'completed' ? null : current));
+            if (previousErrorCode !== next.error.code)
+              callbacksRef.current.onError?.(next.error.code);
+          }
+          previousErrorCode = next.error?.code;
         }
       },
       () => {
@@ -76,24 +113,45 @@ export function useCanvasRealtime(brush: BrushSettings, mode: CanvasMode) {
       () => {
         // 이미 사용한 계정의 새 그리기 시도만 별도 제한 모달로 안내한다.
         if (ownerRef.current === owner) setStrokeNotice('limit');
-      }
+      },
+      canvasKey
     );
     ownerRef.current = owner;
     return () => {
       ownerRef.current = null;
       owner.dispose();
     };
-  }, [resetDrawing, interruptLiveStroke]);
+  }, [resetDrawing, interruptLiveStroke, canvasKey]);
 
-  const { connection } = useCanvasConnection({
-    onReady: (socket, ready) => ownerRef.current?.ready(socket, ready),
-    onInterrupted: () => ownerRef.current?.interrupted(),
-    onPreview: preview => ownerRef.current?.acceptPreview(preview),
-  });
+  useEffect(() => {
+    // 로그인 변경과 같은 사용자 재로그인도 이전 소켓의 ACK 대기를 폐기한다.
+    if (options.sessionVersion !== undefined) ownerRef.current?.resetSession();
+  }, [options.sessionVersion]);
+
+  const { connection } = useCanvasConnection(
+    {
+      onReady: (socket, ready) => {
+        if (ready.canvasKey !== 'main')
+          setDimensions({ width: ready.season.width, height: ready.season.height });
+        ownerRef.current?.ready(socket, ready);
+        callbacksRef.current.onReady?.(ready);
+      },
+      onInterrupted: () => ownerRef.current?.interrupted(),
+      onPreview: preview => ownerRef.current?.acceptPreview(preview),
+      onSeasonState: event => {
+        ownerRef.current?.seasonState(event);
+        callbacksRef.current.onSeasonState?.(event);
+      },
+    },
+    canvasKey,
+    options.reconnectVersion ?? 0,
+    options.enabled ?? true
+  );
 
   return {
     connection,
     sync,
+    dimensions,
     strokeNotice,
     onStrokeNoticeOpenChange,
     drawingModel: {

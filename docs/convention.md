@@ -24,17 +24,19 @@ src/
 │   └── not-found/NotFoundPage.tsx
 ├── entities/
 │   └── session/                 # 공유 세션 타입·조회·query key
+├── features/
+│   └── canvas-workspace/        # 메인·시즌의 공유 실시간 연결·동기화·그리기
 └── shared/
     ├── api/http-client.ts       # Axios 기본 설정
     ├── lib/                    # cn·범용 훅
     └── ui/                     # 기존 primitive·범용 조합 UI
 ```
 
-`vite-env.d.ts`와 `types/global.d.ts`는 빌드용 타입 선언입니다. 헤더와 전역 지갑 다이얼로그가 공유하는 세션 타입·조회·query key는 `entities/session`이 소유하며, 공개 `index.ts`를 통해 사용합니다. 헤더 전용 지갑 인증은 `app/layout/header`의 `ui`, `model`, `api`, `lib`, `config`에 모읍니다. 아직 별도의 `features`는 만들지 않았습니다.
+`vite-env.d.ts`와 `types/global.d.ts`는 빌드용 타입 선언입니다. 헤더와 전역 지갑 다이얼로그가 공유하는 세션 타입·조회·query key는 `entities/session`이 소유하며, 공개 `index.ts`를 통해 사용합니다. 헤더 전용 지갑 인증은 `app/layout/header`의 `ui`, `model`, `api`, `lib`, `config`에 모읍니다. 메인과 시즌 캔버스가 공유하는 연결·복구·그리기는 `features/canvas-workspace`가 소유합니다. 페이지는 공개 `index.ts`만 사용하며 참가 HTTP와 시즌 상태 조립은 `pages/season-canvas` 내부에 둡니다.
 
 ## 의존 방향
 
-- `app → pages, entities, shared`, `pages → entities, shared`, `entities → shared` 방향을 유지합니다.
+- `app → pages, entities, shared`, `pages → features, entities, shared`, `features → entities, shared`, `entities → shared` 방향을 유지합니다.
 - 페이지는 다른 페이지 내부나 `app`을 import하지 않습니다. 홈의 브랜드 설명·프리셋 표시는 라우트가 props로 전달합니다.
 - `shared`는 페이지·앱·제품 정책을 알지 않습니다. 모달과 로딩의 범용 UI 상태는 각각 `shared/ui/modal/model`, `shared/ui/loading/model`에 있습니다. 앱은 해당 전역 UI를 마운트합니다.
 - 같은 페이지 안에서는 실제 구현 파일을 직접 참조합니다. 필요 없는 barrel·빈 역할 폴더·중간 wrapper는 만들지 않습니다.

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import type { CanvasConnectionState } from '../model/canvasConnection';
+import type { CanvasConnectionState } from '@/features/canvas-workspace';
 
 interface CanvasConnectionStatusProps {
   connection: CanvasConnectionState;

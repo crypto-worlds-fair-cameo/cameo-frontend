@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/shared/ui/collapsible';
-import type { CanvasConnectionState } from '../model/canvasConnection';
+import type { CanvasConnectionState } from '@/features/canvas-workspace';
 import { CanvasConnectionStatus } from './CanvasConnectionStatus';
 
 interface CanvasStatsPanelProps {
