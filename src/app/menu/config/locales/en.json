@@ -14,5 +14,9 @@
   "seasonCanvas": {
     "title": "Season Canvas",
     "description": "Season canvas page"
+  },
+  "history": {
+    "title": "History",
+    "description": "Snapshot history"
   }
 }

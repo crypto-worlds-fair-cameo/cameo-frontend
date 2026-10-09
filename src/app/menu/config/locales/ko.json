@@ -14,5 +14,9 @@
   "seasonCanvas": {
     "title": "시즌 캔버스",
     "description": "시즌 캔버스 페이지"
+  },
+  "history": {
+    "title": "히스토리",
+    "description": "스냅샷 히스토리"
   }
 }

@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 
-export type MenuTranslationKey = 'ui' | 'mainCanvas' | 'seasonCanvas';
+export type MenuTranslationKey = 'ui' | 'mainCanvas' | 'seasonCanvas' | 'history';
 
 export interface MenuItem {
   path: string;
