@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/button';
-import type { CanvasMode } from '@/features/canvas-workspace';
+import { canRetryCanvasRecovery, type CanvasMode } from '@/features/canvas-workspace';
 import type { useSeasonWorkspace } from '../model/useSeasonWorkspace';
 import { SeasonStatusBadge } from './SeasonStatusBadge';
 import { formatSeasonDate } from '../lib/seasonDate';
@@ -116,7 +116,16 @@ export function SeasonWorkspacePanel({
         </p>
       )}
       {sync.status === 'recovering' && <p role="status">{t('workspace.recovering')}</p>}
-      {sync.error && <p role="alert">{t(`workspace.${errorKey}`)}</p>}
+      {sync.error && (
+        <div role="alert">
+          <p>{t(`workspace.${errorKey}`)}</p>
+          {canRetryCanvasRecovery(sync.error.code) && (
+            <Button size="sm" variant="secondary" onClick={realtime.retryRecovery}>
+              {t('retry')}
+            </Button>
+          )}
+        </div>
+      )}
       {sync.retry && <p role="status">{t('workspace.retrying')}</p>}
       {sync.submissionStatus === 'saving' && <p role="status">{t('workspace.saving')}</p>}
       {sync.submissionStatus === 'saved' && <p role="status">{t('workspace.saved')}</p>}

@@ -4,7 +4,7 @@ export { useCanvasRealtime } from './model/useCanvasRealtime';
 export { useCanvasMode } from './model/useCanvasMode';
 export type { CanvasMode } from './model/useCanvasMode';
 export type { CanvasSyncState } from './model/canvasSync';
-export { initialCanvasSync } from './model/canvasSync';
+export { canRetryCanvasRecovery, initialCanvasSync } from './model/canvasSync';
 export type { CanvasConnectionState } from './model/canvasConnection';
 export { initialCanvasConnection } from './model/canvasConnection';
 export type { CanvasReady, SeasonReady, SeasonStateEvent } from './api/canvasSocket';

@@ -57,6 +57,18 @@ function strokeKey(userId: string, clientStrokeId: string) {
   return JSON.stringify([userId, clientStrokeId]);
 }
 
+function brushKey(brush: StrokePreview['brush']) {
+  return JSON.stringify([
+    brush.type,
+    brush.size,
+    brush.color.toUpperCase(),
+    brush.opacity,
+    brush.version,
+    brush.angle ?? null,
+    brush.seed ?? null,
+  ]);
+}
+
 /** 서버 브러쉬 필드를 페이지의 그리기 모델로 옮기며 wire 불투명도를 유지한다. */
 function chunkStroke(chunk: StrokePreview): CanvasStroke {
   return {
@@ -82,6 +94,7 @@ export function createCanvasDrawingRenderer() {
   let serverCount = 0;
   let lastSequence = '';
   const states = new Map<string, BrushStrokeState>();
+  const strokeProgress = new Map<string, { lastChunkIndex: number; brush: string }>();
 
   /** 원본 좌표를 기기 픽셀로 변환한다. 기존 변환은 교체해 중첩하지 않는다. */
   function transform(context: CanvasRenderingContext2D, { pixelRatio, view }: RenderSettings) {
@@ -117,6 +130,8 @@ export function createCanvasDrawingRenderer() {
       worldHeight,
       drawing.epoch ?? '',
       drawing.resetVersion ?? 0,
+      drawing.snapshotBase?.snapshotId ?? '',
+      drawing.snapshotBase?.throughSequence ?? '0',
     ].join(':');
     const changed =
       key !== liveKey || chunks.length !== serverCount || drawing.liveStrokes.length !== liveCount;
@@ -156,16 +171,64 @@ export function createCanvasDrawingRenderer() {
         serverCount = 0;
         liveCount = 0;
         states.clear();
+        strokeProgress.clear();
+        lastSequence = drawing.snapshotBase?.throughSequence ?? '';
+        // 정본 캡처처럼 청크를 불투명 흰 도화지에 순서대로 합성해 반투명 청크 경계를 맞춘다.
+        transform(layerContext, settings);
+        clip(layerContext, settings);
+        layerContext.fillStyle = '#ffffff';
+        layerContext.fillRect(0, 0, worldWidth, worldHeight);
+        if (drawing.snapshotBase) {
+          layerContext.drawImage(
+            drawing.snapshotBase.image,
+            0,
+            0,
+            drawing.snapshotBase.image.width,
+            drawing.snapshotBase.image.height,
+            0,
+            0,
+            worldWidth,
+            worldHeight
+          );
+          for (const stroke of drawing.snapshotBase.strokes) {
+            const key = strokeKey(stroke.userId, stroke.clientStrokeId);
+            states.set(key, cloneBrushStrokeState(stroke.state));
+            strokeProgress.set(key, {
+              lastChunkIndex: stroke.lastChunkIndex,
+              brush: brushKey(stroke.brush),
+            });
+          }
+        }
       }
       for (const chunk of ordered) {
         const key = strokeKey(chunk.userId, chunk.clientStrokeId);
-        const state = states.get(key) ?? createBrushStrokeState();
+        const progress = strokeProgress.get(key);
+        if (
+          chunk.chunkIndex !== (progress ? progress.lastChunkIndex + 1 : 0) ||
+          (progress && progress.brush !== brushKey(chunk.brush))
+        )
+          throw new Error('Canvas stroke continuation does not match the snapshot.');
+        const storedState = states.get(key);
+        // 캡처 실행기와 같은 독립 상태로 청크를 재생해 실패한 청크가 다음 입력 상태를 오염시키지 않는다.
+        const state = storedState ? cloneBrushStrokeState(storedState) : createBrushStrokeState();
         const stroke = chunkStroke(chunk);
         const bounds = chunkBounds(stroke, state.lastPoint, settings);
+        const finishChunk = () => {
+          if (chunk.isFinal) {
+            states.delete(key);
+            strokeProgress.delete(key);
+          } else {
+            states.set(key, state);
+            strokeProgress.set(key, {
+              lastChunkIndex: chunk.chunkIndex,
+              brush: brushKey(chunk.brush),
+            });
+          }
+        };
         // 화면 밖 청크도 분사 순번과 끝점은 소비해 이후 보이는 구간을 같은 상태로 이어 쓴다.
         if (!bounds) {
           drawBrushStroke(layerContext, stroke, pixelRatio * view.scale, state, false);
-          states.set(key, state);
+          finishChunk();
           continue;
         }
         // 각 청크를 같은 투명 버퍼에서 완성한 뒤 합성해 전체 복구와 실시간 추가의 픽셀을 맞춘다.
@@ -185,6 +248,10 @@ export function createCanvasDrawingRenderer() {
         chunkContext.clearRect(0, 0, bounds.width, bounds.height);
         chunkContext.save();
         try {
+          // 재사용 버퍼가 현재 청크보다 커도 이번 청크 경계 밖에는 픽셀이 남지 않게 한다.
+          chunkContext.beginPath();
+          chunkContext.rect(0, 0, bounds.width, bounds.height);
+          chunkContext.clip();
           transform(chunkContext, {
             ...settings,
             view: {
@@ -210,7 +277,7 @@ export function createCanvasDrawingRenderer() {
           bounds.width,
           bounds.height
         );
-        states.set(key, state);
+        finishChunk();
       }
       // 기존 로컬 전용 모델의 완료 획도 화면 캐시를 계속 사용할 수 있다.
       transform(layerContext, settings);
@@ -238,13 +305,15 @@ export function createCanvasDrawingRenderer() {
     if (mode === 'practice' && drawing.practiceStroke) overlays.push(drawing.practiceStroke);
     if (drawing.activeStroke) overlays.push(drawing.activeStroke);
     const optimistic = drawing.optimisticStrokes ?? [];
-    const hasCommitted = !!drawing.liveStrokes.length || !!drawing.serverChunks?.length;
+    const hasCommitted =
+      !!drawing.snapshotBase || !!drawing.liveStrokes.length || !!drawing.serverChunks?.length;
     // 모든 획이 사라지면 이전 epoch의 캐시와 획별 상태를 버린다.
     if (!hasCommitted && !overlays.length && !optimistic.length) {
       liveKey = '';
       liveCount = 0;
       serverCount = 0;
       states.clear();
+      strokeProgress.clear();
       return;
     }
 
@@ -301,5 +370,24 @@ export function createCanvasDrawingRenderer() {
     }
   }
 
-  return { render };
+  function dispose() {
+    states.clear();
+    strokeProgress.clear();
+    liveKey = '';
+    liveCount = 0;
+    serverCount = 0;
+    lastSequence = '';
+    if (liveLayer) {
+      liveLayer.width = 0;
+      liveLayer.height = 0;
+    }
+    if (chunkLayer) {
+      chunkLayer.width = 0;
+      chunkLayer.height = 0;
+    }
+    liveLayer = null;
+    chunkLayer = null;
+  }
+
+  return { render, dispose };
 }

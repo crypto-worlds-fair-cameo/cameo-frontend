@@ -4,6 +4,8 @@ import { isCanvasKey, isSequence, type CanvasKey } from './canvasProtocol';
 import type {
   AppendStrokeInput,
   AppendStrokeResult,
+  BootstrapCanvasInput,
+  CanvasBootstrapPayload,
   CanvasAckCallback,
   CanvasSyncPage,
   SyncCanvasInput,
@@ -77,6 +79,10 @@ interface CanvasClientEvents {
     callback: CanvasAckCallback<AppendStrokeResult>
   ) => void;
   'canvas:sync': (input: SyncCanvasInput, callback: CanvasAckCallback<CanvasSyncPage>) => void;
+  'canvas:bootstrap': (
+    input: BootstrapCanvasInput,
+    callback: CanvasAckCallback<CanvasBootstrapPayload>
+  ) => void;
 }
 
 export type CanvasSocket = Socket<CanvasServerEvents, CanvasClientEvents>;

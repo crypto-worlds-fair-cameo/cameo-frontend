@@ -1,10 +1,13 @@
 import type { CanvasSocket } from './canvasSocket';
 import {
   isRecord,
+  isCanvasBootstrapPayload,
   isStrokePreview,
   isCanvasSyncPage,
   type AppendStrokeInput,
   type AppendStrokeResult,
+  type BootstrapCanvasInput,
+  type CanvasBootstrapPayload,
   type CanvasSyncPage,
   type SyncCanvasInput,
   MAIN_CANVAS_TARGET,
@@ -77,5 +80,24 @@ export async function syncCanvas(
   const data = readAck(response);
   if (!isCanvasSyncPage(data, target))
     throw new CanvasRequestError('INVALID_RESPONSE', 'Canvas sync response is invalid.');
+  return data;
+}
+
+/** snapshot 선호 여부와 렌더러 버전을 전달해 복구 시작 경계를 조회한다. */
+export async function bootstrapCanvas(
+  socket: CanvasSocket,
+  input: BootstrapCanvasInput,
+  target: CanvasTarget = MAIN_CANVAS_TARGET
+): Promise<CanvasBootstrapPayload> {
+  if (!socket.connected) throw new CanvasRequestError('DISCONNECTED', 'Canvas is disconnected.');
+  let response: unknown;
+  try {
+    response = await socket.timeout(5000).emitWithAck('canvas:bootstrap', input);
+  } catch {
+    throw new CanvasRequestError('ACK_TIMEOUT', 'Canvas acknowledgement timed out.');
+  }
+  const data = readAck(response);
+  if (!isCanvasBootstrapPayload(data, target))
+    throw new CanvasRequestError('INVALID_RESPONSE', 'Canvas bootstrap response is invalid.');
   return data;
 }

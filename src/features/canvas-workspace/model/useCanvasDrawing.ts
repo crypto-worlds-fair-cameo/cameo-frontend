@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import type { BrushSettings } from '@/shared/ui/color-palette/model/brushSettings';
 import type { CanvasMode } from './useCanvasMode';
 import type { StrokePoint, StrokePreview } from '../api/canvasProtocol';
+import type { CanvasSnapshotBase } from './canvasSnapshot';
 
 export interface CanvasStroke {
   brush: BrushSettings;
@@ -18,6 +19,7 @@ export interface CanvasDrawing {
   activeStroke: CanvasStroke | null;
   serverChunks?: StrokePreview[];
   optimisticStrokes?: { stroke: CanvasStroke; acknowledgedPoints: number }[];
+  snapshotBase?: CanvasSnapshotBase | null;
   epoch?: string;
   userId?: string;
   resetVersion?: number;

@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { BrushSettings } from '@/shared/ui/color-palette/model/brushSettings';
 import { useCanvasConnection } from './useCanvasConnection';
 import { createCanvasSync, initialCanvasSync } from './canvasSync';
+import { canLoadCanvasSnapshot } from './canvasSnapshot';
 import { useCanvasDrawing, type CanvasDrawingTransport } from './useCanvasDrawing';
 import type { CanvasMode } from './useCanvasMode';
 import type { CanvasKey } from '../api/canvasProtocol';
@@ -24,6 +25,8 @@ export function useCanvasRealtime(
   mode: CanvasMode,
   options: CanvasRealtimeOptions = {}
 ) {
+  const snapshotEnabled =
+    import.meta.env.VITE_CANVAS_SNAPSHOT_ENABLED === 'true' && canLoadCanvasSnapshot();
   const canvasKey = options.canvasKey ?? 'main';
   const callbacksRef = useRef(options);
   useLayoutEffect(() => {
@@ -114,14 +117,15 @@ export function useCanvasRealtime(
         // 이미 사용한 계정의 새 그리기 시도만 별도 제한 모달로 안내한다.
         if (ownerRef.current === owner) setStrokeNotice('limit');
       },
-      canvasKey
+      canvasKey,
+      snapshotEnabled
     );
     ownerRef.current = owner;
     return () => {
       ownerRef.current = null;
       owner.dispose();
     };
-  }, [resetDrawing, interruptLiveStroke, canvasKey]);
+  }, [resetDrawing, interruptLiveStroke, canvasKey, snapshotEnabled]);
 
   useEffect(() => {
     // 로그인 변경과 같은 사용자 재로그인도 이전 소켓의 ACK 대기를 폐기한다.
@@ -151,6 +155,7 @@ export function useCanvasRealtime(
   return {
     connection,
     sync,
+    retryRecovery: () => ownerRef.current?.retryRecovery(),
     dimensions,
     strokeNotice,
     onStrokeNoticeOpenChange,
@@ -163,6 +168,7 @@ export function useCanvasRealtime(
         activeStroke: mode === 'practice' ? drawingModel.drawing.activeStroke : null,
         serverChunks: sync.previews,
         optimisticStrokes: sync.optimisticStrokes,
+        snapshotBase: sync.snapshotBase,
         epoch: sync.epoch,
         userId: sync.userId,
         resetVersion: sync.resetVersion,
