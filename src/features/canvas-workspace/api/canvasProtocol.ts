@@ -64,6 +64,33 @@ export interface SyncCanvasInput {
   limit?: number;
 }
 
+export interface BootstrapCanvasInput {
+  preferSnapshot: boolean;
+  rendererVersion: string;
+}
+
+export interface CanvasBootstrapSnapshot {
+  snapshotId: string;
+  canvasKey: CanvasKey;
+  throughSequence: string;
+  imageUrl: string;
+  imageSha256: string;
+  width: number;
+  height: number;
+  rendererVersion: string;
+  continuationStateUrl: string;
+  continuationStateSha256: string;
+  capturedAt: string;
+}
+
+export interface CanvasBootstrapPayload {
+  canvasKey: CanvasKey;
+  epoch: string;
+  snapshot: CanvasBootstrapSnapshot | null;
+  baseSequence: string;
+  headSequence: string;
+}
+
 export interface CanvasSyncPage {
   canvasKey: CanvasKey;
   epoch: string;
@@ -186,5 +213,50 @@ export function isCanvasSyncPage(
   return (
     (previous === undefined || previous === BigInt(value.nextSequence)) &&
     value.hasMore === BigInt(value.nextSequence) < BigInt(value.headSequence)
+  );
+}
+
+function isDateString(value: unknown): value is string {
+  return typeof value === 'string' && Number.isFinite(Date.parse(value));
+}
+
+/** bootstrap 응답은 선택한 캔버스의 시작 순서와 현재 head를 함께 돌려준다. */
+export function isCanvasBootstrapPayload(
+  value: unknown,
+  target: CanvasTarget = MAIN_CANVAS_TARGET
+): value is CanvasBootstrapPayload {
+  if (
+    !isRecord(value) ||
+    value.canvasKey !== target.canvasKey ||
+    typeof value.epoch !== 'string' ||
+    !/^[0-9a-f-]{36}$/i.test(value.epoch) ||
+    !isSequence(value.baseSequence) ||
+    !isSequence(value.headSequence) ||
+    BigInt(value.baseSequence) > BigInt(value.headSequence)
+  )
+    return false;
+  if (value.snapshot === null) return value.baseSequence === '0';
+  if (!isRecord(value.snapshot)) return false;
+  const snapshot = value.snapshot;
+  return (
+    typeof snapshot.snapshotId === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      snapshot.snapshotId
+    ) &&
+    snapshot.canvasKey === target.canvasKey &&
+    isSequence(snapshot.throughSequence) &&
+    BigInt(snapshot.throughSequence) === BigInt(value.baseSequence) &&
+    typeof snapshot.imageUrl === 'string' &&
+    typeof snapshot.imageSha256 === 'string' &&
+    /^[0-9a-f]{64}$/.test(snapshot.imageSha256) &&
+    finite(snapshot.width, 1, 100_000) &&
+    Number.isSafeInteger(snapshot.width) &&
+    finite(snapshot.height, 1, 100_000) &&
+    Number.isSafeInteger(snapshot.height) &&
+    typeof snapshot.rendererVersion === 'string' &&
+    typeof snapshot.continuationStateUrl === 'string' &&
+    typeof snapshot.continuationStateSha256 === 'string' &&
+    /^[0-9a-f]{64}$/.test(snapshot.continuationStateSha256) &&
+    isDateString(snapshot.capturedAt)
   );
 }

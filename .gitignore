@@ -6,6 +6,7 @@ pnpm-lock.yaml
 # Production builds
 dist
 dist-ssr
+dist-canvas-capture
 build
 out
 

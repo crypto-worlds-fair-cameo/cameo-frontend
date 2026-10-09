@@ -138,7 +138,7 @@
 }
 
 .canvas-viewport {
-  --canvas-paper: var(--background);
+  --canvas-paper: #ffffff;
   --canvas-border: var(--color-gray-200);
   position: relative;
   flex: 1;
@@ -256,4 +256,12 @@
   font-size: 13px;
   line-height: 1.4;
   color: var(--text-secondary);
+}
+
+.canvas-sync-status p {
+  margin: 0;
+}
+
+.canvas-sync-status button {
+  margin-top: var(--space-2);
 }

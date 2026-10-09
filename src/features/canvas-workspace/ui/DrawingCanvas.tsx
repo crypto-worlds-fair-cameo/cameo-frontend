@@ -51,6 +51,14 @@ export function DrawingCanvas({
   // 재시도 버튼이 값을 바꾸면 동일한 화면 설정으로도 초기화 effect를 다시 실행한다.
   const [attempt, setAttempt] = useState(0);
 
+  useLayoutEffect(
+    () => () => {
+      rendererRef.current?.dispose();
+      rendererRef.current = null;
+    },
+    []
+  );
+
   useLayoutEffect(() => {
     // 렌더링 실패 뒤에는 미완료 획을 취소한 상태로 사용자의 명시적인 재시도를 기다린다.
     if (failed && failedAttempt.current === attempt) return;

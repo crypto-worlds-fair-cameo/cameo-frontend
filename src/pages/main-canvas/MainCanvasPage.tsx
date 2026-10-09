@@ -35,7 +35,7 @@ const MainCanvasPage = () => {
   const [brushSettings, setBrushSettings] = useState(defaultBrushSettings);
   // 모드는 페이지 수명 동안 유지하며, 연습 모드 선택 여부를 버튼과 작업 영역에 표시한다.
   const { mode, toggleMode } = useCanvasMode();
-  const { connection, sync, drawingModel, strokeNotice, onStrokeNoticeOpenChange } =
+  const { connection, sync, retryRecovery, drawingModel, strokeNotice, onStrokeNoticeOpenChange } =
     useCanvasRealtime(brushSettings, mode);
   const isPracticeMode = mode === 'practice';
   return (
@@ -69,7 +69,7 @@ const MainCanvasPage = () => {
           <CanvasStrokeNotice mode={mode} />
         </div>
         <CanvasStatsPanel connection={connection} />
-        <CanvasSyncStatus sync={sync} />
+        <CanvasSyncStatus sync={sync} onRetry={retryRecovery} />
       </aside>
       <CanvasStrokeLimitDialog
         open={strokeNotice !== null}

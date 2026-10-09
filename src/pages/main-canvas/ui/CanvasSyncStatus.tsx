@@ -1,8 +1,15 @@
 import { useTranslation } from 'react-i18next';
-import type { CanvasSyncState } from '@/features/canvas-workspace';
+import { Button } from '@/shared/ui/button';
+import { canRetryCanvasRecovery, type CanvasSyncState } from '@/features/canvas-workspace';
 
 /** 연결 상태와 별도로 그림 복구·그리기 권한·서버 거절을 안내한다. */
-export function CanvasSyncStatus({ sync }: { sync: CanvasSyncState }) {
+export function CanvasSyncStatus({
+  sync,
+  onRetry,
+}: {
+  sync: CanvasSyncState;
+  onRetry?: () => void;
+}) {
   const { t } = useTranslation('mainCanvas');
   // 새 획의 사용 제한은 시도 시 모달에서 안내하므로 스탯 아래에는 중복 표시하지 않는다.
   if (sync.error?.code === 'STROKE_LIMIT_REACHED') return null;
@@ -17,10 +24,16 @@ export function CanvasSyncStatus({ sync }: { sync: CanvasSyncState }) {
             : sync.error.code === 'LOCAL_CAPACITY_REACHED'
               ? 'pendingCapacity'
               : 'error';
+    const retryable = canRetryCanvasRecovery(sync.error.code);
     return (
-      <p className="canvas-sync-status" role="alert">
-        {t(`sync.${key}`)}
-      </p>
+      <div className="canvas-sync-status">
+        <p role="alert">{t(`sync.${key}`)}</p>
+        {retryable && onRetry && (
+          <Button size="sm" variant="secondary" onClick={onRetry}>
+            {t('retry')}
+          </Button>
+        )}
+      </div>
     );
   }
   // 일시 거절은 미확인 좌표를 유지하며 재시도한다. 영구 실패와 별도로 안내한다.
