@@ -1,0 +1,40 @@
+{
+  "title": "Snapshot history",
+  "subtitle": "Hourly snapshots of the Main Canvas",
+  "dayCount_one": "{{count}} snapshot",
+  "dayCount_other": "{{count}} snapshots",
+  "dayCountMore": "{{count}}+ snapshots",
+  "latest": "Latest",
+  "final": "Final",
+  "loadMore": "Load More",
+  "loadingMore": "Loading…",
+  "loading": "Loading snapshots",
+  "openSnapshot": "Open snapshot from {{date}} · {{time}}",
+  "imageUnavailable": "Image unavailable",
+  "empty": {
+    "title": "No snapshots yet",
+    "description": "Snapshots are taken every hour. Check back soon."
+  },
+  "error": {
+    "title": "Couldn't load snapshots",
+    "description": "Please try again in a moment.",
+    "retry": "Try again",
+    "more": "Couldn't load more snapshots."
+  },
+  "unavailable": {
+    "title": "History is not available",
+    "description": "Snapshot history has not been set up yet."
+  },
+  "dialog": {
+    "label": "Snapshot",
+    "imageAlt": "Main Canvas snapshot from {{date}} · {{time}}",
+    "previous": "Prev",
+    "next": "Next",
+    "previousHint": "Older snapshot (←)",
+    "nextHint": "Newer snapshot (→)",
+    "download": "Download Image",
+    "downloading": "Downloading…",
+    "downloadFailed": "Couldn't download the image.",
+    "openImage": "Open image in a new tab"
+  }
+}

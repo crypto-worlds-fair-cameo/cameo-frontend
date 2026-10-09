@@ -13,6 +13,8 @@ import seasonCanvasKo from '@/pages/season-canvas/config/locales/ko.json';
 import seasonCanvasEn from '@/pages/season-canvas/config/locales/en.json';
 import profileKo from '@/pages/profile/config/locales/ko.json';
 import profileEn from '@/pages/profile/config/locales/en.json';
+import historyKo from '@/pages/history/config/locales/ko.json';
+import historyEn from '@/pages/history/config/locales/en.json';
 
 export const languages = [
   { code: 'ko', label: '한국어' },
@@ -28,6 +30,7 @@ export const resources = {
     mainCanvas: mainCanvasKo,
     seasonCanvas: seasonCanvasKo,
     profile: profileKo,
+    history: historyKo,
   },
   en: {
     common: commonEn,
@@ -37,6 +40,7 @@ export const resources = {
     mainCanvas: mainCanvasEn,
     seasonCanvas: seasonCanvasEn,
     profile: profileEn,
+    history: historyEn,
   },
 };
 
@@ -47,7 +51,16 @@ export const i18nOptions = {
   fallbackLng: 'en',
   load: 'languageOnly',
   defaultNS: 'common',
-  ns: ['common', 'notFound', 'wallet', 'navigation', 'mainCanvas', 'seasonCanvas', 'profile'],
+  ns: [
+    'common',
+    'notFound',
+    'wallet',
+    'navigation',
+    'mainCanvas',
+    'seasonCanvas',
+    'profile',
+    'history',
+  ],
   initAsync: false,
   interpolation: { escapeValue: false },
   detection: {

@@ -7,6 +7,7 @@ import type { MenuTranslationKey } from '@/app/menu/Menu.types';
 const MainCanvasPage = lazy(() => import('@/pages/main-canvas/MainCanvasPage'));
 const SeasonCanvasPage = lazy(() => import('@/pages/season-canvas/SeasonCanvasPage'));
 const SeasonWorkspacePage = lazy(() => import('@/pages/season-canvas/SeasonWorkspacePage'));
+const HistoryPage = lazy(() => import('@/pages/history/HistoryPage'));
 const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'));
 const NotFoundPage = lazy(() => import('@/pages/not-found/NotFoundPage'));
 
@@ -55,6 +56,16 @@ export const appRoutes: AppRouteDefinition[] = [
     seoTitle: '시즌 캔버스',
     seoDescription: '시즌 캔버스 페이지',
     element: <SeasonCanvasPage />,
+    showInNavigation: true,
+  },
+  {
+    path: '/history',
+    title: '히스토리',
+    translationKey: 'history',
+    description: '메인 캔버스 스냅샷 히스토리',
+    seoTitle: '스냅샷 히스토리',
+    seoDescription: '메인 캔버스의 시간별 스냅샷',
+    element: <HistoryPage />,
     showInNavigation: true,
   },
   {
