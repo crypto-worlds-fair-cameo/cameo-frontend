@@ -21,8 +21,8 @@ export function useSeasonWorkspaceEnd(scope: WorkspaceScope, query: UseQueryResu
   const [preparingVersion, setPreparingVersion] = useState<number | null>(null);
   const preparationOwnerRef = useRef<symbol | null>(null);
   const requestOwnerRef = useRef<symbol | null>(null);
-  const currentTarget = target?.version === scope.resetVersion ? target.season : null;
-  const error = errorRecord?.version === scope.resetVersion ? errorRecord.key : null;
+  const currentTarget = target && target.version === scope.resetVersion ? target.season : null;
+  const error = errorRecord && errorRecord.version === scope.resetVersion ? errorRecord.key : null;
   const isPreparing = preparingVersion === scope.resetVersion;
 
   const open = async () => {
