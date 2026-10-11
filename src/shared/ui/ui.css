@@ -672,6 +672,16 @@
     color: var(--color-gray-600);
     padding: 2px 12px;
   }
+  .cameo-status--scheduled,
+  .cameo-status--cancelled {
+    border-radius: 49px;
+    background: var(--color-gray-100);
+    color: var(--color-gray-600);
+    padding: 2px 12px;
+  }
+  .cameo-status--cancelled {
+    color: var(--color-accent-red);
+  }
   .cameo-glass-panel {
     padding: var(--space-5);
     background: var(--surface-glass-panel);

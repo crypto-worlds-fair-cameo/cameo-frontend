@@ -2,7 +2,6 @@ import { useId } from 'react';
 import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
-import { toast } from 'sonner';
 import { Button } from '@/shared/ui/button';
 import { MediaListItem } from '@/shared/ui/list-item';
 import { StatusBadge } from '@/shared/ui/status-badge';
@@ -10,11 +9,7 @@ import type { ProfileSeason } from '../api/profile.api';
 import { formatDateRange } from '../lib/profileFormat';
 import { SeasonThumbnail } from './SeasonThumbnail';
 
-/**
- * 내가 만든 시즌. 종료 후 민팅 전이면 NFT 만들기, 민팅 후에는 NFT 보기를 표시한다.
- * NFT 민팅은 블록체인 액션이므로 공통 규칙에 따라 web3 버튼을 사용한다.
- * 민팅·조회 API가 없어 버튼은 연결 예정 안내만 띄운다.
- */
+/** 아직 API가 없는 내가 만든 시즌 샘플 목록을 표시한다. */
 export function MySeasons({ seasons }: { seasons: ProfileSeason[] }) {
   const { t, i18n } = useTranslation('profile');
   const titleId = useId();
@@ -41,22 +36,11 @@ export function MySeasons({ seasons }: { seasons: ProfileSeason[] }) {
                 description={[
                   formatDateRange(season.startsAt, season.endsAt, i18n.language),
                   t('seasons.participants', { count: season.participantCount }),
-                  season.minted ? t('seasons.minted') : null,
                 ]
                   .filter(Boolean)
                   .join(' · ')}
                 action={
                   <div className="profile-list-actions">
-                    {season.status === 'ended' && !season.minted && (
-                      <Button variant="web3" size="sm" onClick={() => toast(t('comingSoon'))}>
-                        {t('seasons.createNft')}
-                      </Button>
-                    )}
-                    {season.minted && (
-                      <Button variant="secondary" size="sm" onClick={() => toast(t('comingSoon'))}>
-                        {t('seasons.viewNft')}
-                      </Button>
-                    )}
                     <StatusBadge status={season.status}>{t(`status.${season.status}`)}</StatusBadge>
                   </div>
                 }

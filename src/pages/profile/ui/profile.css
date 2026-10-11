@@ -119,6 +119,16 @@
   list-style: none;
 }
 
+.profile-joined-list > li {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.profile-list-warning {
+  color: var(--color-accent-red);
+  font-size: var(--text-body);
+}
+
 /* 시안의 목록 썸네일은 카탈로그 기본(96px)보다 작다. 이 페이지 안에서만 줄인다. */
 .profile-list .cameo-media-list-item {
   padding: var(--space-3) var(--space-4);

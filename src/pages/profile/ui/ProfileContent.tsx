@@ -16,9 +16,7 @@ export function ProfileContent({ session }: { session: AuthenticatedSession }) {
   const { t } = useTranslation('profile');
   const { tab, hrefs, select } = useProfileTab();
   const activity = useProfileActivityQuery(session.user.id);
-  const walletAddress = session.user.wallets.find(
-    wallet => wallet.chainNamespace === 'solana'
-  )?.address;
+  const walletAddress = session.activeWallet.address;
   // 시안처럼 참여한 캔버스 탭에서는 요약 카드와 상단 버튼 없이 목록만 보여준다.
   const showOverview = tab !== 'joined';
 
@@ -44,8 +42,10 @@ export function ProfileContent({ session }: { session: AuthenticatedSession }) {
           showActions={showOverview}
           onShowJoined={() => select(hrefs.joined)}
         />
-        <p className="profile-sample-notice">{t('sampleNotice')}</p>
-        {activity.isError ? (
+        {showOverview && <p className="profile-sample-notice">{t('sampleNotice')}</p>}
+        {tab === 'joined' ? (
+          <JoinedCanvases userId={session.user.id} />
+        ) : activity.isError ? (
           <div className="profile-activity-error" role="alert">
             <p>{t('activityError.message')}</p>
             <Button variant="secondary" size="sm" onClick={() => void activity.refetch()}>
@@ -66,7 +66,6 @@ export function ProfileContent({ session }: { session: AuthenticatedSession }) {
             )}
             {tab === 'profile' && <ProfileTransactions transactions={activity.data.transactions} />}
             {tab === 'seasons' && <MySeasons seasons={activity.data.mySeasons} />}
-            {tab === 'joined' && <JoinedCanvases canvases={activity.data.joinedCanvases} />}
           </>
         )}
       </div>

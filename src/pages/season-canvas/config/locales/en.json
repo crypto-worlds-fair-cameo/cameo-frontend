@@ -172,5 +172,6 @@
       "server_disconnect": "Repeated server disconnection.",
       "protocol_error": "The canvas response is unsupported."
     }
-  }
+  },
+  "finalCanvasPreview": "Final season canvas"
 }

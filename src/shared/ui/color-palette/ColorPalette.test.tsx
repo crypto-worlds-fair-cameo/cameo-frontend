@@ -12,12 +12,26 @@ const initial: BrushSettings = {
   brushSize: 12,
 };
 
-function Harness() {
+function Harness({ defaultOpen = true }: { defaultOpen?: boolean }) {
   const [value, setValue] = useState(initial);
-  return <ColorPalette value={value} onValueChange={setValue} />;
+  return <ColorPalette value={value} onValueChange={setValue} defaultOpen={defaultOpen} />;
 }
 
 describe('color palette settings', () => {
+  it('uses the initial responsive default without overwriting later user toggles', async () => {
+    const user = userEvent.setup();
+    const rendered = render(<Harness defaultOpen={false} />);
+    expect(screen.queryByRole('slider', { name: '브러시 크기' })).toBeNull();
+    await user.click(screen.getByRole('button', { name: '컬러 팔레트' }));
+    expect(screen.getByRole('slider', { name: '브러시 크기' })).toBeTruthy();
+
+    rendered.rerender(<Harness defaultOpen />);
+    expect(screen.getByRole('slider', { name: '브러시 크기' })).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: '컬러 팔레트' }));
+    rendered.rerender(<Harness defaultOpen={false} />);
+    expect(screen.queryByRole('slider', { name: '브러시 크기' })).toBeNull();
+  });
+
   it('synchronizes a preset with HEX, RGB and the preview', async () => {
     const user = userEvent.setup();
     render(<Harness />);

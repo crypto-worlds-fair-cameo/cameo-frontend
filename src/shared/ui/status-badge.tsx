@@ -5,13 +5,13 @@ export function StatusBadge({
   status,
   children,
 }: {
-  status: 'active' | 'ended';
+  status: 'scheduled' | 'active' | 'ended' | 'cancelled';
   children?: ReactNode;
 }) {
   return (
     <span className={`cameo-status cameo-status--${status}`}>
       {status === 'active' && <span className="cameo-status-dot" aria-hidden="true" />}
-      {children ?? (status === 'active' ? 'Active' : 'Ended')}
+      {children ?? status}
     </span>
   );
 }

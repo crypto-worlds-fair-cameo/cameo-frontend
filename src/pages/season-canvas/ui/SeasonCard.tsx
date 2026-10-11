@@ -5,7 +5,7 @@ import type { Season } from '../api/seasons.types';
 import { formatSeasonDateRange, getSeasonDaysRemaining } from '../lib/seasonDate';
 import { SeasonPreview } from './SeasonPreview';
 
-/** 이미지 없음 표시와 서버의 시즌 기간·참가 현황을 보여 주고 상세 화면을 연다. */
+/** 시즌 최종 이미지와 서버의 시즌 기간·참가 현황을 보여 주고 상세 화면을 연다. */
 export function SeasonCard({
   season,
   onOpen,
@@ -28,7 +28,7 @@ export function SeasonCard({
 
   return (
     <Card className="season-card">
-      <SeasonPreview status={season.status} className="season-card__preview" />
+      <SeasonPreview seasonId={season.id} status={season.status} className="season-card__preview" />
       <div className="season-card__body">
         <h2>
           {/* 카드 클릭으로 상세를 열고, 모달을 닫을 때 이 버튼으로 초점을 돌려준다. */}

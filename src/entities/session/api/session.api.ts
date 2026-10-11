@@ -1,6 +1,12 @@
 import { isAxiosError } from 'axios';
 import { axiosInstance } from '@/shared/api/http-client';
 
+export interface ActiveWallet {
+  id: string;
+  chainNamespace: 'solana';
+  address: string;
+}
+
 export interface AuthenticatedSession {
   user: {
     id: string;
@@ -8,6 +14,7 @@ export interface AuthenticatedSession {
     avatarUrl: string | null;
     wallets: { chainNamespace: string; address: string }[];
   };
+  activeWallet: ActiveWallet;
   session: {
     expiresAt: string;
     absoluteExpiresAt: string;

@@ -13,7 +13,7 @@ export interface SignInInput {
   statement: string;
   uri: string;
   version: '1';
-  chainId: 'mainnet';
+  chainId: 'mainnet' | 'devnet';
   nonce: string;
   issuedAt: string;
   expirationTime: string;

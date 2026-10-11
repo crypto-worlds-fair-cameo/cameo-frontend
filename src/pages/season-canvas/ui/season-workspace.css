@@ -36,12 +36,45 @@
   padding: var(--space-6);
   overflow: auto;
 }
-/* 작은 화면에서도 상태와 참가 버튼을 내부 스크롤로 읽고 도화지 높이를 확보한다. */
-@media (max-width: 767px) {
-  .season-workspace .canvas-left-sidebar {
-    max-height: 35%;
+/* 태블릿 이하에서는 세 영역을 문서 흐름에 놓아 패널 대신 페이지가 스크롤을 소유한다. */
+@media (max-width: 1023px) {
+  .layout-shell[data-content-layout='canvas']:has(.season-workspace) .layout-main {
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
   }
+
+  .layout-shell[data-content-layout='canvas']:has(.season-workspace) .layout-content {
+    flex: 0 0 auto;
+    min-height: 100%;
+  }
+
+  .season-workspace {
+    flex: 0 0 auto;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .season-workspace .canvas-left-sidebar,
   .season-workspace .canvas-right-area {
-    max-height: 35%;
+    flex: 0 0 auto;
+    width: 100%;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .season-workspace .canvas-left-sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-gray-200);
+  }
+
+  .season-workspace > .canvas-viewport {
+    flex: 0 0 auto;
+    height: clamp(300px, 55dvh, 500px);
+    min-height: 300px;
+  }
+
+  .season-workspace .canvas-right-area {
+    border-top: 1px solid var(--color-gray-200);
+    border-left: 0;
   }
 }

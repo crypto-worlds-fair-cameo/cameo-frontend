@@ -1,17 +1,38 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 import { sessionMutationKey, sessionQueryKey, type AuthenticatedSession } from '@/entities/session';
-import { getProfileActivity, updateDisplayName } from './profile.api';
+import { getParticipatedSeasons, getProfileActivity, updateDisplayName } from './profile.api';
 
 export const profileQueryKeys = {
   activity: (userId: string) => ['profile', 'activity', userId] as const,
+  participated: (userId: string) => ['profile', 'participated', userId] as const,
 };
+
+function isVisible() {
+  return typeof document === 'undefined' || document.visibilityState === 'visible';
+}
 
 /** 사용자별 활동을 캐시한다. 다른 계정으로 바뀌면 이전 계정의 목록을 재사용하지 않는다. */
 export function useProfileActivityQuery(userId: string) {
   return useQuery({
     queryKey: profileQueryKeys.activity(userId),
     queryFn: getProfileActivity,
+  });
+}
+
+/** 참여 시즌은 한 번에 20개씩 읽고 보이는 탭에서 목록 summary를 30초마다 갱신한다. */
+export function useParticipatedSeasonsQuery(userId: string) {
+  return useInfiniteQuery({
+    queryKey: profileQueryKeys.participated(userId),
+    initialPageParam: 0,
+    queryFn: ({ pageParam, signal }) => getParticipatedSeasons(20, pageParam, signal),
+    getNextPageParam: page => {
+      const nextOffset = page.offset + page.limit;
+      return nextOffset < page.total ? nextOffset : undefined;
+    },
+    retry: failureCount => failureCount < 2,
+    refetchOnWindowFocus: true,
+    refetchInterval: () => (isVisible() ? 30_000 : false),
   });
 }
 

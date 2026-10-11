@@ -2,11 +2,13 @@ import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import type { UseQueryResult } from '@tanstack/react-query';
+import { SeasonNftClaimCard } from '@/features/season-nft-claim';
 import { Button } from '@/shared/ui/button';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import {
   Dialog,
   DialogClose,
+  DialogCloseButton,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -76,8 +78,14 @@ export function SeasonDetailDialog(props: SeasonDetailDialogProps) {
             restoreFocus(props.restoreFocusTo.current, props.fallbackFocusTo.current);
           }}
         >
+          {/* 관리 요청 중에는 닫기를 막되, 스크롤 위치와 관계없이 상단 닫기 버튼을 표시한다. */}
+          <DialogCloseButton aria-label={t('detail.close')} disabled={props.isManaging} />
           <div className="season-detail-layout">
-            <SeasonPreview status={summary?.status} className="season-detail__preview" />
+            <SeasonPreview
+              seasonId={summary?.id}
+              status={summary?.status}
+              className="season-detail__preview"
+            />
             <div className="season-detail__info">
               <DialogHeader className="season-detail__heading">
                 <p className="season-detail__eyebrow">{t('detail.eyebrow')}</p>
@@ -115,6 +123,7 @@ export function SeasonDetailDialog(props: SeasonDetailDialogProps) {
                     </div>
                   )}
                   <SeasonDetail season={season} />
+                  <SeasonNftClaimCard seasonId={season.id} source="detail" />
                 </>
               ) : null}
               {/* 관리 요청의 실패는 상세 정보 옆에 남겨 다시 확인할 수 있게 한다. */}

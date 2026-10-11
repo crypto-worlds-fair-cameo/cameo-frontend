@@ -77,6 +77,12 @@
   overflow: hidden;
   background: var(--surface-card);
 }
+.season-preview > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 .season-preview__empty {
   position: absolute;
   inset: 0;
@@ -298,6 +304,14 @@
   padding: 40px;
   transition: none;
 }
+.season-detail-dialog > .cameo-dialog-close {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin-bottom: -48px;
+  margin-left: auto;
+  background: var(--surface-modal);
+}
 .season-detail-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
@@ -322,7 +336,7 @@
 }
 .season-detail__heading[data-slot='dialog-header'] {
   gap: var(--space-3);
-  padding-right: 0;
+  padding-right: 56px;
   text-align: left;
 }
 .season-detail__eyebrow {

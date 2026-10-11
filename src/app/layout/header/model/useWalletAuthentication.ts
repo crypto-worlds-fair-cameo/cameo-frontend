@@ -59,9 +59,7 @@ export function useWalletAuthentication() {
       : session.isError
         ? ('errors.session' as const)
         : null;
-  const walletAddress = session.data?.user.wallets.find(
-    wallet => wallet.chainNamespace === 'solana'
-  )?.address;
+  const walletAddress = session.data?.activeWallet.address;
   const isAuthenticated = Boolean(session.data);
 
   function closeCurrentDialog(content: React.ReactNode) {

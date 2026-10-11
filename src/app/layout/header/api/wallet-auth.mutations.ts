@@ -10,9 +10,14 @@ export function useLoginMutation() {
     mutationFn: authenticateWallet,
     retry: false,
     onMutate: () => queryClient.cancelQueries({ queryKey: sessionQueryKey }),
-    onSuccess: async ({ user, session }) => {
+    onSuccess: async ({ user, activeWallet, session }) => {
       await queryClient.cancelQueries({ queryKey: sessionQueryKey });
-      queryClient.setQueryData<AuthenticatedSession>(sessionQueryKey, { user, session });
+      // 로그인 응답의 서명 지갑을 세션 캐시에 유지해 모든 화면이 같은 지갑을 사용한다.
+      queryClient.setQueryData<AuthenticatedSession>(sessionQueryKey, {
+        user,
+        activeWallet,
+        session,
+      });
     },
   });
 }

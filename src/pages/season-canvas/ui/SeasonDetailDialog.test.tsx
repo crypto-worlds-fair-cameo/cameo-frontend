@@ -7,6 +7,13 @@ import type { SeasonManageAction } from '../model/useSeasonDetail';
 import { SeasonDetailDialog } from './SeasonDetailDialog';
 import { MemoryRouter } from 'react-router';
 
+vi.mock('@/features/season-nft-claim', () => ({
+  SeasonNftClaimCard: ({ seasonId }: { seasonId: string }) => (
+    <div data-testid={`nft-${seasonId}`}>NFT claim</div>
+  ),
+  useSeasonNftPreview: () => null,
+}));
+
 const season: Season = {
   id: 'season-1',
   creatorId: 'user-1',
@@ -39,7 +46,7 @@ const query = {
   refetch: vi.fn(),
 } as unknown as UseQueryResult<Season, Error>;
 
-function DetailHarness() {
+function DetailHarness({ isManaging = false }: { isManaging?: boolean }) {
   const openerRef = useRef<HTMLButtonElement>(null);
   const fallbackRef = useRef<HTMLHeadingElement>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -57,7 +64,7 @@ function DetailHarness() {
         query={query}
         manageAction={manageAction}
         manageError={null}
-        isManaging={false}
+        isManaging={isManaging}
         isRefreshingManagement={false}
         canInteract
         onClose={() => setSelectedId(null)}
@@ -80,11 +87,27 @@ describe('season detail focus lifecycle', () => {
     );
     const opener = screen.getByRole('button', { name: '상세 열기' });
     fireEvent.click(opener);
+    expect(screen.getByTestId(`nft-${season.id}`)).toBeTruthy();
     const manageButton = screen.getByRole('button', { name: '예약 취소' });
     fireEvent.click(manageButton);
     fireEvent.click(screen.getByRole('button', { name: '돌아가기' }));
     await waitFor(() => expect(document.activeElement).toBe(manageButton));
-    fireEvent.click(screen.getByRole('button', { name: '닫기' }));
+    fireEvent.click(screen.getAllByRole('button', { name: '닫기' })[0]);
     await waitFor(() => expect(document.activeElement).toBe(opener));
+
+    fireEvent.click(opener);
+    expect(screen.getByTestId(`nft-${season.id}`)).toBeTruthy();
+  });
+
+  it('keeps translated close controls visible but disabled during a management request', () => {
+    render(
+      <MemoryRouter>
+        <DetailHarness isManaging />
+      </MemoryRouter>
+    );
+    fireEvent.click(screen.getByRole('button', { name: '상세 열기' }));
+    const closeButtons = screen.getAllByRole('button', { name: '닫기' });
+    expect(closeButtons).toHaveLength(2);
+    closeButtons.forEach(button => expect(button.hasAttribute('disabled')).toBe(true));
   });
 });

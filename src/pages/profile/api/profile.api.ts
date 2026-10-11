@@ -1,4 +1,5 @@
 import { axiosInstance } from '@/shared/api/http-client';
+import { isSnapshotPreviewUrl, type SeasonNftSummary } from '@/features/season-nft-claim';
 
 interface ApiResponse<T> {
   statusCode: number;
@@ -6,7 +7,7 @@ interface ApiResponse<T> {
   data: T;
 }
 
-export type ProfileSeasonStatus = 'active' | 'ended';
+export type ProfileSeasonStatus = 'scheduled' | 'active' | 'ended' | 'cancelled';
 
 export interface ProfileTransaction {
   id: string;
@@ -21,7 +22,6 @@ interface ProfileCanvasBase {
   startsAt: string;
   endsAt: string;
   status: ProfileSeasonStatus;
-  minted: boolean;
   // 썸네일 API 전까지 목록에서 시즌을 구분하는 장식용 색 두 개.
   thumbnail: [string, string];
 }
@@ -30,16 +30,30 @@ export interface ProfileSeason extends ProfileCanvasBase {
   participantCount: number;
 }
 
-export interface JoinedCanvas extends ProfileCanvasBase {
-  strokeCount: number;
-}
-
 export interface ProfileActivity {
   joinedAt: string;
   balanceSol: number;
   transactions: ProfileTransaction[];
   mySeasons: ProfileSeason[];
-  joinedCanvases: JoinedCanvas[];
+}
+
+export interface ParticipatedSeason {
+  seasonId: string;
+  title: string;
+  lifecycleStatus: ProfileSeasonStatus;
+  startsAt: string;
+  endsAt: string;
+  joinedAt: string;
+  ownStrokeCount: number;
+  finalImageUrl: string | null;
+  nft: SeasonNftSummary;
+}
+
+export interface ParticipatedSeasonsPage {
+  items: ParticipatedSeason[];
+  total: number;
+  limit: number;
+  offset: number;
 }
 
 // 가입일·잔액·거래 내역·시즌 목록 API가 아직 없어 디자인 시안(P · 프로필)의 값을 그대로 쓴다.
@@ -60,7 +74,6 @@ const sampleActivity: ProfileActivity = {
       endsAt: '2026-11-01T12:00:00Z',
       participantCount: 7,
       status: 'ended',
-      minted: false,
       thumbnail: ['#4fb3ff', '#5ec44f'],
     },
     {
@@ -70,7 +83,6 @@ const sampleActivity: ProfileActivity = {
       endsAt: '2026-10-30T12:00:00Z',
       participantCount: 128,
       status: 'active',
-      minted: false,
       thumbnail: ['#ff6fb5', '#5d4ee2'],
     },
     {
@@ -80,23 +92,117 @@ const sampleActivity: ProfileActivity = {
       endsAt: '2026-08-20T12:00:00Z',
       participantCount: 64,
       status: 'ended',
-      minted: true,
-      thumbnail: ['#1b2a6b', '#f5c542'],
-    },
-  ],
-  joinedCanvases: [
-    {
-      id: 'joined-night-sky',
-      title: 'Night Sky',
-      startsAt: '2026-03-01T12:00:00Z',
-      endsAt: '2026-03-20T12:00:00Z',
-      strokeCount: 12,
-      status: 'ended',
-      minted: true,
       thumbnail: ['#1b2a6b', '#f5c542'],
     },
   ],
 };
+
+const uuidV4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isIsoDate(value: unknown): value is string {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/u.test(value))
+    return false;
+  const parsed = new Date(value);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString() === value;
+}
+
+function isNullableString(value: unknown): value is string | null {
+  return value === null || typeof value === 'string';
+}
+
+function isEnum<T extends string>(value: unknown, values: readonly T[]): value is T {
+  return typeof value === 'string' && values.includes(value as T);
+}
+
+function isClaim(value: unknown): value is SeasonNftSummary['claim'] {
+  if (!isRecord(value)) return false;
+  return (
+    isEnum(value.eligibility, ['ELIGIBLE', 'NOT_PARTICIPANT', 'NO_VALID_STROKE']) &&
+    isEnum(value.state, ['UNCLAIMED', 'PROCESSING', 'CLAIMED']) &&
+    isNullableString(value.walletAddress) &&
+    (value.activeAttemptId === null ||
+      (typeof value.activeAttemptId === 'string' && uuidV4.test(value.activeAttemptId))) &&
+    isNullableString(value.assetAddress) &&
+    isNullableString(value.signature) &&
+    isEnum(value.receiptState, ['NONE', 'RESOLVING', 'VERIFIED']) &&
+    (value.claimedAt === null || isIsoDate(value.claimedAt))
+  );
+}
+
+function isSummary(value: unknown): value is SeasonNftSummary {
+  return (
+    isRecord(value) &&
+    isEnum(value.network, ['devnet', 'mainnet-beta']) &&
+    isEnum(value.availability, ['WAITING_FOR_END', 'PREPARING', 'READY', 'EMPTY', 'UNAVAILABLE']) &&
+    (value.reason === null ||
+      isEnum(value.reason, ['CANCELLED', 'FORCE_ENDED', 'FEATURE_DISABLED'])) &&
+    isClaim(value.claim)
+  );
+}
+
+function isParticipatedSeason(value: unknown): value is ParticipatedSeason {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.seasonId === 'string' &&
+    uuidV4.test(value.seasonId) &&
+    typeof value.title === 'string' &&
+    Array.from(value.title).length >= 1 &&
+    Array.from(value.title).length <= 50 &&
+    isEnum(value.lifecycleStatus, ['scheduled', 'active', 'ended', 'cancelled']) &&
+    isIsoDate(value.startsAt) &&
+    isIsoDate(value.endsAt) &&
+    isIsoDate(value.joinedAt) &&
+    Number.isSafeInteger(value.ownStrokeCount) &&
+    Number(value.ownStrokeCount) >= 0 &&
+    (value.finalImageUrl === null ||
+      (typeof value.finalImageUrl === 'string' && isSnapshotPreviewUrl(value.finalImageUrl))) &&
+    isSummary(value.nft)
+  );
+}
+
+function isParticipatedPage(value: unknown): value is ParticipatedSeasonsPage {
+  return (
+    isRecord(value) &&
+    Array.isArray(value.items) &&
+    value.items.every(isParticipatedSeason) &&
+    Number.isSafeInteger(value.total) &&
+    Number(value.total) >= 0 &&
+    Number.isSafeInteger(value.limit) &&
+    Number(value.limit) >= 1 &&
+    Number(value.limit) <= 50 &&
+    Number.isSafeInteger(value.offset) &&
+    Number(value.offset) >= 0 &&
+    value.items.length <= Number(value.limit)
+  );
+}
+
+/** 인증 사용자의 실제 참여 시즌과 NFT summary를 offset 페이지로 조회한다. */
+export async function getParticipatedSeasons(
+  limit: number,
+  offset: number,
+  signal?: AbortSignal
+): Promise<ParticipatedSeasonsPage> {
+  const response = await axiosInstance.get('/seasons/participated', {
+    params: { limit, offset },
+    withCredentials: true,
+    signal,
+  });
+  const envelope = response.data as unknown;
+  if (
+    !isRecord(envelope) ||
+    envelope.success !== true ||
+    !isParticipatedPage(envelope.data) ||
+    envelope.data.limit !== limit ||
+    envelope.data.offset !== offset
+  ) {
+    throw new Error('The participated seasons response is invalid.');
+  }
+  return envelope.data;
+}
 
 /** 프로필 활동 샘플을 반환한다. 백엔드 요청은 하지 않는다. */
 export async function getProfileActivity(): Promise<ProfileActivity> {

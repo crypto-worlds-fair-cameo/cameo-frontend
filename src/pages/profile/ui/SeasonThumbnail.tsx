@@ -1,5 +1,27 @@
-/** 시즌 썸네일 API 전까지 목록 항목을 구분하는 장식용 그라데이션. */
-export function SeasonThumbnail({ colors }: { colors: [string, string] }) {
+import { useState } from 'react';
+
+/** 확정 스냅샷이 있으면 썸네일로 사용하고, 없거나 로드에 실패하면 장식 배경을 표시한다. */
+export function SeasonThumbnail({
+  colors,
+  imageUrl,
+}: {
+  colors: [string, string];
+  imageUrl?: string | null;
+}) {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  // 이전 이미지 실패는 이후 새 스냅샷의 표시를 막지 않는다.
+  if (imageUrl && imageUrl !== failedUrl) {
+    return (
+      <img
+        className="profile-thumbnail"
+        src={imageUrl}
+        alt=""
+        loading="lazy"
+        style={{ objectFit: 'contain' }}
+        onError={() => setFailedUrl(imageUrl)}
+      />
+    );
+  }
   return (
     <span
       className="profile-thumbnail"

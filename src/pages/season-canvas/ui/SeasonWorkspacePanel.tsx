@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/button';
 import { canRetryCanvasRecovery, type CanvasMode } from '@/features/canvas-workspace';
+import { SeasonNftClaimCard } from '@/features/season-nft-claim';
 import type { useSeasonWorkspace } from '../model/useSeasonWorkspace';
 import { SeasonStatusBadge } from './SeasonStatusBadge';
 import { formatSeasonDate } from '../lib/seasonDate';
@@ -155,6 +156,7 @@ export function SeasonWorkspacePanel({
         </>
       )}
       {model.join.error && <p role="alert">{t(`errors.${model.join.error}`)}</p>}
+      {season && <SeasonNftClaimCard seasonId={season.id} source="workspace" />}
       <p className="season-workspace-rule">{t('workspace.rule')}</p>
     </section>
   );

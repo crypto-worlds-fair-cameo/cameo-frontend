@@ -172,5 +172,6 @@
       "server_disconnect": "서버 연결 종료가 반복됐습니다.",
       "protocol_error": "캔버스 응답을 처리할 수 없습니다."
     }
-  }
+  },
+  "finalCanvasPreview": "시즌 최종 캔버스"
 }

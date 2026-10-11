@@ -1,7 +1,7 @@
 {
   "loading": "Loading profile",
   "fallbackName": "Account",
-  "sampleNotice": "Joined date, balance, transactions and season lists are sample data until the APIs are connected.",
+  "sampleNotice": "Joined date, balance, transactions and My Seasons are sample data.",
   "comingSoon": "This will work once the API is connected.",
   "navigation": {
     "label": "Profile sections",
@@ -19,7 +19,9 @@
   },
   "status": {
     "active": "Active",
-    "ended": "Ended"
+    "ended": "Ended",
+    "scheduled": "Scheduled",
+    "cancelled": "Cancelled"
   },
   "transactions": {
     "title": "Transactions",
@@ -31,14 +33,16 @@
     "empty": "You haven't created a season yet.",
     "participants_one": "{{count}} participant",
     "participants_other": "{{count}} participants",
-    "minted": "minted",
-    "createNft": "Create NFT",
-    "viewNft": "View NFT"
+    "sample": "Sample"
   },
   "joined": {
     "title": "Joined Canvases",
     "empty": "You haven't joined a canvas yet.",
     "browse": "Browse seasons",
+    "loading": "Loading joined canvases.",
+    "error": "Joined canvases could not be loaded.",
+    "refreshError": "The list could not be refreshed. Existing items are still shown.",
+    "loadMore": "Load more",
     "strokes_one": "{{count}} stroke",
     "strokes_other": "{{count}} strokes"
   },

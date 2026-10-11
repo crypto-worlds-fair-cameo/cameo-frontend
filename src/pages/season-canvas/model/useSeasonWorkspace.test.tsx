@@ -30,10 +30,23 @@ const id = '11111111-1111-4111-8111-111111111111';
 const epoch = '00000000-0000-4000-8000-000000000001';
 let season: Season;
 let flag: boolean;
-const session = (userId = 'u', absoluteExpiresAt = '2026-11-01T00:00:00Z') => ({
-  user: { id: userId, displayName: null, avatarUrl: null, wallets: [] },
-  session: { expiresAt: absoluteExpiresAt, absoluteExpiresAt },
-});
+const session = (userId = 'u', absoluteExpiresAt = '2026-11-01T00:00:00Z') => {
+  const activeWallet = {
+    id: `wallet-${userId}`,
+    chainNamespace: 'solana' as const,
+    address: `SessionWallet-${userId}`,
+  };
+  return {
+    user: {
+      id: userId,
+      displayName: null,
+      avatarUrl: null,
+      wallets: [activeWallet],
+    },
+    activeWallet,
+    session: { expiresAt: absoluteExpiresAt, absoluteExpiresAt },
+  };
+};
 let currentSession: ReturnType<typeof session> | null;
 const clients: QueryClient[] = [];
 const sockets: ReturnType<typeof fakeSocket>[] = [];

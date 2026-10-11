@@ -1,7 +1,7 @@
 {
   "loading": "프로필을 불러오는 중",
   "fallbackName": "계정",
-  "sampleNotice": "가입일, 잔액, 거래 내역과 시즌 목록은 API 연결 전까지 샘플 데이터입니다.",
+  "sampleNotice": "가입일, 잔액, 거래 내역과 내 시즌 목록은 샘플 데이터입니다.",
   "comingSoon": "API가 연결되면 사용할 수 있습니다.",
   "navigation": {
     "label": "프로필 메뉴",
@@ -19,7 +19,9 @@
   },
   "status": {
     "active": "진행 중",
-    "ended": "종료"
+    "ended": "종료",
+    "scheduled": "예정",
+    "cancelled": "취소"
   },
   "transactions": {
     "title": "거래 내역",
@@ -31,14 +33,16 @@
     "empty": "아직 만든 시즌이 없습니다.",
     "participants_one": "참가자 {{count}}명",
     "participants_other": "참가자 {{count}}명",
-    "minted": "민팅 완료",
-    "createNft": "NFT 만들기",
-    "viewNft": "NFT 보기"
+    "sample": "샘플"
   },
   "joined": {
     "title": "참여한 캔버스",
     "empty": "아직 참여한 캔버스가 없습니다.",
     "browse": "시즌 둘러보기",
+    "loading": "참여한 캔버스를 불러오는 중입니다.",
+    "error": "참여한 캔버스를 불러오지 못했습니다.",
+    "refreshError": "목록을 새로 고치지 못했습니다. 기존 내용을 표시합니다.",
+    "loadMore": "더 보기",
     "strokes_one": "{{count}}획",
     "strokes_other": "{{count}}획"
   },
