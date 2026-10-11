@@ -9,8 +9,12 @@ import { CanvasStatsPanel } from './ui/CanvasStatsPanel';
 import { useCanvasRealtime } from '@/features/canvas-workspace';
 import { CanvasSyncStatus } from './ui/CanvasSyncStatus';
 import { CanvasStrokeLimitDialog } from './ui/CanvasStrokeLimitDialog';
+import { CanvasWalletRequiredDialog } from './ui/CanvasWalletRequiredDialog';
 import { CanvasStrokeNotice } from './ui/CanvasStrokeNotice';
 import { useCanvasMode } from '@/features/canvas-workspace';
+import './ui/main-canvas.css';
+
+const CANVAS_SIZE = 10_000;
 
 /**
  * 메인 캔버스의 진입점. 도화지 크기를 정하고 페이지 내부 UI를 조립한다.
@@ -38,8 +42,28 @@ const MainCanvasPage = () => {
   const { connection, sync, retryRecovery, drawingModel, strokeNotice, onStrokeNoticeOpenChange } =
     useCanvasRealtime(brushSettings, mode);
   const isPracticeMode = mode === 'practice';
+  const [walletNoticeOpen, setWalletNoticeOpen] = useState(false);
+  // 손님의 실제 획은 공통 엔진이 거절한다. 서버가 손님으로 확인한 상태에서
+  // 도화지 안의 실제 획이 거절된 경우에만 지갑 연결 안내를 연다.
+  const pageDrawingModel: typeof drawingModel = {
+    ...drawingModel,
+    startStroke: (pointerId, point) => {
+      if (drawingModel.startStroke(pointerId, point)) return true;
+      const insidePaper =
+        point.x >= 0 && point.y >= 0 && point.x < CANVAS_SIZE && point.y < CANVAS_SIZE;
+      if (
+        mode === 'live' &&
+        insidePaper &&
+        sync.status === 'ready' &&
+        sync.userId === undefined &&
+        !sync.error
+      )
+        setWalletNoticeOpen(true);
+      return false;
+    },
+  };
   return (
-    <div className="main-canvas-layout cameo-light" data-mode={mode}>
+    <div className="main-canvas-layout main-canvas-page cameo-light" data-mode={mode}>
       {/* 왼쪽 영역은 여러 패널을 담는 공간이며, 각 패널의 내부 배치는 해당 컴포넌트가 소유한다. */}
       <aside className="canvas-left-sidebar">
         <ColorPalette
@@ -49,33 +73,36 @@ const MainCanvasPage = () => {
         />
       </aside>
       <CanvasViewport
-        worldWidth={10_000}
-        worldHeight={10_000}
+        worldWidth={CANVAS_SIZE}
+        worldHeight={CANVAS_SIZE}
         brushSettings={brushSettings}
         mode={mode}
-        drawingModel={drawingModel}
-      />
+        drawingModel={pageDrawingModel}
+      >
+        {/* 연습 중에는 도화지에 옅은 회색을 겹쳐 실제 도화지와 구분한다. 입력은 아래 canvas가 받는다. */}
+        {isPracticeMode && <div className="main-canvas-practice-paper" aria-hidden="true" />}
+      </CanvasViewport>
       {/* 오른쪽 영역은 독립 패널을 배치하는 공간이며, 각 패널이 자체 UI를 소유한다. */}
       <aside className="canvas-right-area">
-        {/* 모드와 규칙을 먼저 표시해 모바일의 짧은 패널에서도 바로 읽을 수 있게 한다. */}
-        <div className="canvas-mode-control">
-          <Button
-            variant={isPracticeMode ? 'primary' : 'secondary'}
-            aria-pressed={isPracticeMode}
-            onClick={toggleMode}
-          >
-            {t(isPracticeMode ? 'changeToDrawMode' : 'changeToPracticeMode')}
-          </Button>
-          <CanvasStrokeNotice mode={mode} />
-        </div>
         <CanvasStatsPanel connection={connection} />
+        {/* 버튼 문구가 다음 동작(연습 시작·끝내기)을 나타내므로 눌림 상태는 따로 두지 않는다. */}
+        <Button
+          variant={isPracticeMode ? 'primary' : 'secondary'}
+          className="canvas-mode-button"
+          onClick={toggleMode}
+        >
+          {t(isPracticeMode ? 'exitPractice' : 'practiceMode')}
+        </Button>
         <CanvasSyncStatus sync={sync} onRetry={retryRecovery} />
       </aside>
+      <CanvasStrokeNotice mode={mode} strokeUsed={sync.strokeUsed} />
       <CanvasStrokeLimitDialog
-        open={strokeNotice !== null}
+        open={strokeNotice === 'limit' || strokeNotice === 'completed'}
         completed={strokeNotice === 'completed'}
         onOpenChange={onStrokeNoticeOpenChange}
       />
+      {/* 손님의 실제 획 시도는 헤더의 지갑 연결 버튼으로 안내한다. */}
+      <CanvasWalletRequiredDialog open={walletNoticeOpen} onOpenChange={setWalletNoticeOpen} />
     </div>
   );
 };

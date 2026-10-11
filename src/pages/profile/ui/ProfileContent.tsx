@@ -42,6 +42,8 @@ export function ProfileContent({ session }: { session: AuthenticatedSession }) {
           showActions={showOverview}
           onShowJoined={() => select(hrefs.joined)}
         />
+        {/* 샘플 잔액을 실제 값으로 오해하지 않도록 요약 카드보다 먼저 안내한다.
+            참여한 캔버스는 실제 API를 쓰므로 안내하지 않는다. */}
         {showOverview && <p className="profile-sample-notice">{t('sampleNotice')}</p>}
         {tab === 'joined' ? (
           <JoinedCanvases userId={session.user.id} />

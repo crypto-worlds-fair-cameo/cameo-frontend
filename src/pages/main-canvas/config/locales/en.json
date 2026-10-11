@@ -6,25 +6,33 @@
   "unsupported": "Your browser cannot display this canvas.",
   "initializationError": "The canvas could not be displayed. Please try again.",
   "retry": "Try again",
-  "changeToPracticeMode": "Change to Practice mode",
-  "changeToDrawMode": "Change to Draw mode",
+  "practiceMode": "Practice Mode",
+  "exitPractice": "Exit Practice",
   "strokeNotice": {
-    "description": "One stroke per account, forever.",
-    "practiceDescription": "Practice freely, just for you."
+    "description": "You can draw only once here",
+    "badge": "1 stroke · forever",
+    "used": "Your stroke remains forever",
+    "practice": "Practice on this paper"
   },
   "strokeCompleted": {
-    "title": "Your one stroke has been used",
-    "description": "This account has used its one lifetime stroke. You can continue drawing in practice mode."
+    "title": "Your stroke is here — forever.",
+    "description": "Your one and only stroke is now on the main canvas.",
+    "confirm": "View Main Canvas"
   },
   "strokeLimit": {
     "title": "Stroke already used",
     "description": "This account has already used its one stroke.",
     "confirm": "OK"
   },
+  "walletRequired": {
+    "title": "Leave this stroke?",
+    "description": "You need to connect a wallet to leave a stroke. Use the Connect Wallet button at the top right.",
+    "confirm": "Confirm"
+  },
   "stats": {
     "title": "Stats",
-    "activeUsers": "Connections",
-    "unavailable": "Connection count unavailable"
+    "activeUsers": "Active Users",
+    "unavailable": "Active user count unavailable"
   },
   "connection": {
     "connecting": "Connecting",

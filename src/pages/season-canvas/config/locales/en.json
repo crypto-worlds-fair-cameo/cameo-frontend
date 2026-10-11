@@ -1,7 +1,7 @@
 {
-  "title": "Season Canvas",
+  "title": "Season Canvas 2026",
   "intro": "Create public seasons and follow their progress.",
-  "create": "Create season",
+  "create": "Create Season",
   "previewUnavailable": "No image",
   "sessionChecking": "Checking sign-in status",
   "sessionError": "We could not verify your sign-in status. Try again.",
@@ -9,13 +9,13 @@
   "filters": {
     "label": "Season status filter",
     "all": "All",
-    "scheduled": "Scheduled",
-    "active": "Active",
+    "scheduled": "Upcoming",
+    "active": "Live",
     "ended": "Ended"
   },
   "status": {
-    "scheduled": "Scheduled",
-    "active": "Active",
+    "scheduled": "Upcoming",
+    "active": "Live",
     "ended": "Ended",
     "cancelled": "Cancelled"
   },
@@ -24,14 +24,15 @@
     "daysRemaining": "{{count}} days until the scheduled end",
     "participants": "Registered: {{count}} / {{capacity}}",
     "size": "{{width}} × {{height}} px",
-    "strokes": "{{count}} strokes per person",
-    "unlimited": "Unlimited strokes per person",
     "creator": "Created by me",
     "participant": "Registered participant",
     "details": "View details",
     "startsAt": "Starts {{date}}",
     "endsAt": "Scheduled end {{date}}",
-    "actualEnd": "Actual end {{date}}"
+    "actualEnd": "Actual end {{date}}",
+    "joined": "Joined",
+    "artists_one": "{{count}} artist",
+    "artists_other": "{{count}} artists"
   },
   "list": {
     "loading": "Loading seasons.",
@@ -66,7 +67,17 @@
     "timezone": "Display time zone: {{timezone}}",
     "cancel": "Cancel schedule",
     "end": "End early",
-    "refresh": "Refresh information"
+    "refresh": "Refresh information",
+    "perPerson": "{{count}} per person",
+    "unlimited": "Unlimited",
+    "join": "Join Season",
+    "joining": "Joining…",
+    "enter": "Enter Canvas",
+    "view": "View Canvas",
+    "browseLive": "Browse Live Seasons",
+    "endedNotice": "This season has ended.",
+    "opensAt": "This season opens {{date}}.",
+    "cancelledNotice": "This season was cancelled."
   },
   "manage": {
     "cancelTitle": "Cancel this scheduled season?",
@@ -78,25 +89,36 @@
     "close": "Go back"
   },
   "form": {
-    "title": "Create a season",
+    "title": "Create New Season",
     "description": "Every season is free and public. The creator uses one capacity slot.",
-    "titleLabel": "Title",
+    "titleLabel": "Season Title",
     "titlePlaceholder": "Name this shared canvas",
     "descriptionLabel": "Description",
     "descriptionPlaceholder": "Tell people about this season",
+    "descriptionCount": "{{count}}/{{max}}",
     "capacity": "Capacity",
     "width": "Width",
     "height": "Height",
-    "strokeLimit": "Strokes per person",
-    "unlimited": "Unlimited strokes",
+    "strokeLimit": "Brush Strokes",
+    "unlimited": "Unlimited",
+    "limit": "Limit",
+    "entryRules": "Entry Rules",
+    "anyone": "Anyone",
+    "walletOnly": "Wallet holders only",
+    "noFee": "None",
+    "entryFee": "Entry fee in SOL",
+    "duration": "Season Duration",
+    "durationNote": "Ends automatically at the end time. As host, you can also end it early.",
+    "canvasSize": "Canvas size",
+    "time": "time",
     "startMode": "Start mode",
     "immediate": "Start now",
     "scheduled": "Schedule",
-    "startsAt": "Scheduled start",
-    "endsAt": "End time",
+    "startsAt": "Starts",
+    "endsAt": "Ends",
     "timezone": "Times are shown in your browser time zone ({{timezone}}).",
-    "cancel": "Close",
-    "submit": "Create season",
+    "cancel": "Cancel",
+    "submit": "Create Season",
     "submitting": "Creating",
     "serverError": "Could not complete the request: {{message}}",
     "traceId": "Support reference: {{traceId}}",
@@ -133,9 +155,17 @@
     "unlimited": "Unlimited"
   },
   "workspace": {
+    "info": "Season Info",
+    "leave": "Leave",
+    "participants": "Participants",
+    "brushStrokes": "Brush Strokes",
+    "host": "Host",
+    "hostBadge": "HOST",
+    "duration": "Duration",
+    "shareInvite": "Share Invite Link",
+    "forceEnd": "Force End Season",
     "title": "Season canvas",
     "back": "Back to seasons",
-    "watch": "Watch canvas",
     "join": "Join season",
     "connections": "Viewing connections",
     "practice": "Practice locally",
@@ -173,5 +203,40 @@
       "protocol_error": "The canvas response is unsupported."
     }
   },
-  "finalCanvasPreview": "Final season canvas"
+  "finalCanvasPreview": "Final season canvas",
+  "created": {
+    "title": "The season has opened!",
+    "view": "View My Season",
+    "done": "Done"
+  },
+  "invite": {
+    "title": "Invite to {{title}}",
+    "linkLabel": "Season invite link",
+    "copy": "Copy",
+    "copied": "Copied ✓",
+    "description": "Anyone with this link can join until {{date}}.",
+    "copyError": "Could not copy the link. Select it and copy it manually.",
+    "done": "Done"
+  },
+  "end": {
+    "title": "Force end this season?",
+    "participants": "Drawing stops immediately for all {{count}} participants",
+    "finalWarning": "and the canvas is finalized. This can't be undone.",
+    "typeBefore": "Type ",
+    "typeAfter": " to confirm",
+    "confirm": "Force End Season",
+    "cancel": "Cancel"
+  },
+  "join": {
+    "walletTitle": "Connect a wallet to enter the room.",
+    "walletCreateTitle": "Connect a wallet to create a season.",
+    "walletHint": "Use the Connect Wallet button at the top right.",
+    "cancel": "Cancel",
+    "fullTitle": "This season is full.",
+    "close": "Close",
+    "joinedTitle": "You're in!",
+    "done": "Done",
+    "errorTitle": "Couldn't join this season",
+    "retry": "Try Again"
+  }
 }

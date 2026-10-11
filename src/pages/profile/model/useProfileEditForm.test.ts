@@ -15,6 +15,8 @@ describe('profile save errors', () => {
       'invalid'
     );
     expect(getProfileSaveErrorKey(httpError(401))).toBe('sessionExpired');
+    // 닉네임 중복은 허용하며, 계약에 없는 409는 일반 저장 실패로 처리한다.
+    expect(getProfileSaveErrorKey(httpError(409))).toBe('failed');
     expect(getProfileSaveErrorKey(httpError(429))).toBe('rateLimited');
     expect(getProfileSaveErrorKey(new AxiosError('offline'))).toBe('network');
     expect(getProfileSaveErrorKey(new Error('unknown'))).toBe('failed');

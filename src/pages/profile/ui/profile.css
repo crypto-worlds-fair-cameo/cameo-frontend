@@ -1,116 +1,155 @@
-/* 프로필 페이지 전용 배치. 색·간격·모서리는 전역 토큰을 사용한다. */
+/* 전역 레이아웃은 app이 소유하므로, 시안의 위쪽 여백은 레이아웃 기본 여백에 더할 만큼만 페이지 안에서 준다. */
 .profile-page {
+  padding-top: 8px;
   display: grid;
-  gap: var(--space-6);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-8);
+  min-width: 0;
   color: var(--text-primary);
 }
-
-.profile-main {
-  display: grid;
-  gap: var(--space-6);
+.profile-sidebar {
   min-width: 0;
 }
-
-/* 좁은 화면에서는 탭 메뉴를 가로로 두고 넘치면 메뉴만 가로로 스크롤한다. */
+.profile-main {
+  display: grid;
+  gap: var(--space-8);
+  min-width: 0;
+}
 .profile-sidebar .cameo-navigation--sidebar {
   flex-direction: row;
+  gap: var(--space-2);
   overflow-x: auto;
 }
-
 .profile-sidebar .cameo-navigation--sidebar a {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 6px 15px;
+  border-color: transparent;
+  color: var(--color-gray-400);
+  font-size: 16px;
+  line-height: 26px;
   white-space: nowrap;
 }
-
-@media (min-width: 768px) {
-  .profile-page {
-    grid-template-columns: 200px minmax(0, 1fr);
-    gap: var(--space-8);
-    align-items: start;
-  }
-
-  .profile-sidebar .cameo-navigation--sidebar {
-    flex-direction: column;
-    overflow-x: visible;
-  }
+.profile-sidebar .cameo-navigation--sidebar a[aria-current] {
+  border-color: var(--color-gray-200);
+  color: var(--color-black);
+  font-weight: 700;
 }
-
 .profile-header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-4);
+  min-height: 64px;
 }
-
-/* 이름 영역의 기본 너비를 두어 좁은 화면에서는 이름을 쪼개지 않고 버튼을 다음 줄로 보낸다. */
 .profile-identity {
   flex: 1 1 160px;
+  align-self: start;
   min-width: 0;
+  padding-top: 5px;
 }
-
 .profile-identity h1 {
-  font-size: var(--text-title);
+  font-size: 16px;
   font-weight: 700;
+  line-height: 24px;
   overflow-wrap: anywhere;
 }
-
 .profile-identity p {
   margin-top: 2px;
-  color: var(--text-secondary);
-  font-size: 13px;
+  color: var(--color-gray-500);
+  font-size: 14px;
+  line-height: 22px;
+  overflow-wrap: anywhere;
 }
-
 .profile-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
 }
-
-.profile-sample-notice {
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-input);
-  background: var(--surface-card);
-  color: var(--text-secondary);
+.profile-actions .cameo-button {
+  height: 40px;
+  border-color: var(--color-gray-200);
   font-size: 13px;
+  font-weight: 700;
+  line-height: 20px;
 }
-
+.profile-edit-button {
+  min-width: 80px;
+}
+.profile-joined-button {
+  min-width: 150px;
+}
+/* 샘플 안내는 시안에 없는 줄이라 헤더 바로 아래에 붙여 시안 간격을 크게 바꾸지 않는다. */
+.profile-sample-notice {
+  margin-top: calc(var(--space-6) * -1);
+  color: var(--color-gray-500);
+  font-size: 12px;
+  line-height: 18px;
+}
 .profile-summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
   gap: var(--space-4);
 }
-
-.profile-summary dt {
-  color: var(--text-secondary);
-  font-size: var(--text-body);
+.profile-summary .cameo-card {
+  min-height: 104px;
+  padding: 16px 21px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-button);
+  background: var(--background);
+  box-shadow: none;
 }
-
+.profile-summary dt {
+  color: var(--text-primary);
+  font-size: 16px;
+  line-height: 26px;
+}
 .profile-summary dd {
-  margin-top: var(--space-1);
-  font-family: var(--font-data);
+  margin: 0;
   font-size: 24px;
+  line-height: 38px;
   overflow-wrap: anywhere;
 }
-
 .profile-section {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-4);
+  margin-top: var(--space-3);
+  min-width: 0;
 }
-
 .profile-section-header {
+  position: relative;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
+  min-height: 40px;
   padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--border-default);
 }
-
 .profile-section-header h2 {
-  font-size: var(--text-body-lg);
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 24px;
 }
-
+/* SVG 원본은 유지하고 구분선의 표시 폭만 본문에 맞춘다. */
+.profile-section-rule {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: 1px;
+}
+.profile-joined {
+  margin-top: 0;
+}
+.profile-joined .profile-section-header {
+  align-items: start;
+  min-height: 36px;
+  padding-bottom: 12px;
+}
 .profile-list {
   display: grid;
   gap: var(--space-3);
@@ -118,55 +157,164 @@
   padding: 0;
   list-style: none;
 }
-
 .profile-joined-list > li {
   display: grid;
   gap: var(--space-3);
 }
-
 .profile-list-warning {
   color: var(--color-accent-red);
   font-size: var(--text-body);
 }
-
-/* 시안의 목록 썸네일은 카탈로그 기본(96px)보다 작다. 이 페이지 안에서만 줄인다. */
 .profile-list .cameo-media-list-item {
-  padding: var(--space-3) var(--space-4);
+  flex-wrap: nowrap;
+  min-height: 72px;
+  padding: 11px;
+  border-color: var(--color-gray-200);
 }
-
 .profile-list .cameo-media-list-image {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
 }
-
+.profile-list .cameo-list-copy {
+  align-self: start;
+  min-width: 0;
+  margin-top: 2px;
+}
+.profile-list .cameo-list-copy h3 {
+  margin: 0 0 1px;
+  color: var(--color-gray-500);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+}
+.profile-list .cameo-list-copy > div {
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 21px;
+  overflow-wrap: anywhere;
+}
 .profile-list-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex: 0 0 auto;
   align-items: center;
   gap: var(--space-2);
   margin-left: auto;
 }
-
-.profile-strokes {
-  color: var(--text-secondary);
-  font-family: var(--font-data);
-  font-size: var(--text-body);
+.profile-new-season {
+  min-width: 120px;
+  height: 32px;
+  gap: 4px;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 20px;
 }
-
+.profile-new-season svg {
+  width: 12px;
+  height: 12px;
+}
+.profile-nft-action {
+  min-width: 96px;
+  height: 32px;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 18px;
+}
+.profile-nft-action.cameo-button--secondary {
+  border-color: var(--color-black);
+}
+.profile-list .cameo-status--ended {
+  justify-content: center;
+  min-width: 56px;
+  height: 24px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 12px;
+  padding: 0 8px;
+  background: transparent;
+  color: var(--color-gray-200);
+  font-size: 11px;
+  line-height: 16px;
+}
+.profile-joined .cameo-status--ended {
+  background: #e8e8eb;
+  color: var(--color-gray-500);
+}
+.profile-joined .profile-list-actions {
+  margin-right: 4px;
+}
+.profile-status--active {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-status-active);
+  font-size: 12px;
+  line-height: 18px;
+}
+.profile-season-chevron {
+  display: block;
+  flex-shrink: 0;
+  margin: 0 8px 0 11px;
+  transform: scaleX(-1);
+}
+.profile-strokes {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: var(--space-2);
+  color: var(--color-gray-400);
+  font-size: 12px;
+  line-height: 18px;
+}
+.profile-stroke-count {
+  color: var(--color-black);
+  font-size: 14px;
+  line-height: 21px;
+}
 .profile-thumbnail {
   display: block;
 }
-
+/* 공통 거래 목록을 유지하며 날짜를 금액 바로 옆으로 배치한다. */
+.profile-transactions .cameo-transactions li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px;
+  align-items: start;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0;
+  border: 0;
+  font-size: 14px;
+  line-height: 22px;
+}
+.profile-transactions .cameo-transactions li > span:first-child {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 80px;
+  gap: var(--space-2);
+}
+.profile-transactions .cameo-transactions small {
+  margin-top: 2px;
+  color: var(--color-gray-500);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: right;
+}
+.profile-transactions .cameo-transactions [data-direction] {
+  font-family: inherit;
+  text-align: right;
+}
 .profile-empty {
   display: grid;
   justify-items: center;
   gap: var(--space-3);
   padding: var(--space-6) 0;
-  color: var(--text-secondary);
+  color: var(--color-gray-500);
   font-size: var(--text-body);
   text-align: center;
 }
-
 .profile-activity-error {
   display: flex;
   flex-wrap: wrap;
@@ -174,102 +322,51 @@
   justify-content: space-between;
   gap: var(--space-3);
   padding: var(--space-4);
-  border: 1px solid var(--border-card);
+  border: 1px solid var(--color-gray-200);
   border-radius: var(--radius-button);
-  color: var(--text-secondary);
+  color: var(--color-gray-500);
 }
-
 .profile-activity-skeleton {
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-8);
 }
-
-/* 프로필 수정 모달 */
-.profile-edit-form {
-  display: grid;
-  gap: var(--space-5);
+@media (min-width: 768px) {
+  .profile-page {
+    padding-top: 32px;
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+  .profile-sidebar .cameo-navigation--sidebar {
+    flex-direction: column;
+    overflow-x: visible;
+  }
 }
-
-.profile-edit-avatar {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
+@media (min-width: 1024px) {
+  /* 사이드바와 본문 비율은 시안을 따르되 폭은 레이아웃이 정한 본문 폭 안에서 나눈다. */
+  .profile-page {
+    padding-top: 70px;
+    grid-template-columns: minmax(226px, 27.3225664%) minmax(0, 1fr);
+    column-gap: 0;
+  }
+  .profile-sidebar .cameo-navigation {
+    width: 226px;
+  }
 }
-
-.profile-edit-avatar-frame {
-  position: relative;
-  flex-shrink: 0;
-  border-radius: 50%;
-}
-
-.profile-edit-avatar-frame[data-state='error'] {
-  box-shadow: 0 0 0 2px var(--color-accent-red);
-}
-
-.profile-edit-avatar-badge {
-  position: absolute;
-  right: -2px;
-  bottom: -2px;
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  border: 2px solid var(--surface-modal);
-  border-radius: 50%;
-  background: var(--color-black);
-  color: #fff;
-}
-
-.profile-edit-avatar-badge svg {
-  width: 12px;
-  height: 12px;
-}
-
-.profile-edit-avatar-copy {
-  display: grid;
-  justify-items: start;
-  gap: var(--space-1);
-  min-width: 0;
-}
-
-.profile-edit-label {
-  font-weight: 500;
-}
-
-.profile-edit-hint {
-  color: var(--text-secondary);
-  font-size: 12px;
-}
-
-.profile-edit-hint[data-state='error'] {
-  color: var(--color-accent-red);
-}
-
-.profile-edit-nickname {
-  position: relative;
-}
-
-.profile-edit-nickname .cameo-input {
-  padding-right: 64px;
-}
-
-.profile-edit-count {
-  position: absolute;
-  top: 50%;
-  right: var(--space-3);
-  transform: translateY(-50%);
-  color: var(--text-tertiary);
-  font-family: var(--font-data);
-  font-size: 12px;
-  pointer-events: none;
-}
-
-.profile-edit-error {
-  color: var(--color-accent-red);
-  font-size: var(--text-body);
-}
-
-.profile-edit-actions {
-  display: grid;
-  gap: var(--space-2);
+@media (max-width: 767px) {
+  .profile-list .cameo-media-list-item {
+    flex-wrap: wrap;
+  }
+  .profile-list .cameo-list-copy {
+    flex-basis: calc(100% - 64px);
+  }
+  .profile-transactions .cameo-transactions li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .profile-transactions .cameo-transactions li > span:first-child {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .profile-transactions .cameo-transactions small {
+    margin: 0;
+    text-align: left;
+  }
 }

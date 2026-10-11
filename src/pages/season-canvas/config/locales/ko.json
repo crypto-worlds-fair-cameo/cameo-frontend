@@ -1,5 +1,5 @@
 {
-  "title": "시즌 캔버스",
+  "title": "시즌 캔버스 2026",
   "intro": "공개 시즌을 만들고 진행 상태를 확인할 수 있습니다.",
   "create": "시즌 개설",
   "previewUnavailable": "이미지 없음",
@@ -9,12 +9,12 @@
   "filters": {
     "label": "시즌 상태 필터",
     "all": "전체",
-    "scheduled": "예약",
-    "active": "진행",
+    "scheduled": "예정",
+    "active": "진행 중",
     "ended": "종료"
   },
   "status": {
-    "scheduled": "예약",
+    "scheduled": "예정",
     "active": "진행 중",
     "ended": "종료",
     "cancelled": "취소"
@@ -24,14 +24,14 @@
     "daysRemaining": "예정 종료까지 {{count}}일",
     "participants": "누적 참가 {{count}} / {{capacity}}명",
     "size": "{{width}} × {{height}} px",
-    "strokes": "1인당 {{count}}획",
-    "unlimited": "1인당 획 수 무제한",
     "creator": "내가 개설함",
     "participant": "참가 등록됨",
     "details": "상세 보기",
     "startsAt": "시작 {{date}}",
     "endsAt": "예정 종료 {{date}}",
-    "actualEnd": "실제 종료 {{date}}"
+    "actualEnd": "실제 종료 {{date}}",
+    "joined": "참가함",
+    "artists_other": "참여 {{count}}명"
   },
   "list": {
     "loading": "시즌 목록을 불러오는 중입니다.",
@@ -66,7 +66,17 @@
     "timezone": "표시 시간대: {{timezone}}",
     "cancel": "예약 취소",
     "end": "조기 종료",
-    "refresh": "정보 새로고침"
+    "refresh": "정보 새로고침",
+    "perPerson": "1인당 {{count}}획",
+    "unlimited": "무제한",
+    "join": "시즌 참가",
+    "joining": "참가하는 중…",
+    "enter": "캔버스 입장",
+    "view": "캔버스 보기",
+    "browseLive": "진행 중인 시즌 보기",
+    "endedNotice": "종료된 시즌입니다.",
+    "opensAt": "{{date}}에 시작합니다.",
+    "cancelledNotice": "취소된 시즌입니다."
   },
   "manage": {
     "cancelTitle": "예약 시즌을 취소할까요?",
@@ -80,22 +90,33 @@
   "form": {
     "title": "새 시즌 개설",
     "description": "모든 시즌은 무료·공개입니다. 개설자도 정원 한 자리를 사용합니다.",
-    "titleLabel": "제목",
+    "titleLabel": "시즌 제목",
     "titlePlaceholder": "함께 완성할 시즌 이름",
     "descriptionLabel": "설명",
     "descriptionPlaceholder": "시즌을 간단히 소개해 주세요",
+    "descriptionCount": "{{count}}/{{max}}",
     "capacity": "정원",
     "width": "가로 크기",
     "height": "세로 크기",
     "strokeLimit": "1인당 획 제한",
-    "unlimited": "횟수 무제한",
+    "unlimited": "무제한",
+    "limit": "정원 제한",
+    "entryRules": "입장 규칙",
+    "anyone": "누구나",
+    "walletOnly": "지갑 보유자만",
+    "noFee": "없음",
+    "entryFee": "SOL 입장료",
+    "duration": "시즌 기간",
+    "durationNote": "종료 시각에 자동으로 끝납니다. 개설자는 미리 종료할 수도 있습니다.",
+    "canvasSize": "캔버스 크기",
+    "time": "시간",
     "startMode": "시작 방식",
     "immediate": "즉시 시작",
     "scheduled": "예약 시작",
-    "startsAt": "예약 시작 시각",
-    "endsAt": "종료 시각",
+    "startsAt": "시작",
+    "endsAt": "종료",
     "timezone": "시각은 브라우저 시간대({{timezone}})로 표시됩니다.",
-    "cancel": "닫기",
+    "cancel": "취소",
     "submit": "개설하기",
     "submitting": "개설 중",
     "serverError": "요청을 완료하지 못했습니다: {{message}}",
@@ -133,9 +154,17 @@
     "unlimited": "무제한"
   },
   "workspace": {
+    "info": "시즌 정보",
+    "leave": "나가기",
+    "participants": "참가자",
+    "brushStrokes": "획 제한",
+    "host": "개설자",
+    "hostBadge": "개설자",
+    "duration": "기간",
+    "shareInvite": "초대 링크 공유",
+    "forceEnd": "시즌 강제 종료",
     "title": "시즌 캔버스",
     "back": "시즌 목록으로",
-    "watch": "캔버스 관람",
     "join": "시즌 참가",
     "connections": "관람 연결 수",
     "practice": "로컬에서 연습",
@@ -173,5 +202,40 @@
       "protocol_error": "캔버스 응답을 처리할 수 없습니다."
     }
   },
-  "finalCanvasPreview": "시즌 최종 캔버스"
+  "finalCanvasPreview": "시즌 최종 캔버스",
+  "created": {
+    "title": "시즌이 개설되었습니다!",
+    "view": "내 시즌 보기",
+    "done": "완료"
+  },
+  "invite": {
+    "title": "{{title}} 시즌에 초대",
+    "linkLabel": "시즌 초대 링크",
+    "copy": "복사",
+    "copied": "복사됨 ✓",
+    "description": "이 링크로 {{date}}까지 시즌에 참가할 수 있습니다.",
+    "copyError": "링크를 복사하지 못했습니다. 링크를 선택해 직접 복사하세요.",
+    "done": "완료"
+  },
+  "end": {
+    "title": "시즌을 강제 종료할까요?",
+    "participants": "참가자 {{count}}명의 그리기가 즉시 중단됩니다.",
+    "finalWarning": "캔버스가 확정되며 이 작업은 되돌릴 수 없습니다.",
+    "typeBefore": "종료하려면 ",
+    "typeAfter": "을(를) 입력하세요",
+    "confirm": "시즌 강제 종료",
+    "cancel": "취소"
+  },
+  "join": {
+    "walletTitle": "지갑을 연결하고 시즌에 입장하세요.",
+    "walletCreateTitle": "지갑을 연결하고 시즌을 만드세요.",
+    "walletHint": "오른쪽 위의 지갑 연결 버튼을 눌러 주세요.",
+    "cancel": "취소",
+    "fullTitle": "정원이 가득 찼습니다.",
+    "close": "닫기",
+    "joinedTitle": "참가 완료!",
+    "done": "완료",
+    "errorTitle": "시즌에 참가하지 못했습니다",
+    "retry": "다시 시도"
+  }
 }

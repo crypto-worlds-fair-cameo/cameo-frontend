@@ -64,6 +64,13 @@ function codePointLength(value: string): number {
   return Array.from(value).length;
 }
 
+/** 서버 시즌 설명 제한(앞뒤 공백 제거 후 100자). 입력 중 글자 수 표시도 같은 기준으로 센다. */
+export const DESCRIPTION_MAX_LENGTH = 100;
+
+export function descriptionLength(value: string): number {
+  return codePointLength(value.trim());
+}
+
 function parseInteger(
   value: string,
   field: SeasonFormField,
@@ -100,7 +107,8 @@ export function validateSeasonDraft(
   const title = draft.title.trim();
   const description = draft.description.trim();
   if (codePointLength(title) < 1 || codePointLength(title) > 50) errors.title = 'titleLength';
-  if (codePointLength(description) > 100) errors.description = 'descriptionLength';
+  if (descriptionLength(description) > DESCRIPTION_MAX_LENGTH)
+    errors.description = 'descriptionLength';
   const width = parseInteger(draft.width, 'width', 500, 10_000, errors);
   const height = parseInteger(draft.height, 'height', 500, 10_000, errors);
   const capacity = parseInteger(draft.capacity, 'capacity', 2, 100, errors);

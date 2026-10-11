@@ -4,22 +4,96 @@
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
-.season-workspace-panel h1 {
-  margin: 0 0 var(--space-3);
-  font-size: 20px;
+.season-workspace {
+  background: var(--color-gray-50);
+}
+.season-workspace .canvas-left-sidebar,
+.season-workspace .canvas-right-area {
+  background: transparent;
+}
+.season-workspace .canvas-right-area {
+  flex-basis: 283px;
+  padding: 24px 56px 24px 0;
+  border-left: 0;
+}
+.season-workspace-info {
+  padding: 14px 16px 20px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 78%);
+  backdrop-filter: blur(2px);
+}
+.season-workspace-info-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 21px;
+  font-size: 14px;
+  line-height: 21px;
+}
+.season-workspace-info-heading .cameo-button {
+  width: 20px;
+  height: 20px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  color: var(--color-gray-400);
+}
+.season-workspace-info-heading .cameo-button svg {
+  width: 19px;
+  height: 19px;
+}
+.season-workspace-host-badge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--color-black);
+  color: #fff;
+  font-size: 11px;
   font-weight: 700;
+  line-height: 17px;
+}
+.season-workspace-panel h1 {
+  margin: 12px 5px 16px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 24px;
 }
 .season-workspace-panel dl {
   display: grid;
-  gap: var(--space-2);
-  margin: var(--space-3) 0;
+  gap: 14px;
+  margin: 0 5px;
 }
 .season-workspace-panel dt {
-  color: var(--text-secondary);
+  color: var(--color-gray-400);
+  font-size: 12px;
+  line-height: 18px;
 }
 .season-workspace-panel dd {
   margin: 0;
+  color: var(--color-black);
+  font-size: 14px;
+  line-height: 21px;
   font-variant-numeric: tabular-nums;
+}
+.season-workspace-host-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.season-workspace-host-actions .cameo-button {
+  width: 100%;
+  height: 40px;
+  padding: 0 8px;
+  border-color: var(--color-gray-200);
+  border-radius: 12px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.season-workspace-host-actions .season-workspace-end-button {
+  color: var(--color-accent-red);
 }
 .season-workspace-panel p {
   margin: var(--space-2) 0;
@@ -35,6 +109,43 @@
 .season-workspace-error {
   padding: var(--space-6);
   overflow: auto;
+}
+/* 큰 작업 공간에서는 피그마의 도화지와 양쪽 도구 패널 위치를 유지한다. */
+@media (min-width: 1200px) and (min-height: 900px) {
+  .season-workspace .canvas-left-sidebar {
+    flex-basis: 283px;
+    gap: 16px;
+    padding: 47px 1px 24px 56px;
+  }
+  .season-workspace-back {
+    display: flex;
+    height: 40px;
+    align-items: center;
+    padding: 0 16px;
+    border-radius: 12px;
+    background: var(--color-gray-700);
+    color: #fff;
+    font-weight: 700;
+    line-height: 20px;
+    text-decoration: none;
+  }
+  .season-workspace .canvas-right-area {
+    padding-top: 103px;
+  }
+  .season-workspace .canvas-viewport {
+    --canvas-border: var(--color-gray-400);
+    height: min(756px, calc(100dvh - 324px));
+    align-self: center;
+    transform: translateY(13px);
+    background: transparent;
+  }
+}
+/* 1024~1199px에서는 오른쪽 패널 폭을 줄여 도화지 공간을 확보한다. */
+@media (min-width: 1024px) and (max-width: 1199px) {
+  .season-workspace .canvas-right-area {
+    flex-basis: 251px;
+    padding-right: 24px;
+  }
 }
 /* 태블릿 이하에서는 세 영역을 문서 흐름에 놓아 패널 대신 페이지가 스크롤을 소유한다. */
 @media (max-width: 1023px) {
@@ -60,6 +171,7 @@
     width: 100%;
     max-height: none;
     overflow: visible;
+    padding: 12px;
   }
 
   .season-workspace .canvas-left-sidebar {

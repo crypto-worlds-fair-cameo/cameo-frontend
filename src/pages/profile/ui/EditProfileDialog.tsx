@@ -1,5 +1,5 @@
 import { useId, useRef, useState, type ReactNode } from 'react';
-import { Pencil, UserRound } from 'lucide-react';
+import { UserRound } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import type { AuthenticatedSession } from '@/entities/session';
@@ -19,6 +19,7 @@ import { Input } from '@/shared/ui/input';
 import { useDisplayNameMutation } from '../api/profile.queries';
 import { NICKNAME_MAX_LENGTH } from '../lib/profileValidation';
 import { getProfileSaveErrorKey, useProfileEditForm } from '../model/useProfileEditForm';
+import './profile-edit.css';
 
 type ProfileUser = AuthenticatedSession['user'];
 type DisplayNameMutation = ReturnType<typeof useDisplayNameMutation>;
@@ -39,7 +40,7 @@ export function EditProfileDialog({ user, trigger }: { user: ProfileUser; trigge
   return (
     <Dialog open={open} onOpenChange={changeOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="cameo-light profile-edit-dialog">
+      <DialogContent className="cameo-light profile-edit-dialog" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>{t('edit.title')}</DialogTitle>
           <DialogDescription className="sr-only">{t('edit.description')}</DialogDescription>
@@ -72,6 +73,12 @@ function EditProfileForm({
   const fileInput = useRef<HTMLInputElement>(null);
   const imageHintId = useId();
   const errorKey = mutation.isError ? getProfileSaveErrorKey(mutation.error) : null;
+  const nicknameError = form.tooLong
+    ? t('edit.nicknameTooLong')
+    : errorKey === 'invalid'
+      ? t(`edit.errors.${errorKey}`)
+      : undefined;
+  const canSave = form.canSave && errorKey !== 'invalid';
   const imageState = form.avatar.error ? 'error' : form.avatar.previewUrl ? 'selected' : undefined;
 
   return (
@@ -79,7 +86,7 @@ function EditProfileForm({
       className="profile-edit-form"
       onSubmit={event => {
         event.preventDefault();
-        if (!form.canSave || mutation.isPending) return;
+        if (!canSave || mutation.isPending) return;
         mutation.mutate(form.nickname.trim(), {
           onSuccess: () => {
             toast(t('edit.saved'));
@@ -90,7 +97,7 @@ function EditProfileForm({
     >
       <div className="profile-edit-avatar">
         <span className="profile-edit-avatar-frame" data-state={imageState}>
-          <Avatar className="size-16" aria-hidden="true">
+          <Avatar className="profile-edit-avatar-image" aria-hidden="true">
             <AvatarImage
               src={form.avatar.previewUrl ?? user.avatarUrl ?? undefined}
               alt=""
@@ -101,7 +108,7 @@ function EditProfileForm({
             </AvatarFallback>
           </Avatar>
           <span className="profile-edit-avatar-badge" aria-hidden="true">
-            <Pencil />
+            <img src="/images/profile/edit-pencil.svg" alt="" />
           </span>
         </span>
         <div className="profile-edit-avatar-copy">
@@ -132,6 +139,7 @@ function EditProfileForm({
             }}
           />
           <Button
+            className="profile-edit-change-image"
             variant="secondary"
             size="sm"
             aria-describedby={imageHintId}
@@ -142,17 +150,7 @@ function EditProfileForm({
           </Button>
         </div>
       </div>
-      <Field
-        label={t('edit.nickname')}
-        hint={t('edit.nicknameHint')}
-        error={
-          form.tooLong
-            ? t('edit.nicknameTooLong')
-            : errorKey === 'invalid'
-              ? t('edit.errors.invalid')
-              : undefined
-        }
-      >
+      <Field label={t('edit.nickname')} hint={t('edit.nicknameHint')} error={nicknameError}>
         {props => (
           <div className="profile-edit-nickname">
             <Input
@@ -170,16 +168,20 @@ function EditProfileForm({
             <span className="profile-edit-count" aria-hidden="true">
               {form.length}/{NICKNAME_MAX_LENGTH}
             </span>
+            <span className="sr-only" role="status" aria-live="polite">
+              {errorKey === 'invalid' ? nicknameError : ''}
+            </span>
           </div>
         )}
       </Field>
+      <div className="profile-edit-spacer" aria-hidden="true" />
       {errorKey && errorKey !== 'invalid' && (
         <p className="profile-edit-error" role="alert">
           {t(`edit.errors.${errorKey}`)}
         </p>
       )}
       <div className="profile-edit-actions">
-        <Button type="submit" loading={mutation.isPending} disabled={!form.canSave}>
+        <Button type="submit" loading={mutation.isPending} disabled={!canSave}>
           {t(mutation.isPending ? 'edit.saving' : 'edit.save')}
         </Button>
         <DialogClose asChild>

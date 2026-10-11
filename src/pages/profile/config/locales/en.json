@@ -10,6 +10,7 @@
     "joined": "Joined Canvases"
   },
   "header": {
+    "wallet": "Phantom",
     "edit": "Edit",
     "joinedCanvases": "Joined Canvases"
   },
@@ -43,6 +44,8 @@
     "error": "Joined canvases could not be loaded.",
     "refreshError": "The list could not be refreshed. Existing items are still shown.",
     "loadMore": "Load more",
+    "strokeLabel_one": "stroke",
+    "strokeLabel_other": "strokes",
     "strokes_one": "{{count}} stroke",
     "strokes_other": "{{count}} strokes"
   },

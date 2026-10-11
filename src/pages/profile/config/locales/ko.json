@@ -10,6 +10,7 @@
     "joined": "참여한 캔버스"
   },
   "header": {
+    "wallet": "Phantom",
     "edit": "수정",
     "joinedCanvases": "참여한 캔버스"
   },
@@ -44,7 +45,8 @@
     "refreshError": "목록을 새로 고치지 못했습니다. 기존 내용을 표시합니다.",
     "loadMore": "더 보기",
     "strokes_one": "{{count}}획",
-    "strokes_other": "{{count}}획"
+    "strokes_other": "{{count}}획",
+    "strokeLabel": "획"
   },
   "activityError": {
     "message": "활동 내역을 불러오지 못했습니다.",

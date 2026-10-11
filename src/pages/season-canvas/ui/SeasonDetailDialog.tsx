@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
+import { ArrowRight } from 'lucide-react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { SeasonNftClaimCard } from '@/features/season-nft-claim';
 import { Button } from '@/shared/ui/button';
@@ -18,9 +19,11 @@ import {
 import { Skeleton } from '@/shared/ui/skeleton';
 import { SeasonRequestError, type Season } from '../api/seasons.types';
 import type { SeasonErrorKey } from '../lib/seasonErrors';
-import { formatSeasonDateTime } from '../lib/seasonDate';
+import { formatSeasonDate, formatSeasonDateRange, formatSeasonDateTime } from '../lib/seasonDate';
 import type { SeasonManageAction } from '../model/useSeasonDetail';
+import { restoreDialogFocus } from './restoreDialogFocus';
 import { SeasonPreview } from './SeasonPreview';
+import { SeasonEndDialog } from './SeasonEndDialog';
 
 interface SeasonDetailDialogProps {
   selectedId: string | null;
@@ -31,7 +34,10 @@ interface SeasonDetailDialogProps {
   isManaging: boolean;
   isRefreshingManagement: boolean;
   canInteract: boolean;
+  isJoining: boolean;
   onClose: () => void;
+  onJoin: (season: Season) => void;
+  onBrowseLive: () => void;
   onOpenManage: (action: SeasonManageAction) => void;
   onCloseManage: () => void;
   onConfirmManage: () => void;
@@ -40,13 +46,24 @@ interface SeasonDetailDialogProps {
 }
 
 export function SeasonDetailDialog(props: SeasonDetailDialogProps) {
-  const { t } = useTranslation('seasonCanvas');
+  const { t, i18n } = useTranslation('seasonCanvas');
   const cachedSeason = props.query.data;
   const notFound =
     props.query.error instanceof SeasonRequestError &&
     (props.query.error.statusCode === 404 || props.query.error.code === 'SEASON_NOT_FOUND');
   // 404는 취소된 시즌의 접근 제한일 수 있으므로 오래된 상세를 현재 정보처럼 표시하지 않는다.
   const season = notFound ? undefined : cachedSeason;
+  // 세션 경계가 준비되고 최신 상세가 확인된 시즌에만 참가·입장·보기 동작을 연다.
+  const actionable = season && props.canInteract && !props.query.isError ? season : undefined;
+  // 종료·예약·취소 시즌은 버튼 위에 현재 상태를 한 줄로 안내한다.
+  const statusNotice =
+    season?.status === 'ended'
+      ? t('detail.endedNotice')
+      : season?.status === 'scheduled'
+        ? t('detail.opensAt', { date: formatSeasonDate(season.startsAt, i18n.language) })
+        : season?.status === 'cancelled'
+          ? t('detail.cancelledNotice')
+          : null;
   // 404가 아니면 목록의 미리보기로 제목을 먼저 보여 주고, 조회된 상세로 갱신한다.
   const summary = notFound ? undefined : (season ?? props.preview);
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
@@ -75,7 +92,7 @@ export function SeasonDetailDialog(props: SeasonDetailDialogProps) {
           showCloseButton={false}
           onCloseAutoFocus={event => {
             event.preventDefault();
-            restoreFocus(props.restoreFocusTo.current, props.fallbackFocusTo.current);
+            restoreDialogFocus(props.restoreFocusTo.current, props.fallbackFocusTo.current);
           }}
         >
           {/* 관리 요청 중에는 닫기를 막되, 스크롤 위치와 관계없이 상단 닫기 버튼을 표시한다. */}
@@ -84,6 +101,7 @@ export function SeasonDetailDialog(props: SeasonDetailDialogProps) {
             <SeasonPreview
               seasonId={summary?.id}
               status={summary?.status}
+              variant="detail"
               className="season-detail__preview"
             />
             <div className="season-detail__info">
@@ -132,11 +150,29 @@ export function SeasonDetailDialog(props: SeasonDetailDialogProps) {
                   {t(`errors.${props.manageError}`)}
                 </p>
               )}
+              {statusNotice && !props.query.isError && (
+                <p className="season-detail__notice">{statusNotice}</p>
+              )}
               <DialogFooter className="season-detail__actions">
-                {/* 확인된 상세와 세션 경계가 준비됐을 때만 캔버스 관람 링크를 제공한다. */}
-                {season && props.canInteract && !props.query.isError && (
-                  <Button asChild variant="web3">
-                    <Link to={`/season-canvas/${season.id}`}>{t('workspace.watch')}</Link>
+                {/* 진행 중 시즌은 참가자에게 입장을, 그 밖의 사용자에게 참가를 제공한다. */}
+                {actionable?.status === 'active' &&
+                  (actionable.isParticipant ? (
+                    <Button asChild>
+                      <Link to={`/season-canvas/${actionable.id}`}>{t('detail.enter')}</Link>
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="web3"
+                      loading={props.isJoining}
+                      onClick={() => props.onJoin(actionable)}
+                    >
+                      {props.isJoining ? t('detail.joining') : t('detail.join')}
+                    </Button>
+                  ))}
+                {/* 종료된 시즌의 완성된 캔버스는 누구나 볼 수 있다. */}
+                {actionable?.status === 'ended' && (
+                  <Button asChild>
+                    <Link to={`/season-canvas/${actionable.id}`}>{t('detail.view')}</Link>
                   </Button>
                 )}
                 {/* 서버가 제공한 관리 권한에 따라 취소·조기 종료 버튼을 표시한다. */}
@@ -172,58 +208,62 @@ export function SeasonDetailDialog(props: SeasonDetailDialogProps) {
                     {t('detail.end')}
                   </Button>
                 )}
-                <DialogClose asChild>
-                  <Button variant="secondary" disabled={props.isManaging}>
-                    {t('detail.close')}
+                {actionable?.status === 'ended' ? (
+                  <Button variant="secondary" onClick={props.onBrowseLive}>
+                    {t('detail.browseLive')}
+                    <ArrowRight aria-hidden="true" />
                   </Button>
-                </DialogClose>
+                ) : (
+                  <DialogClose asChild>
+                    <Button variant="secondary" disabled={props.isManaging}>
+                      {t('detail.close')}
+                    </Button>
+                  </DialogClose>
+                )}
               </DialogFooter>
             </div>
           </div>
         </DialogContent>
       </Dialog>
       <ConfirmDialog
-        open={props.manageAction !== null}
+        open={props.manageAction === 'cancel'}
         onOpenChange={open => !open && props.onCloseManage()}
-        title={t(props.manageAction === 'cancel' ? 'manage.cancelTitle' : 'manage.endTitle')}
-        description={t(
-          props.manageAction === 'cancel' ? 'manage.cancelDescription' : 'manage.endDescription',
-          { title: season?.title ?? props.preview?.title ?? '' }
-        )}
-        confirmLabel={t(
-          props.manageAction === 'cancel' ? 'manage.cancelConfirm' : 'manage.endConfirm'
-        )}
+        title={t('manage.cancelTitle')}
+        description={t('manage.cancelDescription', {
+          title: season?.title ?? props.preview?.title ?? '',
+        })}
+        confirmLabel={t('manage.cancelConfirm')}
         cancelLabel={t('manage.close')}
         loading={props.isManaging}
+        onConfirm={() => void props.onConfirmManage()}
+      />
+      <SeasonEndDialog
+        open={props.manageAction === 'end'}
+        title={season?.title ?? props.preview?.title ?? ''}
+        participantCount={season?.participantCount ?? props.preview?.participantCount ?? 0}
+        canConfirm={Boolean(actionable?.canEnd)}
+        loading={props.isManaging}
+        onOpenChange={open => !open && props.onCloseManage()}
         onConfirm={() => void props.onConfirmManage()}
       />
     </>
   );
 }
 
-function restoreFocus(target: HTMLElement | null, fallback: HTMLElement | null) {
-  queueMicrotask(() => {
-    const available = (element: HTMLElement | null) =>
-      element?.isConnected && !element.matches(':disabled, [aria-disabled="true"]');
-    if (available(target)) target!.focus();
-    else if (available(fallback)) fallback!.focus();
-  });
-}
-
 /** 최신 상세의 기간, 1인당 획 제한과 누적 참가 인원을 간결한 정보 행으로 표시한다. */
 function SeasonDetail({ season }: { season: Season }) {
-  const { t } = useTranslation('seasonCanvas');
+  const { t, i18n } = useTranslation('seasonCanvas');
   // 조기 종료일을 기간에 반영하고, null 획 제한은 무제한으로 표시한다.
   const periodEnd = season.forceEndedAt ?? season.endsAt;
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  // 기간은 카드와 같은 날짜 범위로 보여 주고, 정확한 시각은 마우스를 올리면 확인한다.
+  const exactPeriod = `${formatSeasonDateTime(season.startsAt)} - ${formatSeasonDateTime(periodEnd)}`;
   const facts: { label: string; value: ReactNode }[] = [
     {
       label: t('detail.period'),
       value: (
-        <span className="season-detail__period" title={t('detail.timezone', { timezone })}>
-          <time dateTime={season.startsAt}>{formatSeasonDateTime(season.startsAt)}</time>
-          <span>-</span>
-          <time dateTime={periodEnd}>{formatSeasonDateTime(periodEnd)}</time>
+        <span title={`${exactPeriod} (${t('detail.timezone', { timezone })})`}>
+          {formatSeasonDateRange(season.startsAt, periodEnd, i18n.language)}
         </span>
       ),
     },
@@ -231,8 +271,8 @@ function SeasonDetail({ season }: { season: Season }) {
       label: t('detail.brushStrokes'),
       value:
         season.strokeLimitPerUser === null
-          ? t('card.unlimited')
-          : t('card.strokes', { count: season.strokeLimitPerUser }),
+          ? t('detail.unlimited')
+          : t('detail.perPerson', { count: season.strokeLimitPerUser }),
     },
     { label: t('detail.capacity'), value: `${season.participantCount}/${season.capacity}` },
   ];

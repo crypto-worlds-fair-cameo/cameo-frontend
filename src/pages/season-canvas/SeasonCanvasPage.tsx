@@ -5,14 +5,18 @@ import { Skeleton } from '@/shared/ui/skeleton';
 import type { SeasonListStatus } from './api/seasons.types';
 import { useSeasonCreate } from './model/useSeasonCreate';
 import { useSeasonDetail } from './model/useSeasonDetail';
+import { useSeasonJoinFlow } from './model/useSeasonJoinFlow';
 import { useSeasonList } from './model/useSeasonList';
 import { useSeasonSessionScope } from './model/useSeasonSessionScope';
 import { SeasonCreateDialog } from './ui/SeasonCreateDialog';
+import { SeasonCreatedDialog } from './ui/SeasonCreatedDialog';
 import { SeasonDetailDialog } from './ui/SeasonDetailDialog';
+import { SeasonJoinDialog } from './ui/SeasonJoinDialog';
 import { SeasonList } from './ui/SeasonList';
 import './ui/season-canvas.css';
 
-const filters: (SeasonListStatus | undefined)[] = [undefined, 'scheduled', 'active', 'ended'];
+// Figma 탭 순서(전체·진행 중·예정·종료)를 따른다. 인기순 정렬은 서버가 제공하지 않는다.
+const filters: (SeasonListStatus | undefined)[] = [undefined, 'active', 'scheduled', 'ended'];
 
 const SeasonCanvasPage = () => {
   const { t } = useTranslation('seasonCanvas');
@@ -21,19 +25,23 @@ const SeasonCanvasPage = () => {
   const detailOpenerRef = useRef<HTMLElement | null>(null);
   const restoreCreateFocusRef = useRef(true);
   const scope = useSeasonSessionScope();
-  const list = useSeasonList(scope.sessionKey, scope.isReady);
-  const detail = useSeasonDetail(scope);
+  // 로그인 확인이 실패해도 공개 목록은 손님으로 보여 준다. 계정 동작은 각 버튼의 로그인 창이 맡는다.
+  const browseAsGuest = scope.sessionQuery.isError && !scope.isReady && !scope.isChangingSession;
+  const listScope = browseAsGuest ? { ...scope, sessionKey: 'guest', isReady: true } : scope;
+  const list = useSeasonList(listScope.sessionKey, listScope.isReady);
+  const detail = useSeasonDetail(listScope);
   const create = useSeasonCreate(
     scope,
-    id => {
+    () => {
       restoreCreateFocusRef.current = false;
       detailOpenerRef.current = null;
       list.resetToFirstAll();
-      detail.openDetail(id);
     },
     list.resetToFirstAll
   );
   const preview = list.query.data?.items.find(item => item.id === detail.selectedId);
+  // 참가 안내 팝업은 상세 모달을 대신하므로 팝업을 띄우기 전에 상세를 닫는다.
+  const joinFlow = useSeasonJoinFlow(scope, detail.closeDetail);
 
   return (
     <div className="season-page">
@@ -45,25 +53,28 @@ const SeasonCanvasPage = () => {
           <Skeleton className="season-create-skeleton" />
         ) : (
           <Button
-            disabled={!scope.session || !scope.isReady}
+            variant="secondary"
+            className="season-create-button"
+            disabled={scope.isChangingSession}
             onClick={event => {
+              // 지갑 연결 창은 헤더가 소유하므로 손님에게는 헤더의 연결 버튼을 안내한다.
+              // 안내를 닫으면 포커스가 이 버튼으로 돌아오도록 안내 팝업의 복귀 대상으로 둔다.
+              if (!scope.session) {
+                detailOpenerRef.current = event.currentTarget;
+                joinFlow.askWalletToCreate();
+                return;
+              }
               createOpenerRef.current = event.currentTarget;
               restoreCreateFocusRef.current = true;
               create.openDialog();
             }}
           >
+            <span aria-hidden="true">+</span>
             {t('create')}
           </Button>
         )}
       </header>
-      {scope.sessionQuery.isError && (
-        <div className="season-inline-alert" role="alert">
-          <span>{t('sessionError')}</span>
-          <Button size="sm" variant="secondary" onClick={() => void scope.sessionQuery.refetch()}>
-            {t('retry')}
-          </Button>
-        </div>
-      )}
+      <hr className="season-divider" />
       <div className="season-filter" role="group" aria-label={t('filters.label')}>
         {filters.map(filter => (
           <button
@@ -77,7 +88,7 @@ const SeasonCanvasPage = () => {
           </button>
         ))}
       </div>
-      {!scope.isReady ? (
+      {!listScope.isReady ? (
         <div className="season-list" aria-busy="true" aria-label={t('sessionChecking')}>
           {[0, 1, 2].map(value => (
             <Skeleton key={value} className="season-list__skeleton" />
@@ -124,11 +135,31 @@ const SeasonCanvasPage = () => {
         manageError={detail.manageError}
         isManaging={detail.isManaging}
         isRefreshingManagement={detail.isRefreshingManagement}
-        canInteract={scope.isReady && !scope.isChangingSession}
+        canInteract={listScope.isReady && !scope.isChangingSession}
+        isJoining={joinFlow.joiningId !== null && joinFlow.joiningId === detail.selectedId}
         onClose={detail.closeDetail}
+        onJoin={season => void joinFlow.join(season)}
+        onBrowseLive={() => {
+          detail.closeDetail();
+          list.setStatus('active');
+        }}
         onOpenManage={detail.openManage}
         onCloseManage={detail.closeManage}
         onConfirmManage={detail.confirmManage}
+        restoreFocusTo={detailOpenerRef}
+        fallbackFocusTo={headingRef}
+      />
+      <SeasonCreatedDialog
+        createdId={create.createdId}
+        onClose={create.closeCreatedNotice}
+        restoreFocusTo={createOpenerRef}
+        fallbackFocusTo={headingRef}
+      />
+      <SeasonJoinDialog
+        notice={joinFlow.notice}
+        joiningId={joinFlow.joiningId}
+        onClose={joinFlow.closeNotice}
+        onRetry={season => void joinFlow.join(season)}
         restoreFocusTo={detailOpenerRef}
         fallbackFocusTo={headingRef}
       />

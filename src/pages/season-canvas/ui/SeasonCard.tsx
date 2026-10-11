@@ -1,5 +1,6 @@
-import { UserRound } from 'lucide-react';
+import { User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { cn } from '@/shared/lib/utils';
 import { Card } from '@/shared/ui/card';
 import type { Season } from '../api/seasons.types';
 import { formatSeasonDateRange, getSeasonDaysRemaining } from '../lib/seasonDate';
@@ -27,8 +28,13 @@ export function SeasonCard({
   );
 
   return (
-    <Card className="season-card">
-      <SeasonPreview seasonId={season.id} status={season.status} className="season-card__preview" />
+    <Card className={cn('season-card', `season-card--${season.status}`)}>
+      <SeasonPreview
+        seasonId={season.id}
+        status={season.status}
+        joined={season.isParticipant}
+        className="season-card__preview"
+      />
       <div className="season-card__body">
         <h2>
           {/* 카드 클릭으로 상세를 열고, 모달을 닫을 때 이 버튼으로 초점을 돌려준다. */}
@@ -51,25 +57,35 @@ export function SeasonCard({
           )}
         </p>
         <div className="season-card__footer">
-          <span
-            className="season-card__participants"
-            aria-label={t('card.participants', {
-              count: season.participantCount,
-              capacity: season.capacity,
-            })}
-          >
-            <UserRound aria-hidden="true" />
-            {season.participantCount}/{season.capacity}
-          </span>
-          <progress
-            className="season-card__capacity"
-            max={capacity}
-            value={registered}
-            aria-label={t('detail.participants')}
-          />
-          <span className="season-card__remaining">
-            {t('card.remaining', { count: remaining })}
-          </span>
+          {/* 종료된 시즌은 남은 자리 대신 함께한 참가자 수만 보여 준다. */}
+          {season.status === 'ended' ? (
+            <span className="season-card__participants">
+              <User aria-hidden="true" fill="currentColor" />
+              {t('card.artists', { count: season.participantCount })}
+            </span>
+          ) : (
+            <>
+              <span
+                className="season-card__participants"
+                aria-label={t('card.participants', {
+                  count: season.participantCount,
+                  capacity: season.capacity,
+                })}
+              >
+                <User aria-hidden="true" fill="currentColor" />
+                {season.participantCount}/{season.capacity}
+              </span>
+              <progress
+                className="season-card__capacity"
+                max={capacity}
+                value={registered}
+                aria-label={t('detail.participants')}
+              />
+              <span className="season-card__remaining">
+                {t('card.remaining', { count: remaining })}
+              </span>
+            </>
+          )}
         </div>
       </div>
     </Card>

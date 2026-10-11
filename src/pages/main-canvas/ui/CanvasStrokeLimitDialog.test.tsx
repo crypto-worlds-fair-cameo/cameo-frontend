@@ -6,9 +6,10 @@ import { CanvasStrokeLimitDialog } from './CanvasStrokeLimitDialog';
 describe('canvas stroke limit dialog', () => {
   it('announces lifetime consumption with only a dismissal action after successful completion', () => {
     render(<CanvasStrokeLimitDialog open completed onOpenChange={() => {}} />);
-    const dialog = screen.getByRole('alertdialog', { name: '한 획을 소진했습니다' });
-    expect(dialog.textContent).toContain('평생 한 번뿐인 획을 소진했습니다');
+    const dialog = screen.getByRole('alertdialog', { name: '당신의 획이 영원히 남았어요.' });
+    expect(dialog.textContent).toContain('단 하나뿐인 획이 메인 캔버스에 남았어요');
     expect(screen.getAllByRole('button')).toHaveLength(1);
+    expect(screen.getByRole('button', { name: '메인 캔버스 보기' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: '다시 그리기' })).toBeNull();
   });
   it('labels the modal alert and dismisses it with confirmation', () => {

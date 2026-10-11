@@ -1,0 +1,206 @@
+/* 공통 대화상자는 배경과 창을 형제로 렌더링하므로 이 창 바로 앞의 배경만 시안 색으로 바꾼다. */
+.cameo-dialog-overlay:has(+ .profile-edit-dialog) {
+  background: rgb(217 217 217 / 50%);
+  backdrop-filter: none;
+}
+
+.profile-edit-dialog {
+  width: 496px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 32px);
+  gap: var(--space-6);
+  overflow-y: auto;
+  border: 1px solid var(--color-gray-400);
+  border-radius: 12px;
+  padding: 48px 48px 40px;
+  background: var(--surface-modal);
+  color: var(--color-black);
+  box-shadow: none;
+}
+
+.profile-edit-dialog [data-slot='dialog-header'] {
+  gap: 0;
+  padding-right: 0;
+  text-align: left;
+}
+
+.profile-edit-dialog [data-slot='dialog-title'] {
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 31px;
+}
+
+.profile-edit-form {
+  display: grid;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+.profile-edit-avatar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  min-height: 86px;
+}
+
+.profile-edit-avatar-frame {
+  position: relative;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.profile-edit-avatar-frame[data-state='error'] {
+  box-shadow: 0 0 0 2px var(--color-accent-red);
+}
+
+.profile-edit-avatar-image {
+  width: 72px;
+  height: 72px;
+}
+
+.profile-edit-avatar-badge {
+  position: absolute;
+  right: -3px;
+  bottom: -2px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--surface-modal);
+  border-radius: 50%;
+  background: var(--color-black);
+}
+
+.profile-edit-avatar-copy {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.profile-edit-label,
+.profile-edit-form .cameo-field > label {
+  color: var(--color-gray-700);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 20px;
+}
+
+.profile-edit-hint,
+.profile-edit-form .cameo-field-hint,
+.profile-edit-form .cameo-field-error {
+  color: var(--color-gray-400);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.profile-edit-hint[data-state='selected'] {
+  color: #0e7a4e;
+}
+
+.profile-edit-hint[data-state='error'],
+.profile-edit-form .cameo-field-error {
+  color: var(--color-accent-red);
+}
+
+.profile-edit-change-image {
+  margin-top: var(--space-2);
+  width: 110px;
+  height: 32px;
+  border-color: var(--color-gray-200);
+  border-radius: 8px;
+  padding: 0 var(--space-2);
+  color: var(--color-black);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 18px;
+}
+
+.profile-edit-form .cameo-field {
+  gap: var(--space-2);
+}
+
+.profile-edit-nickname {
+  position: relative;
+}
+
+.profile-edit-nickname .cameo-input {
+  height: 40px;
+  border-color: var(--color-black);
+  border-radius: 8px;
+  padding: 0 64px 0 var(--space-3);
+  background: var(--surface-modal);
+  color: var(--color-black);
+  font-size: var(--text-body);
+  line-height: 21px;
+}
+
+.profile-edit-nickname .cameo-input[aria-invalid='true'] {
+  border-color: var(--color-accent-red);
+}
+
+.profile-edit-count {
+  position: absolute;
+  top: 50%;
+  right: var(--space-3);
+  transform: translateY(-50%);
+  color: var(--color-gray-400);
+  font-size: 12px;
+  line-height: 18px;
+  pointer-events: none;
+}
+
+.profile-edit-spacer {
+  height: var(--space-2);
+}
+
+.profile-edit-error {
+  color: var(--color-accent-red);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.profile-edit-actions {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.profile-edit-actions .cameo-button {
+  height: 46px;
+  border-radius: 6px;
+  font-size: var(--text-body-lg);
+  font-weight: 400;
+  line-height: 24px;
+}
+
+.profile-edit-actions .cameo-button--primary {
+  background: var(--color-black);
+  color: var(--surface-modal);
+}
+
+.profile-edit-actions .cameo-button--secondary {
+  border-color: var(--color-black);
+  background: var(--surface-modal);
+  color: var(--color-black);
+}
+
+.profile-edit-actions .cameo-button:disabled {
+  background: var(--color-gray-100);
+  color: var(--color-gray-400);
+  opacity: 1;
+}
+
+.profile-edit-actions .cameo-button--primary[aria-busy='true'] {
+  background: var(--color-black);
+  color: var(--surface-modal);
+}
+
+@media (max-width: 480px) {
+  .profile-edit-dialog {
+    padding: var(--space-8) var(--space-6);
+  }
+
+  .profile-edit-avatar {
+    gap: var(--space-4);
+  }
+}

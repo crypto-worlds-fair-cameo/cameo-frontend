@@ -1,47 +1,83 @@
+/* Figma(1920px) 목록은 공통 본문 폭(1024px)보다 넓으므로, 넓은 화면에서는 시즌 페이지만 화면 폭에 맞춘다. */
 .season-page {
-  display: grid;
-  gap: var(--space-6);
+  display: flex;
+  width: 100%;
+  flex-direction: column;
   padding-bottom: var(--space-8);
 }
 .season-hero {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-5);
-  padding: var(--space-8) 0;
+  gap: 30px;
+  padding: 27px 0 47px;
   text-align: center;
 }
 .season-hero h1 {
   margin: 0;
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  line-height: 1.05;
-  letter-spacing: -0.04em;
+  font-size: 40px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+.season-create-button.cameo-button {
+  width: 200px;
+  height: 40px;
+  gap: var(--space-1);
+  padding: 0 var(--space-4);
+  border-color: var(--color-black);
+  border-radius: 10px;
+  background: var(--background);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 15%);
+  font-size: 13px;
+  font-weight: 700;
+}
+.season-create-button.cameo-button:hover {
+  background: var(--surface-card);
+}
+.season-create-button.cameo-button:disabled {
+  box-shadow: none;
+}
+.season-create-skeleton {
+  width: 200px;
+  height: 40px;
+  border-radius: 10px;
+}
+.season-divider {
+  width: 100%;
+  margin: 0 0 25px;
+  border: 0;
+  border-top: 1px solid var(--color-gray-200);
 }
 .season-filter {
   display: flex;
-  gap: var(--space-5);
-  border-bottom: 1px solid var(--color-gray-200);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) 32px;
+  min-height: 40px;
+  margin-bottom: 40px;
+  padding: 0 9px;
 }
 .season-filter__item {
-  min-height: var(--control-height-md);
   flex-shrink: 0;
-  margin-bottom: -1px;
-  padding: var(--space-3) var(--space-1);
+  padding: 4px 0 3px;
   border: 0;
   border-bottom: 2px solid transparent;
   border-radius: 0;
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--color-gray-200);
   font: inherit;
-  font-weight: 600;
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.5;
   cursor: pointer;
+  transition: color var(--duration-fast);
 }
 .season-filter__item:hover {
-  color: var(--text-primary);
+  color: var(--color-gray-400);
 }
 .season-filter__item[aria-pressed='true'] {
-  border-bottom-color: var(--border-strong);
-  color: var(--text-primary);
+  border-bottom-color: var(--color-black);
+  color: var(--color-black);
 }
 .season-filter__item:focus-visible {
   outline: 2px solid var(--ring);
@@ -53,11 +89,14 @@
 }
 .season-list {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-4);
+  width: min(100%, 1564px);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 26px 40px;
+  margin-inline: auto;
 }
 .season-list__skeleton {
-  min-height: 340px;
+  min-height: 366px;
+  border-radius: 10px;
 }
 .season-card {
   position: relative;
@@ -66,7 +105,9 @@
   flex-direction: column;
   overflow: hidden;
   padding: 0;
-  border-color: var(--color-gray-200);
+  border: 1px solid var(--color-gray-200);
+  border-radius: 10px;
+  background: var(--background);
 }
 .season-card__preview {
   aspect-ratio: 8 / 5;
@@ -89,41 +130,43 @@
   display: grid;
   place-content: center;
   justify-items: center;
-  gap: var(--space-3);
-  color: var(--text-tertiary);
+  gap: var(--space-2);
+  color: var(--color-gray-300);
   font-size: 13px;
 }
 .season-preview__empty svg {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   stroke-width: 1.25;
 }
+/* 카드 배지: 진행 중은 초록 점과 LIVE, 종료는 연회색 알약(Figma 시즌 목록). */
 .season-preview__status {
   --status-dot: var(--color-gray-300);
   position: absolute;
-  top: var(--space-3);
-  left: var(--space-3);
+  top: 14px;
+  left: 18px;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
+  gap: var(--space-2);
+  height: 22px;
+  padding: 0 10px 0 8px;
   border-radius: 999px;
   background: rgb(23 23 23 / 65%);
   color: #fff;
   font-size: 11px;
-  line-height: 1.5;
-  backdrop-filter: blur(8px);
+  line-height: 1;
 }
 .season-preview__status::before {
-  width: 7px;
-  height: 7px;
+  width: 10px;
+  height: 10px;
   flex: none;
   border-radius: 50%;
   background: var(--status-dot);
   content: '';
 }
 .season-preview__status--active {
-  --status-dot: #2ce792;
+  --status-dot: #64fd71;
+  text-transform: uppercase;
 }
 .season-preview__status--scheduled {
   --status-dot: #fdc34e;
@@ -131,17 +174,62 @@
 .season-preview__status--cancelled {
   --status-dot: var(--color-accent-red);
 }
+.season-preview__status--ended {
+  padding: 0 12px;
+  background: rgb(238 238 238 / 90%);
+  color: var(--color-gray-500);
+}
+.season-preview__status--ended::before {
+  display: none;
+}
+.season-preview__joined {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--color-black);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+/* 상세 모달 배지는 점 없는 흰 알약에 소문자 live를 쓴다. */
+.season-preview--detail .season-preview__status {
+  top: 16px;
+  left: 16px;
+  min-width: 92px;
+  height: 24px;
+  justify-content: center;
+  padding: 0 14px;
+  border: 1px solid var(--color-gray-100);
+  background: rgb(255 255 255 / 92%);
+  color: var(--color-black);
+}
+.season-preview--detail .season-preview__status::before {
+  display: none;
+}
+.season-preview--detail .season-preview__status--active {
+  text-transform: lowercase;
+}
+.season-preview--detail .season-preview__status--ended {
+  background: rgb(238 238 238 / 90%);
+  color: var(--color-gray-500);
+}
 .season-card__body {
   display: flex;
   min-width: 0;
   flex: 1;
   flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-4) var(--space-5);
+  padding: 18px 14px 12px;
 }
 .season-card h2 {
-  margin: 0;
-  font-size: 16px;
+  margin: 0 6px;
+  color: var(--color-black);
+  font-size: 17px;
   font-weight: 600;
   line-height: 1.4;
 }
@@ -159,7 +247,7 @@
 .season-card__open::after {
   position: absolute;
   inset: 0;
-  border-radius: var(--radius-card);
+  border-radius: 10px;
   content: '';
 }
 .season-card__open:focus-visible {
@@ -180,42 +268,47 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-1);
-  margin: 0 0 var(--space-4);
-  color: var(--text-secondary);
-  font-size: 11px;
-  line-height: 1.6;
+  margin: 6px 6px 24px;
+  color: var(--color-gray-500);
+  font-size: 12px;
+  line-height: 1.5;
   overflow-wrap: anywhere;
 }
 .season-card__footer {
-  display: grid;
-  grid-template-columns: auto minmax(40px, 86px) auto;
+  display: flex;
+  min-width: 0;
   align-items: center;
-  justify-content: start;
-  gap: var(--space-3);
   margin-top: auto;
-  padding-top: var(--space-4);
+  padding-top: 16px;
   border-top: 1px solid var(--color-gray-200);
-  font-size: 11px;
+  font-size: 13px;
+  line-height: 1.5;
 }
 .season-card__participants {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
+  color: var(--color-black);
   white-space: nowrap;
 }
 .season-card__participants svg {
   width: 14px;
   height: 14px;
+  flex: none;
+  stroke-width: 1.5;
 }
 .season-card__capacity {
-  width: 100%;
+  width: 88px;
+  min-width: 40px;
   height: 6px;
+  flex: 0 1 88px;
+  margin: 0 11px 0 20px;
   overflow: hidden;
   border: 0;
   border-radius: 999px;
   appearance: none;
   background: var(--color-gray-200);
-  color: var(--color-accent-red);
+  color: #ed4242;
 }
 .season-card__capacity::-webkit-progress-bar {
   border-radius: 999px;
@@ -223,15 +316,25 @@
 }
 .season-card__capacity::-webkit-progress-value {
   border-radius: 999px;
-  background: var(--color-accent-red);
+  background: #ed4242;
 }
 .season-card__capacity::-moz-progress-bar {
   border-radius: 999px;
-  background: var(--color-accent-red);
+  background: #ed4242;
 }
 .season-card__remaining {
-  color: var(--text-secondary);
+  color: var(--color-gray-500);
+  font-size: 11px;
   white-space: nowrap;
+}
+/* 종료된 시즌 카드는 이미지와 글자를 흐리게 보여 진행 중 시즌과 구분한다. */
+.season-card--ended .season-preview__empty {
+  opacity: 0.45;
+}
+.season-card--ended h2,
+.season-card--ended .season-card__dates,
+.season-card--ended .season-card__participants {
+  color: var(--color-gray-200);
 }
 .season-status {
   display: inline-flex;
@@ -288,9 +391,9 @@
   border-radius: var(--radius-input);
   background: color-mix(in srgb, var(--destructive) 5%, var(--background));
 }
-.season-create-skeleton {
-  width: 150px;
-  height: var(--control-height-md);
+/* Figma의 시즌 팝업은 모두 흰 반투명 배경 위에 뜬다. */
+.cameo-dialog-overlay:has(+ .season-dialog) {
+  background: rgb(255 255 255 / 70%);
 }
 .season-dialog {
   max-height: min(86vh, 760px);
@@ -298,10 +401,13 @@
 }
 .season-detail-dialog {
   display: block;
-  width: min(calc(100% - 2rem), 1100px);
-  max-width: 1100px;
+  width: min(calc(100% - 2rem), 1086px);
+  max-width: 1086px;
   max-height: 90dvh;
-  padding: 40px;
+  padding: 47px 44px 47px 62px;
+  border: 1px solid var(--color-gray-300);
+  border-radius: 8px;
+  box-shadow: none;
   transition: none;
 }
 .season-detail-dialog > .cameo-dialog-close {
@@ -314,70 +420,182 @@
 }
 .season-detail-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 532fr) minmax(0, 417fr);
   align-items: stretch;
-  gap: var(--space-8);
+  gap: 31px;
 }
 .season-detail__preview {
   aspect-ratio: 1;
   align-self: start;
-  border: 1px solid var(--color-gray-200);
-  border-radius: var(--radius-input);
+  border: 1px solid var(--color-gray-300);
 }
 .season-detail__preview .season-preview__empty svg {
-  width: 72px;
-  height: 72px;
+  width: 64px;
+  height: 64px;
 }
 .season-detail__info {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: var(--space-8);
+  gap: 28px;
+  padding-bottom: 15px;
 }
 .season-detail__heading[data-slot='dialog-header'] {
-  gap: var(--space-3);
+  gap: 6px;
+  /* 상단에 고정된 닫기 버튼과 제목이 겹치지 않도록 오른쪽을 비운다. */
   padding-right: 56px;
   text-align: left;
 }
 .season-detail__eyebrow {
-  margin: 0 0 var(--space-2);
-  color: var(--text-secondary);
+  margin: 0 0 var(--space-3);
+  color: var(--color-gray-500);
   font-size: 14px;
+  line-height: 1.4;
 }
 .season-detail__heading [data-slot='dialog-title'] {
   font-size: 24px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.35;
   overflow-wrap: anywhere;
 }
 .season-detail__heading [data-slot='dialog-description'] {
-  line-height: 1.6;
+  color: var(--color-gray-500);
+  font-size: 14px;
+  line-height: 1.5;
   overflow-wrap: anywhere;
+}
+.season-detail__notice {
+  margin: auto 0 -8px;
+  color: var(--color-black);
+  font-size: 14px;
+  text-align: center;
 }
 .season-detail__actions[data-slot='dialog-footer'] {
   flex-direction: column;
   gap: var(--space-4);
   margin-top: auto;
-  padding-top: var(--space-4);
+  padding-top: 0;
 }
-.season-detail__actions .cameo-button {
+.season-detail__notice + .season-detail__actions[data-slot='dialog-footer'] {
+  margin-top: 0;
+}
+/* 상세·참가 안내 버튼은 Figma처럼 46px 높이, 4px 모서리, 보통 굵기의 꽉 찬 폭 버튼이다. */
+.season-detail-dialog .cameo-button,
+.season-notice .cameo-button {
   width: 100%;
+  height: 46px;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 400;
+}
+.season-detail-dialog .cameo-button svg,
+.season-notice .cameo-button svg {
+  width: 16px;
+  height: 16px;
+}
+/* 참가 요청 중에는 연한 보라 바탕에 흰 글자만 보여 준다. */
+.season-detail-dialog .cameo-button--web3[aria-busy='true'],
+.season-notice .cameo-button--web3[aria-busy='true'] {
+  color: #fff;
+}
+.season-detail-dialog .cameo-button[aria-busy='true'] .cameo-spinner,
+.season-notice .cameo-button[aria-busy='true'] .cameo-spinner {
+  display: none;
+}
+.season-notice {
+  display: flex;
+  width: min(calc(100% - 2rem), 546px);
+  max-width: 546px;
+  min-height: 345px;
+  flex-direction: column;
+  gap: 0;
+  padding: 64px 56px 51px;
+  border: 1px solid var(--color-gray-400);
+  border-radius: 10px;
+  box-shadow: none;
+  text-align: center;
+}
+.season-notice [data-slot='dialog-title'] {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.season-notice [data-slot='dialog-description'] {
+  margin: var(--space-3) 0 0;
+  color: var(--color-gray-500);
+  font-size: 16px;
+  line-height: 1.5;
+}
+.season-notice__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: auto;
+  padding-top: var(--space-8);
 }
 .season-create-dialog {
-  width: min(calc(100% - 2rem), 680px);
-  max-width: 680px;
+  display: block;
+  width: min(calc(100% - 2rem), 546px);
+  max-width: 546px;
+  max-height: calc(100dvh - 48px);
+  padding: 11px 37px 85px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.season-create__heading[data-slot='dialog-header'] {
+  margin-bottom: 20px;
+  padding: 0;
+  text-align: center;
+}
+.season-create__heading [data-slot='dialog-title'] {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 36px;
 }
 .season-form {
   display: grid;
-  gap: var(--space-4);
+  gap: 22px;
 }
 .season-form__controls {
-  display: grid;
-  gap: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   min-width: 0;
   margin: 0;
   padding: 0;
   border: 0;
+}
+.season-form .cameo-field > label,
+.season-form__entry legend,
+.season-form__duration h2,
+.season-form__strokes .cameo-slider-field label {
+  color: var(--color-gray-700);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 20px;
+}
+.season-form .cameo-field > label > span {
+  display: none;
+}
+.season-form__controls > .cameo-field:first-child {
+  margin-bottom: 28px;
+}
+.season-form .cameo-input {
+  height: 30px;
+  border-color: var(--color-gray-200);
+  border-radius: 5px;
+  font-size: 14px;
+  line-height: 21px;
+}
+.season-form .cameo-input:focus {
+  border-color: var(--color-black);
+}
+.season-form .cameo-input[aria-invalid='true'] {
+  border-color: var(--destructive);
 }
 .season-form__grid {
   display: grid;
@@ -386,33 +604,255 @@
 }
 .season-textarea {
   width: 100%;
-  min-height: 88px;
+  min-height: 156px;
   resize: vertical;
-  border: 1px solid var(--border-input);
-  border-radius: var(--radius-input);
+  border: 1px solid var(--color-gray-200);
+  border-radius: 5px;
   background: var(--background);
   color: var(--text-primary);
   padding: var(--space-3);
   font: inherit;
+  font-size: 14px;
+}
+/* 글자 수는 설명 제목 줄의 오른쪽 끝에 두어 창 높이를 늘리지 않는다. */
+.season-form .cameo-field:has(> .season-form__counter) {
+  position: relative;
+}
+.season-form__counter {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+  color: var(--color-gray-400);
+  font-size: 12px;
+  line-height: 20px;
+}
+.season-form__counter[data-over='true'] {
+  color: var(--destructive);
 }
 .season-textarea:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 3px;
 }
-.season-mode {
-  display: grid;
-  gap: var(--space-2);
+.season-form__strokes {
+  position: relative;
+  margin-top: 47px;
+}
+.season-form__strokes .cameo-slider-field {
+  gap: 12px;
+}
+.season-form__strokes .cameo-slider-field output {
+  position: absolute;
+  top: 54px;
+  right: 0;
+  font-family: inherit;
+  font-size: 13px;
+}
+/* 시안은 최솟값 상태라 채움이 보이지 않는다. 팔레트의 브러시 크기처럼 선택한 만큼 검정으로 채운다. */
+.season-form__strokes .cameo-slider-field input::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 0;
+  background: linear-gradient(
+    to right,
+    var(--color-black) var(--slider-progress),
+    var(--color-gray-300) var(--slider-progress)
+  );
+}
+.season-form__strokes .cameo-slider-field input::-moz-range-track {
+  height: 8px;
+  border-radius: 0;
+  background: var(--color-gray-300);
+}
+.season-form__strokes .cameo-slider-field input::-moz-range-progress {
+  height: 8px;
+  background: var(--color-black);
+}
+.season-form__strokes .cameo-slider-field input::-webkit-slider-thumb {
+  margin-top: -6px;
+  border-width: 1px;
+}
+.season-form__strokes > .cameo-checkbox-label {
+  margin-top: 8px;
+}
+.season-form .cameo-checkbox-label {
+  gap: 8px;
+  color: var(--color-gray-300);
+  font-size: 14px;
+  line-height: 21px;
+}
+.season-form .cameo-checkbox {
+  width: 20px;
+  height: 20px;
+  border-width: 0.5px;
+  border-radius: 4px;
+}
+.season-form .cameo-checkbox:disabled {
+  opacity: 1;
+}
+.season-form__capacity {
+  margin-top: 38px;
+}
+.season-form__option-row {
+  display: flex;
+  min-height: 28px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-gray-300);
+  font-size: 14px;
+}
+.season-form__option-row > .cameo-checkbox-label:first-child {
+  width: 105px;
+}
+.season-form__option-row .cameo-input {
+  width: 82px;
+  height: 28px;
+  padding-inline: 6px;
+  border-color: var(--color-black);
+  border-radius: 4px;
+}
+.season-form__entry {
   margin: 0;
+  margin-top: 18px;
   padding: 0;
   border: 0;
 }
-.season-mode legend {
-  margin-bottom: var(--space-2);
-  font-weight: 500;
+.season-form__entry legend {
+  margin-bottom: 8px;
 }
-.season-mode > div {
+.season-form__fee {
+  margin-top: 36px;
+}
+.season-form__duration {
+  margin-top: 16px;
+}
+.season-form__duration-heading {
   display: flex;
-  gap: var(--space-2);
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.season-form__duration h2 {
+  margin: 0;
+}
+.season-form__duration-heading .cameo-checkbox-label {
+  color: var(--color-gray-500);
+  font-size: 12px;
+}
+.season-form__duration-heading .cameo-checkbox {
+  width: 16px;
+  height: 16px;
+}
+.season-form__dates {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 14px minmax(0, 1fr);
+  gap: 8px;
+}
+.season-form__dates .cameo-field > label {
+  color: var(--color-gray-400);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+}
+.season-form__date-separator {
+  padding-top: 27px;
+  text-align: center;
+}
+.season-form__date-inputs {
+  display: flex;
+  min-width: 0;
+  gap: 7px;
+}
+.season-form__date-input,
+.season-form__time-input {
+  position: relative;
+  min-width: 0;
+}
+.season-form__date-input {
+  flex: 1 1 119px;
+}
+.season-form__time-input {
+  flex: 1 1 92px;
+}
+.season-form__date-inputs .cameo-input {
+  height: 28px;
+  padding-inline: 6px 20px;
+  border-color: var(--color-black);
+  border-radius: 4px;
+  color: var(--color-black);
+  font-size: 12px;
+}
+.season-form__date-inputs .cameo-input:disabled {
+  background: var(--background);
+  opacity: 0.5;
+}
+.season-form__date-inputs .cameo-input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 0;
+  width: 22px;
+  height: 24px;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.season-form__date-inputs img {
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.season-form__time-input img {
+  transform: translateY(-50%) rotate(180deg);
+}
+.season-form__duration-note {
+  margin: 13px 0 0;
+  color: var(--color-gray-400);
+  font-size: 12px;
+  line-height: 18px;
+}
+.season-form__dimensions {
+  margin-top: 16px;
+  color: var(--color-gray-500);
+  font-size: 12px;
+}
+.season-form__dimensions summary {
+  width: fit-content;
+  cursor: pointer;
+}
+.season-form__dimensions .season-form__grid {
+  margin-top: 12px;
+}
+.season-form__error,
+.season-form__ambiguous {
+  margin-top: 16px;
+}
+.season-create__actions[data-slot='dialog-footer'] {
+  flex-direction: column;
+  gap: 13px;
+  margin-inline: -6px;
+}
+.season-create__actions .cameo-button {
+  width: 100%;
+  height: 46px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 400;
+}
+.cameo-dialog-overlay:has(+ .season-created-dialog) {
+  background: rgb(217 217 217 / 73%);
+}
+.season-created-dialog {
+  padding: 62px 56px 52px;
+  border-radius: 12px;
+}
+.season-created-dialog [data-slot='dialog-title'] {
+  line-height: 31px;
+}
+.season-created-dialog .cameo-button {
+  border-radius: 6px;
 }
 .season-form__error,
 .season-form__ambiguous,
@@ -443,33 +883,40 @@
   min-width: 0;
   align-items: baseline;
   gap: var(--space-4);
-  padding: var(--space-4) 0;
+  padding: 15px 0;
   border-bottom: 1px solid var(--color-gray-200);
 }
 .season-detail dt {
+  color: var(--color-black);
   font-size: 14px;
 }
 .season-detail dd {
   margin: 0;
+  color: var(--color-black);
   font-size: 14px;
   overflow-wrap: anywhere;
   text-align: right;
 }
-.season-detail__period {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: end;
-  gap: var(--space-1);
-}
-.season-detail__period time {
-  white-space: nowrap;
-}
 .season-detail__skeleton {
   height: 220px;
 }
-@media (max-width: 1023px) {
+@media (min-width: 1100px) {
+  .season-page {
+    --season-page-width: min(1706px, calc(100vw - 96px));
+    width: var(--season-page-width);
+    margin-inline: calc((100% - var(--season-page-width)) / 2);
+  }
+}
+@media (max-width: 1199px) {
+  .season-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-6);
+  }
+}
+@media (max-width: 899px) {
   .season-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-5);
   }
 }
 @media (max-width: 800px) {
@@ -485,14 +932,24 @@
   }
   .season-detail__info {
     gap: var(--space-5);
+    padding-bottom: 0;
   }
 }
 @media (max-width: 640px) {
-  .season-list {
-    grid-template-columns: minmax(0, 1fr);
-  }
   .season-hero {
-    padding: var(--space-5) 0;
+    gap: var(--space-5);
+    padding: var(--space-3) 0 var(--space-8);
+  }
+  .season-hero h1 {
+    font-size: 32px;
+  }
+  .season-filter {
+    gap: var(--space-1) var(--space-6);
+    margin-bottom: var(--space-6);
+    padding: 0;
+  }
+  .season-filter__item {
+    font-size: 16px;
   }
   .season-inline-alert {
     align-items: stretch;
@@ -506,5 +963,126 @@
   }
   .season-dialog {
     max-height: 92vh;
+  }
+  .season-create-dialog {
+    max-height: calc(100dvh - 24px);
+    padding: 16px 24px 28px;
+  }
+  .season-form__dates {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .season-form__date-separator {
+    display: none;
+  }
+  .season-form__date-inputs .cameo-input {
+    font-size: 14px;
+  }
+  .season-form__date-input {
+    flex: 1.3;
+  }
+  .season-form__time-input {
+    flex: 1;
+  }
+  .season-notice {
+    min-height: 0;
+    padding: 40px var(--space-6) 28px;
+  }
+  .season-notice [data-slot='dialog-title'] {
+    font-size: 20px;
+  }
+}
+@media (max-width: 599px) {
+  .season-list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+}
+/* 시안의 개설 창은 1212px 높이 화면 기준(내용 1080px)이다. 낮은 화면에서는 세로 간격만 줄여
+   "Create Season" 버튼까지 스크롤 없이 보이게 한다. 높은 화면은 시안 간격을 그대로 쓴다. */
+@media (max-height: 1100px) {
+  .season-create-dialog {
+    padding-block: 8px 24px;
+  }
+  .season-create__heading[data-slot='dialog-header'] {
+    margin-bottom: 12px;
+  }
+  .season-form {
+    gap: 16px;
+  }
+  .season-form__controls > .cameo-field:first-child {
+    margin-bottom: 16px;
+  }
+  .season-textarea {
+    min-height: 88px;
+  }
+  .season-form__strokes {
+    margin-top: 24px;
+  }
+  .season-form__capacity {
+    margin-top: 20px;
+  }
+  .season-form__fee {
+    margin-top: 14px;
+  }
+  .season-form__duration-note {
+    margin-top: 8px;
+  }
+}
+@media (max-height: 860px) {
+  .season-create-dialog {
+    max-height: calc(100dvh - 24px);
+  }
+  .season-create__heading [data-slot='dialog-title'] {
+    line-height: 30px;
+  }
+  .season-textarea {
+    min-height: 56px;
+  }
+  .season-form__controls > .cameo-field:first-child {
+    margin-bottom: 10px;
+  }
+  .season-form__strokes,
+  .season-form__capacity {
+    margin-top: 14px;
+  }
+  .season-form__entry,
+  .season-form__fee,
+  .season-form__dimensions,
+  .season-form__duration {
+    margin-top: 8px;
+  }
+  .season-create__actions[data-slot='dialog-footer'] {
+    gap: 8px;
+  }
+  .season-create__actions .cameo-button {
+    height: 40px;
+  }
+}
+@media (max-height: 760px) {
+  .season-create-dialog {
+    padding-block: 4px 12px;
+  }
+  .season-create__heading[data-slot='dialog-header'] {
+    margin-bottom: 6px;
+  }
+  .season-form {
+    gap: 10px;
+  }
+  .season-textarea {
+    min-height: 44px;
+  }
+  .season-form__controls > .cameo-field:first-child {
+    margin-bottom: 6px;
+  }
+  .season-form__strokes .cameo-slider-field {
+    gap: 6px;
+  }
+  .season-form__strokes > .cameo-checkbox-label {
+    margin-top: 2px;
+  }
+  .season-form__strokes,
+  .season-form__capacity {
+    margin-top: 8px;
   }
 }

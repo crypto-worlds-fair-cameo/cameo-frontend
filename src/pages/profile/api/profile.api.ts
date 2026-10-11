@@ -8,6 +8,7 @@ interface ApiResponse<T> {
 }
 
 export type ProfileSeasonStatus = 'scheduled' | 'active' | 'ended' | 'cancelled';
+export type ProfileThumbnail = string | [string, string];
 
 export interface ProfileTransaction {
   id: string;
@@ -22,8 +23,8 @@ interface ProfileCanvasBase {
   startsAt: string;
   endsAt: string;
   status: ProfileSeasonStatus;
-  // 썸네일 API 전까지 목록에서 시즌을 구분하는 장식용 색 두 개.
-  thumbnail: [string, string];
+  // 이미지 URL을 사용하고, 이미지가 없는 항목은 기존 장식용 색 두 개로 표시한다.
+  thumbnail: ProfileThumbnail;
 }
 
 export interface ProfileSeason extends ProfileCanvasBase {
@@ -74,7 +75,7 @@ const sampleActivity: ProfileActivity = {
       endsAt: '2026-11-01T12:00:00Z',
       participantCount: 7,
       status: 'ended',
-      thumbnail: ['#4fb3ff', '#5ec44f'],
+      thumbnail: '/images/profile/season-design-ui.png',
     },
     {
       id: 'season-pixel-battle',
@@ -83,7 +84,7 @@ const sampleActivity: ProfileActivity = {
       endsAt: '2026-10-30T12:00:00Z',
       participantCount: 128,
       status: 'active',
-      thumbnail: ['#ff6fb5', '#5d4ee2'],
+      thumbnail: '/images/profile/season-pixel-battle.png',
     },
     {
       id: 'season-night-sky',
@@ -92,7 +93,7 @@ const sampleActivity: ProfileActivity = {
       endsAt: '2026-08-20T12:00:00Z',
       participantCount: 64,
       status: 'ended',
-      thumbnail: ['#1b2a6b', '#f5c542'],
+      thumbnail: '/images/profile/season-night-sky.png',
     },
   ],
 };

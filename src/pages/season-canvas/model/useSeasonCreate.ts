@@ -22,6 +22,7 @@ export function useSeasonCreate(
   const queryClient = useQueryClient();
   const mutation = useCreateSeasonMutation(scope.isCurrentScope);
   const [open, setOpen] = useState(false);
+  const [createdState, setCreatedState] = useState<{ version: number; id: string } | null>(null);
   const [draft, setDraft] = useState<SeasonFormDraft>(() => createInitialSeasonDraft());
   const [errors, setErrors] = useState<SeasonFormErrors>({});
   const [serverError, setServerError] = useState<SeasonErrorKey | null>(null);
@@ -29,6 +30,8 @@ export function useSeasonCreate(
   const [ambiguous, setAmbiguous] = useState(false);
   const [retryAcknowledged, setRetryAcknowledged] = useState(false);
   const requestOwnerRef = useRef<symbol | null>(null);
+  // 세션이 바뀐 render부터 이전 계정의 개설 완료 안내를 숨긴다.
+  const createdId = createdState?.version === scope.resetVersion ? createdState.id : null;
 
   useEffect(() => {
     let active = true;
@@ -37,6 +40,7 @@ export function useSeasonCreate(
       if (!active) return;
       requestOwnerRef.current = null;
       setOpen(false);
+      setCreatedState(null);
       setDraft(createInitialSeasonDraft());
       setErrors({});
       setServerError(null);
@@ -46,10 +50,12 @@ export function useSeasonCreate(
     });
     return () => {
       active = false;
+      requestOwnerRef.current = null;
     };
   }, [scope.resetVersion]);
 
   const openDialog = () => {
+    setCreatedState(null);
     setDraft(createInitialSeasonDraft());
     setErrors({});
     setServerError(null);
@@ -81,13 +87,14 @@ export function useSeasonCreate(
     setTraceId(null);
     try {
       const season = await mutation.mutateAsync({ input: validation.input, scope: token });
-      // 세션이 바뀌었으면 늦은 생성 응답으로 상세를 열지 않는다.
-      if (!scope.isCurrentScope(token)) return;
+      // 세션 변경이나 unmount 뒤 도착한 응답으로 완료 안내를 다시 열지 않는다.
+      if (!scope.isCurrentScope(token) || requestOwnerRef.current !== requestOwner) return;
+      setCreatedState({ version: scope.resetVersion, id: season.id });
       setOpen(false);
       setAmbiguous(false);
       onCreated(season.id);
     } catch (error) {
-      if (!scope.isCurrentScope(token)) return;
+      if (!scope.isCurrentScope(token) || requestOwnerRef.current !== requestOwner) return;
       const key = getSeasonErrorKey(error);
       setServerError(key);
       setTraceId(
@@ -120,6 +127,7 @@ export function useSeasonCreate(
 
   return {
     open,
+    createdId,
     draft,
     errors,
     serverError,
@@ -129,6 +137,7 @@ export function useSeasonCreate(
     isPending: mutation.isPending,
     openDialog,
     closeDialog,
+    closeCreatedNotice: () => setCreatedState(null),
     updateDraft,
     submit,
     checkList,

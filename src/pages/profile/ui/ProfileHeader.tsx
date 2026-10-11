@@ -33,8 +33,9 @@ export function ProfileHeader({
       <div className="profile-identity">
         <h1>{name ? `@${name}` : t('fallbackName')}</h1>
         {walletAddress && (
-          <p className="font-data" title={walletAddress}>
-            {shortenAddress(walletAddress)}
+          <p title={walletAddress}>
+            <span>{t('header.wallet')} </span>
+            <span>{shortenAddress(walletAddress)}</span>
           </p>
         )}
       </div>
@@ -43,12 +44,17 @@ export function ProfileHeader({
           <EditProfileDialog
             user={user}
             trigger={
-              <Button variant="secondary" size="sm">
+              <Button variant="secondary" size="sm" className="profile-edit-button">
                 {t('header.edit')}
               </Button>
             }
           />
-          <Button variant="secondary" size="sm" onClick={onShowJoined}>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="profile-joined-button"
+            onClick={onShowJoined}
+          >
             {t('header.joinedCanvases')}
           </Button>
         </div>

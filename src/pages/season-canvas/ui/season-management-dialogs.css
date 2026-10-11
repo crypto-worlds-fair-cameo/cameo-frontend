@@ -1,0 +1,187 @@
+.cameo-dialog-overlay:has(+ .season-management-dialog) {
+  background: rgb(255 255 255 / 70%);
+}
+
+.season-management-dialog {
+  display: block;
+  width: 546px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 32px);
+  padding: 62px 56px 52px;
+  overflow-y: auto;
+  border: 1px solid var(--color-gray-400);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.season-management-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.season-management-dialog [data-slot='dialog-title'] {
+  margin: 0;
+  color: var(--color-black);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 31px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.season-management-dialog .season-management-button {
+  width: 100%;
+  height: 46px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+}
+
+.season-invite-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 40px;
+  padding: 0 6px 0 12px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 8px;
+  background: var(--color-gray-50);
+}
+
+.season-invite-link .cameo-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-black);
+  font-size: 14px;
+  line-height: 21px;
+  text-overflow: ellipsis;
+}
+
+.season-invite-link .season-invite-copy {
+  width: 72px;
+  height: 28px;
+  padding: 0;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 18px;
+}
+
+.season-invite-link .season-invite-copy[data-copied='true'] {
+  background: #0e7a4e;
+  color: #fff;
+}
+
+.season-invite-description {
+  width: 100%;
+  margin: 0;
+  color: var(--color-gray-400);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.season-invite-spacer {
+  height: 40px;
+}
+
+.season-end-warning {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border-radius: 24px;
+  background: #fdecee;
+}
+
+.season-end-description {
+  margin: 0;
+  color: var(--color-gray-500);
+  font-size: 16px;
+  line-height: 24px;
+  text-align: center;
+}
+
+.season-end-description span {
+  display: block;
+}
+
+.season-end-confirmation {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.season-end-confirmation label {
+  color: var(--color-gray-700);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.season-end-confirmation strong {
+  color: var(--color-black);
+  font-weight: 700;
+}
+
+.season-end-confirmation .cameo-input {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 8px;
+  color: var(--color-black);
+  font-size: 14px;
+  line-height: 21px;
+}
+
+.season-end-confirmation .cameo-input::placeholder {
+  color: var(--color-gray-300);
+}
+
+.season-end-confirmation .cameo-input[data-confirmed='true'] {
+  border-color: var(--color-black);
+}
+
+.season-end-spacer {
+  height: 8px;
+}
+
+.season-management-dialog .season-end-submit:disabled {
+  background: #f5b5bb;
+  color: #fff;
+}
+
+.season-management-error {
+  width: 100%;
+  margin: 0;
+  color: var(--color-accent-red);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+@media (max-width: 575px) {
+  .season-management-dialog {
+    padding: 40px 24px 32px;
+  }
+
+  .season-management-dialog [data-slot='dialog-title'] {
+    font-size: 21px;
+    line-height: 29px;
+  }
+
+  .season-end-description {
+    font-size: 14px;
+    line-height: 22px;
+  }
+}

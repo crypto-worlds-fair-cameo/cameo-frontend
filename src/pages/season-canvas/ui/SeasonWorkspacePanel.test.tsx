@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { useSeasonWorkspace } from '../model/useSeasonWorkspace';
@@ -46,7 +47,12 @@ describe('SeasonWorkspacePanel', () => {
       join: { isJoining: false, join: vi.fn(), error: null },
     } as unknown as ReturnType<typeof useSeasonWorkspace>;
 
-    render(<SeasonWorkspacePanel model={model} mode="live" />);
+    // 패널의 조기 종료 기능이 서버 상태 캐시를 사용하므로 QueryClient로 감싼다.
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <SeasonWorkspacePanel model={model} mode="live" />
+      </QueryClientProvider>
+    );
     expect(screen.getByTestId('workspace-nft').textContent).toBe(
       '11111111-1111-4111-8111-111111111111:workspace'
     );

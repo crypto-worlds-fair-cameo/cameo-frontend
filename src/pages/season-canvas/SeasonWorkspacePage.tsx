@@ -47,7 +47,7 @@ function SeasonWorkspace({ id }: { id: string }) {
     <div className="main-canvas-layout season-workspace cameo-light" data-mode={mode}>
       <aside className="canvas-left-sidebar">
         <Link to="/season-canvas" className="season-workspace-back">
-          {t('workspace.back')}
+          {t('workspace.leave')}
         </Link>
         <ColorPalette value={brush} onValueChange={setBrush} defaultOpen={!isMobile} />
         <Button variant="secondary" aria-pressed={mode === 'practice'} onClick={toggleMode}>

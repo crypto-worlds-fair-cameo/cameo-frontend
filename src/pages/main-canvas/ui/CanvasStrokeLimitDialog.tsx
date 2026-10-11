@@ -21,18 +21,28 @@ export function CanvasStrokeLimitDialog({
   completed?: boolean;
 }) {
   const { t } = useTranslation('mainCanvas');
-  // 정상 완료는 평생 1획 소진을, 새 획 거절은 이미 사용했다는 안내를 표시한다.
+  // 정상 완료는 도화지에 남은 결과를, 새 획 거절은 이미 사용했다는 안내를 표시한다.
   const key = completed ? 'strokeCompleted' : 'strokeLimit';
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="cameo-light" role="alertdialog" showCloseButton={false}>
+      {/* 디자인처럼 화면을 어둡게 덮지 않고 테두리가 있는 창만 도화지 위에 띄운다. */}
+      <DialogContent
+        className="cameo-light main-canvas-dialog"
+        role="alertdialog"
+        showCloseButton={false}
+      >
         <DialogHeader>
           <DialogTitle>{t(`${key}.title`)}</DialogTitle>
           <DialogDescription>{t(`${key}.description`)}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <DialogClose asChild>
-            <Button>{t('strokeLimit.confirm')}</Button>
+            <Button
+              variant={completed ? 'secondary' : 'primary'}
+              className="main-canvas-dialog-button"
+            >
+              {t(`${key}.confirm`)}
+            </Button>
           </DialogClose>
         </DialogFooter>
       </DialogContent>

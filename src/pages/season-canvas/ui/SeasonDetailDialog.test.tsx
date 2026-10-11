@@ -36,17 +36,29 @@ const season: Season = {
   canEnd: false,
 };
 
-const query = {
-  data: season,
-  error: null,
-  isLoading: false,
-  isError: false,
-  isRefetchError: false,
-  isFetching: false,
-  refetch: vi.fn(),
-} as unknown as UseQueryResult<Season, Error>;
+function queryOf(data: Season) {
+  return {
+    data,
+    error: null,
+    isLoading: false,
+    isError: false,
+    isRefetchError: false,
+    isFetching: false,
+    refetch: vi.fn(),
+  } as unknown as UseQueryResult<Season, Error>;
+}
 
-function DetailHarness({ isManaging = false }: { isManaging?: boolean }) {
+function DetailHarness({
+  data = season,
+  isManaging = false,
+  onJoin = vi.fn(),
+  onBrowseLive = vi.fn(),
+}: {
+  data?: Season;
+  isManaging?: boolean;
+  onJoin?: (season: Season) => void;
+  onBrowseLive?: () => void;
+}) {
   const openerRef = useRef<HTMLButtonElement>(null);
   const fallbackRef = useRef<HTMLHeadingElement>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -56,18 +68,21 @@ function DetailHarness({ isManaging = false }: { isManaging?: boolean }) {
       <h1 ref={fallbackRef} tabIndex={-1}>
         시즌
       </h1>
-      <button ref={openerRef} onClick={() => setSelectedId(season.id)}>
+      <button ref={openerRef} onClick={() => setSelectedId(data.id)}>
         상세 열기
       </button>
       <SeasonDetailDialog
         selectedId={selectedId}
-        query={query}
+        query={queryOf(data)}
         manageAction={manageAction}
         manageError={null}
         isManaging={isManaging}
         isRefreshingManagement={false}
         canInteract
+        isJoining={false}
         onClose={() => setSelectedId(null)}
+        onJoin={onJoin}
+        onBrowseLive={onBrowseLive}
         onOpenManage={setManageAction}
         onCloseManage={() => setManageAction(null)}
         onConfirmManage={() => setManageAction(null)}
@@ -78,15 +93,20 @@ function DetailHarness({ isManaging = false }: { isManaging?: boolean }) {
   );
 }
 
+function openDetail(props: Parameters<typeof DetailHarness>[0] = {}) {
+  render(
+    <MemoryRouter>
+      <DetailHarness {...props} />
+    </MemoryRouter>
+  );
+  const opener = screen.getByRole('button', { name: '상세 열기' });
+  fireEvent.click(opener);
+  return opener;
+}
+
 describe('season detail focus lifecycle', () => {
   it('restores nested confirmation and detail focus to their openers', async () => {
-    render(
-      <MemoryRouter>
-        <DetailHarness />
-      </MemoryRouter>
-    );
-    const opener = screen.getByRole('button', { name: '상세 열기' });
-    fireEvent.click(opener);
+    const opener = openDetail();
     expect(screen.getByTestId(`nft-${season.id}`)).toBeTruthy();
     const manageButton = screen.getByRole('button', { name: '예약 취소' });
     fireEvent.click(manageButton);
@@ -100,14 +120,51 @@ describe('season detail focus lifecycle', () => {
   });
 
   it('keeps translated close controls visible but disabled during a management request', () => {
-    render(
-      <MemoryRouter>
-        <DetailHarness isManaging />
-      </MemoryRouter>
-    );
-    fireEvent.click(screen.getByRole('button', { name: '상세 열기' }));
+    openDetail({ isManaging: true });
     const closeButtons = screen.getAllByRole('button', { name: '닫기' });
     expect(closeButtons).toHaveLength(2);
     closeButtons.forEach(button => expect(button.hasAttribute('disabled')).toBe(true));
+  });
+
+  it('returns from the typed end confirmation to the end button', async () => {
+    openDetail({ data: { ...season, status: 'active', canCancel: false, canEnd: true } });
+    const endButton = screen.getByRole('button', { name: '조기 종료' });
+    fireEvent.click(endButton);
+    const confirm = screen.getByRole('button', { name: '시즌 강제 종료' });
+    expect(confirm.hasAttribute('disabled')).toBe(true);
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: season.title } });
+    expect(confirm.hasAttribute('disabled')).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: '취소' }));
+    await waitFor(() => expect(document.activeElement).toBe(endButton));
+  });
+});
+
+describe('season detail actions', () => {
+  it('offers joining to a non-participant of a live season', () => {
+    const onJoin = vi.fn();
+    const live = { ...season, status: 'active', isParticipant: false, isCreator: false } as const;
+    openDetail({ data: { ...live, canCancel: false }, onJoin });
+    fireEvent.click(screen.getByRole('button', { name: '시즌 참가' }));
+    expect(onJoin).toHaveBeenCalledWith(expect.objectContaining({ id: 'season-1' }));
+    expect(screen.queryByRole('link', { name: '캔버스 입장' })).toBeNull();
+  });
+
+  it('lets a participant enter the live canvas', () => {
+    openDetail({ data: { ...season, status: 'active', canCancel: false } });
+    expect(screen.getByRole('link', { name: '캔버스 입장' }).getAttribute('href')).toBe(
+      '/season-canvas/season-1'
+    );
+    expect(screen.queryByRole('button', { name: '시즌 참가' })).toBeNull();
+  });
+
+  it('shows the ended notice with view and browse actions instead of close', () => {
+    const onBrowseLive = vi.fn();
+    openDetail({ data: { ...season, status: 'ended', canCancel: false }, onBrowseLive });
+    expect(screen.getByText('종료된 시즌입니다.')).toBeTruthy();
+    expect(screen.getByRole('link', { name: '캔버스 보기' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '진행 중인 시즌 보기' }));
+    expect(onBrowseLive).toHaveBeenCalledTimes(1);
+    // 상단 X 닫기만 남고 하단 동작 영역에는 닫기 버튼이 없다.
+    expect(screen.getAllByRole('button', { name: '닫기' })).toHaveLength(1);
   });
 });

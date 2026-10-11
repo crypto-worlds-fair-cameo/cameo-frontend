@@ -9,9 +9,15 @@ export function ProfileTransactions({ transactions }: { transactions: ProfileTra
   const { t, i18n } = useTranslation('profile');
   const titleId = useId();
   return (
-    <section className="profile-section" aria-labelledby={titleId}>
+    <section className="profile-section profile-transactions" aria-labelledby={titleId}>
       <div className="profile-section-header">
         <h2 id={titleId}>{t('transactions.title')}</h2>
+        <img
+          className="profile-section-rule"
+          src="/images/profile/section-rule.svg"
+          alt=""
+          aria-hidden="true"
+        />
       </div>
       {transactions.length === 0 ? (
         <p className="profile-empty">{t('transactions.empty')}</p>

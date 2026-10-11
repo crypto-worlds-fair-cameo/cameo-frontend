@@ -74,25 +74,28 @@ export function SeasonList({
           <p>{t('list.empty')}</p>
         </div>
       )}
-      <nav className="season-pager" aria-label={t('list.pagination')}>
-        <Button
-          variant="secondary"
-          size="sm"
-          disabled={page === 1}
-          onClick={() => onPage(page - 1)}
-        >
-          {t('list.previous')}
-        </Button>
-        <span aria-current="page">{t('list.page', { page })}</span>
-        <Button
-          variant="secondary"
-          size="sm"
-          disabled={!data?.hasNext}
-          onClick={() => onPage(page + 1)}
-        >
-          {t('list.next')}
-        </Button>
-      </nav>
+      {/* 한 페이지에 모두 들어가면 Figma처럼 페이지 이동을 숨긴다. */}
+      {(page > 1 || data?.hasNext) && (
+        <nav className="season-pager" aria-label={t('list.pagination')}>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={page === 1}
+            onClick={() => onPage(page - 1)}
+          >
+            {t('list.previous')}
+          </Button>
+          <span aria-current="page">{t('list.page', { page })}</span>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={!data?.hasNext}
+            onClick={() => onPage(page + 1)}
+          >
+            {t('list.next')}
+          </Button>
+        </nav>
+      )}
     </section>
   );
 }
