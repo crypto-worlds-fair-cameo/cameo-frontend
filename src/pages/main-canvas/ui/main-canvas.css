@@ -24,14 +24,58 @@
 /* 도화지는 작업 공간에서 최소 16px 여백을 둔 정사각형이다. 같은 크기의 옅은 회색을 곱해 연습 도화지로 보이게 한다. */
 .main-canvas-practice-paper {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: calc(min(100cqw, 100cqh) - 32px);
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
+  top: var(--canvas-paper-y, 0);
+  left: var(--canvas-paper-x, 0);
+  width: var(--canvas-paper-width, 100%);
+  height: var(--canvas-paper-height, 100%);
   background: #f7f7f7;
   mix-blend-mode: multiply;
   pointer-events: none;
+}
+
+/* 첫 그림을 받는 동안 도화지와 같은 자리에 불러오는 중을 표시한다. 받은 그림이 비쳐 보이도록 반투명이다. */
+.main-canvas-loading {
+  position: absolute;
+  top: var(--canvas-paper-y, 0);
+  left: var(--canvas-paper-x, 0);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  width: var(--canvas-paper-width, 100%);
+  height: var(--canvas-paper-height, 100%);
+  background: rgb(255 255 255 / 70%);
+  color: var(--color-gray-600);
+  font-size: 15px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.main-canvas-loading p {
+  margin: 0;
+}
+
+.main-canvas-loading .main-canvas-loading__spinner {
+  width: 28px;
+  height: 28px;
+  border-width: 3px;
+}
+
+/* 팔레트와 지도를 한 덩어리로 묶는다. 낮은 화면에서는 useFitToHeight가 --fit-scale을 줄여 전부 보이게 한다.
+   크기만 줄이고 왼쪽 위 모서리는 그대로 두어 Figma의 정렬을 유지한다. */
+.main-canvas-left-fit {
+  display: flex;
+  flex-direction: column;
+  transform: scale(var(--fit-scale, 1));
+  transform-origin: top left;
+  /* 줄어든 만큼 아래 여백을 음수로 두어 레이아웃 높이도 줄인다. */
+  margin-bottom: var(--fit-trim, 0px);
+}
+
+/* Figma(1920×1080): 지도는 팔레트 아래에 둔다. */
+.main-canvas-page .canvas-navigator {
+  padding-top: 48px;
 }
 
 /* 오른쪽 통계 카드 */
@@ -234,23 +278,51 @@
 }
 
 @media (min-width: 768px) {
-  /* 좌우 영역을 같은 폭으로 두어 도화지가 화면 가운데에 오게 한다. 위 여백은 1920×1080 디자인 기준이다. */
+  /* 도화지 작업 공간은 헤더 아래 전체를 덮고, 좌우 칸과 안내 바는 그 위에 뜬다.
+     확대하면 도화지가 칸 아래까지 화면을 꽉 채운다. 칸은 원래 자리(양끝)를 지킨다. */
+  .main-canvas-page.main-canvas-layout {
+    justify-content: space-between;
+  }
+
+  /* 좌우 영역을 같은 폭으로 두어 도화지가 화면 가운데에 오게 한다. 위 여백은 1920×1080 디자인 기준이다.
+     칸의 빈 곳은 아래 도화지가 입력을 받고, 패널만 클릭을 받는다. */
   .main-canvas-page .canvas-left-sidebar {
+    position: relative;
+    z-index: 1;
     flex: 0 0 282px;
     padding: clamp(16px, 9.5vh, 102px) 0 var(--space-4) 56px;
+    pointer-events: none;
   }
 
   .main-canvas-page .canvas-right-area {
+    position: relative;
+    z-index: 1;
     flex: 0 0 282px;
     gap: var(--space-2);
     padding: clamp(16px, 9.5vh, 102px) 56px var(--space-4) 0;
     border-left: 0;
+    pointer-events: none;
   }
 
-  /* 도화지 위치를 디자인(위 233px, 아래 123px)에 맞추고, 아래 여백에 안내 바를 둔다. */
+  /* 패널과 버튼만 클릭을 받고, 팔레트와 지도 사이 같은 빈 곳은 아래 도화지로 넘긴다. */
+  .main-canvas-page .canvas-right-area > *,
+  .main-canvas-page .color-palette,
+  .main-canvas-page .canvas-navigator-map,
+  .main-canvas-page .canvas-navigator-buttons button {
+    pointer-events: auto;
+  }
+
+  /* 도화지는 배경 없는 헤더 밑까지 깔린다. 헤더 높이는 app Layout이 알려 준다. */
   .main-canvas-page .canvas-viewport {
+    position: absolute;
+    inset: calc(-1 * var(--layout-header-height, 0px)) 0 0;
     height: auto;
-    margin: clamp(16px, 12.2vh, 132px) 0 clamp(80px, 9.9vh, 107px);
+  }
+
+  /* 1배(전체 보기) 도화지 자리는 디자인대로 헤더 아래, 좌우 칸 사이, 위 233px·아래 123px 여백 안이다. */
+  .main-canvas-page .canvas-fit-area {
+    inset: calc(var(--layout-header-height, 0px) + clamp(16px, 12.2vh, 132px)) 282px
+      clamp(80px, 9.9vh, 107px);
   }
 
   .main-canvas-page .canvas-stroke-notice {
@@ -259,10 +331,42 @@
     left: 50%;
     transform: translateX(-50%);
   }
+
+  /* 휠 확대·끌어 옮기기 중에는 도화지만 보이게 헤더·팔레트·통계·안내 바를 잠시 숨기고, 멈추면 다시 보인다.
+     지도와 +/− 버튼은 남긴다. 자리는 그대로 두고(높이 맞춤 계산 유지) 숨긴 동안 클릭은 도화지로 넘긴다. */
+  .main-canvas-page .color-palette,
+  .main-canvas-page .canvas-right-area > *,
+  .main-canvas-page .canvas-stroke-notice,
+  .layout-shell:has(.main-canvas-page) .layout-header {
+    transition: opacity 0.3s ease;
+  }
+
+  .main-canvas-page[data-navigating] .color-palette,
+  .main-canvas-page[data-navigating] .canvas-right-area > *,
+  .main-canvas-page[data-navigating] .canvas-stroke-notice,
+  .layout-shell:has(.main-canvas-page[data-navigating]) .layout-header {
+    opacity: 0;
+    pointer-events: none;
+    transition-duration: 0.15s;
+  }
 }
 
-/* 좁은 화면은 기존 위·아래 배치를 유지하고, 안내 바를 도화지 바로 아래에, 모드 버튼을 오른쪽 영역 맨 위에 둔다. */
+@media (min-width: 768px) and (prefers-reduced-motion: reduce) {
+  .main-canvas-page .color-palette,
+  .main-canvas-page .canvas-right-area > *,
+  .main-canvas-page .canvas-stroke-notice,
+  .layout-shell:has(.main-canvas-page) .layout-header {
+    transition: none;
+  }
+}
+
+/* 좁은 화면은 기존 위·아래 배치를 유지하고, 안내 바를 도화지 바로 아래에, 모드 버튼을 오른쪽 영역 맨 위에 둔다.
+   휴대폰은 휠·마우스 드래그가 없고 아래 영역이 좁아 확대 도구를 숨기고 전체 보기만 쓴다. */
 @media (max-width: 767px) {
+  .main-canvas-page .canvas-navigator {
+    display: none;
+  }
+
   .main-canvas-page .canvas-right-area {
     order: 2;
   }

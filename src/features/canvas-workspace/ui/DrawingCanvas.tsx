@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/button';
 import type { BrushSettings } from '@/shared/ui/color-palette/model/brushSettings';
-import type { CanvasView } from '../lib/canvasTransform';
+import type { CanvasRect, CanvasView } from '../lib/canvasTransform';
 import { createCanvasDrawingRenderer } from '../lib/createCanvasDrawingRenderer';
 import { useCanvasPointer } from '../model/useCanvasPointer';
 import type { CanvasDrawingModel } from '../model/useCanvasDrawing';
@@ -16,6 +16,8 @@ interface DrawingCanvasProps {
   worldWidth: number;
   worldHeight: number;
   view: CanvasView;
+  /** 도화지 틀(CSS px). 그림은 이 안에만 표시하고 테두리도 여기에 그린다. */
+  frame: CanvasRect;
   brushSettings: BrushSettings;
   mode: CanvasMode;
   drawingModel: CanvasDrawingModel;
@@ -29,6 +31,7 @@ export function DrawingCanvas({
   worldWidth,
   worldHeight,
   view,
+  frame,
   brushSettings,
   mode,
   drawingModel,
@@ -37,6 +40,7 @@ export function DrawingCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<ReturnType<typeof createCanvasDrawingRenderer> | null>(null);
   const { scale, offsetX, offsetY } = view;
+  const { x: frameX, y: frameY, width: frameWidth, height: frameHeight } = frame;
   const { drawing, revision } = drawingModel;
   const { cursor, handlers, cancelInput } = useCanvasPointer(
     canvasRef,
@@ -44,7 +48,8 @@ export function DrawingCanvas({
     mode,
     drawingModel,
     worldWidth,
-    worldHeight
+    worldHeight,
+    frame
   );
   const [failed, setFailed] = useState(false);
   const failedAttempt = useRef<number | null>(null);
@@ -80,33 +85,51 @@ export function DrawingCanvas({
         context.setTransform(1, 0, 0, 1, 0, 0);
         context.clearRect(0, 0, width, height);
         const styles = getComputedStyle(canvas);
-        // 도화지 좌표에 배율·가운데 이동을 적용한 뒤 기기의 실제 픽셀 좌표로 변환한다.
-        // setTransform은 이전 변환을 교체하므로 리사이즈해도 배율이 중첩되지 않는다.
-        context.setTransform(
-          pixelRatio * scale,
-          0,
-          0,
-          pixelRatio * scale,
-          pixelRatio * offsetX,
-          pixelRatio * offsetY
+        // 그림은 화면에 보이는 도화지 부분(틀) 안에만 표시하고 바깥 여백은 비워 둔다.
+        context.save();
+        context.beginPath();
+        context.rect(
+          frameX * pixelRatio,
+          frameY * pixelRatio,
+          frameWidth * pixelRatio,
+          frameHeight * pixelRatio
         );
-        // 작업 공간 배경은 CSS가, 원본 좌표 기준 도화지의 표면과 경계는 Canvas 2D가 그린다.
-        context.fillStyle = styles.getPropertyValue('--canvas-paper').trim();
-        context.fillRect(0, 0, worldWidth, worldHeight);
+        context.clip();
+        try {
+          // 도화지 좌표에 배율·가운데 이동을 적용한 뒤 기기의 실제 픽셀 좌표로 변환한다.
+          // setTransform은 이전 변환을 교체하므로 리사이즈해도 배율이 중첩되지 않는다.
+          context.setTransform(
+            pixelRatio * scale,
+            0,
+            0,
+            pixelRatio * scale,
+            pixelRatio * offsetX,
+            pixelRatio * offsetY
+          );
+          // 작업 공간 배경은 CSS가, 원본 좌표 기준 도화지의 표면과 경계는 Canvas 2D가 그린다.
+          context.fillStyle = styles.getPropertyValue('--canvas-paper').trim();
+          context.fillRect(0, 0, worldWidth, worldHeight);
 
-        // 렌더러는 완료한 실제 그림을 캐시하고, 진행 중·연습 획만 별도로 합성한다.
-        rendererRef.current ??= createCanvasDrawingRenderer();
-        rendererRef.current.render(context, drawing, mode, {
-          width,
-          height,
-          pixelRatio,
-          view: { scale, offsetX, offsetY },
-          worldWidth,
-          worldHeight,
-        });
+          // 렌더러는 완료한 실제 그림을 캐시하고, 진행 중·연습 획만 별도로 합성한다.
+          rendererRef.current ??= createCanvasDrawingRenderer();
+          rendererRef.current.render(context, drawing, mode, {
+            width,
+            height,
+            pixelRatio,
+            view: { scale, offsetX, offsetY },
+            worldWidth,
+            worldHeight,
+          });
+        } finally {
+          // 그리기가 실패해도 다음 시도에 틀 잘라내기가 남지 않게 한다.
+          context.restore();
+        }
+        // 경계는 확대 배율과 관계없이 도화지 실제 가장자리에 화면 기준 1 CSS 픽셀로 그린다.
+        // 확대해 화면 밖으로 나간 가장자리는 보이지 않는다.
+        context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
         context.strokeStyle = styles.getPropertyValue('--canvas-border').trim();
-        context.lineWidth = 1 / scale; // 전체 보기 배율과 관계없이 경계는 화면에서 1 CSS 픽셀이다.
-        context.strokeRect(0, 0, worldWidth, worldHeight);
+        context.lineWidth = 1;
+        context.strokeRect(offsetX, offsetY, worldWidth * scale, worldHeight * scale);
         setFailed(false);
       } catch {
         // 컨텍스트 생성 또는 그리기가 실패하면 페이지 안에서 재시도 안내를 표시한다.
@@ -127,6 +150,10 @@ export function DrawingCanvas({
     scale,
     offsetX,
     offsetY,
+    frameX,
+    frameY,
+    frameWidth,
+    frameHeight,
     attempt,
     drawing,
     revision,

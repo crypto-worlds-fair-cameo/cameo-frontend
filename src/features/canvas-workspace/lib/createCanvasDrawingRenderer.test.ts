@@ -232,4 +232,31 @@ describe('authoritative canvas renderer', () => {
     expect(layer.paint.clearRect).toHaveBeenCalledTimes(2);
     expect(chunkLayer.paint.arc).toHaveBeenCalledTimes(2);
   });
+  it('copies chunk pixels in device coordinates after a full replay at a scaled view', () => {
+    const { layer } = mockLayers();
+    const main = context();
+    // 새로고침·확대처럼 전체를 다시 그릴 때 도화지 좌표 변환이 남아 있으면 획이 왼쪽 위로 축소되어 찍힌다.
+    createCanvasDrawingRenderer().render(
+      main.canvas,
+      drawing([
+        chunk('1', 'a', 'stroke', '#ff0000', [
+          { x: 1_000, y: 1_000 },
+          { x: 2_000, y: 2_000 },
+        ]),
+      ]),
+      'live',
+      { ...settings, view: { scale: 0.05, offsetX: 10, offsetY: 20 } }
+    );
+
+    const copies = layer.paint.drawImage.mock;
+    const copyOrder = copies.invocationCallOrder[copies.invocationCallOrder.length - 1];
+    const transforms = layer.paint.setTransform.mock.calls.filter(
+      (_, index) => layer.paint.setTransform.mock.invocationCallOrder[index] < copyOrder
+    );
+    expect(transforms[transforms.length - 1]).toEqual([1, 0, 0, 1, 0, 0]);
+    // 청크 경계는 기기 픽셀 기준이라 (1000, 1000) 근처의 획은 화면 (60, 70) 근처에 복사된다.
+    const [, , , , , x, y] = copies.calls[copies.calls.length - 1];
+    expect(x).toBeGreaterThan(50);
+    expect(y).toBeGreaterThan(60);
+  });
 });

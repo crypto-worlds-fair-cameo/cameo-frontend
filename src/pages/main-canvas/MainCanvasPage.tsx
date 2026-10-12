@@ -1,16 +1,18 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '@/shared/lib/hooks/use-mobile';
 import { Button } from '@/shared/ui/button';
 import { ColorPalette } from '@/shared/ui/color-palette/ColorPalette';
 import { defaultBrushSettings } from '@/shared/ui/color-palette/model/brushSettings';
-import { CanvasViewport } from '@/features/canvas-workspace';
+import { CanvasNavigator, CanvasViewport, useCanvasZoom } from '@/features/canvas-workspace';
+import { useFitToHeight } from './model/useFitToHeight';
 import { CanvasStatsPanel } from './ui/CanvasStatsPanel';
 import { useCanvasRealtime } from '@/features/canvas-workspace';
 import { CanvasSyncStatus } from './ui/CanvasSyncStatus';
 import { CanvasStrokeLimitDialog } from './ui/CanvasStrokeLimitDialog';
 import { CanvasWalletRequiredDialog } from './ui/CanvasWalletRequiredDialog';
 import { CanvasStrokeNotice } from './ui/CanvasStrokeNotice';
+import { CanvasLoadingOverlay } from './ui/CanvasLoadingOverlay';
 import { useCanvasMode } from '@/features/canvas-workspace';
 import './ui/main-canvas.css';
 
@@ -22,7 +24,8 @@ const CANVAS_SIZE = 10_000;
  * 화면이 만들어지는 순서:
  * 1. app의 Layout이 헤더 아래에 캔버스 전용 작업 공간을 확보한다.
  * 2. 범용 왼쪽 영역에 도구 패널을 배치하고 CanvasViewport가 남은 작업 공간을 측정한다.
- * 3. 측정값으로 도화지 전체가 보이는 배율과 가운데 위치를 계산한다.
+ * 3. 측정값으로 도화지 전체가 보이는 배율과 가운데 위치를 계산한다. 휠·+/−·지도로 최대 10배까지 확대하고,
+ *    스페이스바+드래그 또는 휠 버튼 드래그로 화면을 옮긴다.
  * 4. DrawingCanvas가 화면 해상도에 맞는 Canvas 2D에 서버 순서의 그림을 표시한다.
  * 5. 페이지가 소켓 하나를 연결하고 연결 수와 그림 동기화 상태를 오른쪽 패널에 전달한다.
  *    페이지를 떠나면 소켓과 타이머를 정리한다. 연결 끊김은 도화지를 지우지 않는다.
@@ -42,7 +45,25 @@ const MainCanvasPage = () => {
   const { connection, sync, retryRecovery, drawingModel, strokeNotice, onStrokeNoticeOpenChange } =
     useCanvasRealtime(brushSettings, mode);
   const isPracticeMode = mode === 'practice';
+  // 낮은 화면에서는 팔레트와 지도를 스크롤 없이 전부 보이도록 함께 줄인다.
+  const leftColumnRef = useRef<HTMLElement>(null);
+  const leftContentRef = useRef<HTMLDivElement>(null);
+  useFitToHeight(leftColumnRef, leftContentRef, !isMobile);
+  // 확대 상태는 페이지가 소유하고 도화지·지도·배율 표시가 함께 읽는다.
+  const zoom = useCanvasZoom(CANVAS_SIZE, CANVAS_SIZE);
   const [walletNoticeOpen, setWalletNoticeOpen] = useState(false);
+  // 첫 그림을 받는 몇 초 동안만 도화지 위에 불러오는 중을 띄운다. 한 번 표시한 뒤의 재연결 복구는
+  // 기존 그림을 덮지 않고 오른쪽 안내만 쓴다. 연습 중에는 연습 획을 가리지 않게 표시하지 않고,
+  // 연결 재시도·실패 중에는 Stats의 연결 안내와 엇갈리지 않게 표시하지 않는다.
+  const [firstLoadDone, setFirstLoadDone] = useState(false);
+  if (!firstLoadDone && (sync.status === 'ready' || sync.status === 'failed'))
+    setFirstLoadDone(true);
+  const showLoading =
+    !firstLoadDone &&
+    !isPracticeMode &&
+    !sync.error &&
+    connection.status !== 'reconnecting' &&
+    connection.status !== 'failed';
   // 손님의 실제 획은 공통 엔진이 거절한다. 서버가 손님으로 확인한 상태에서
   // 도화지 안의 실제 획이 거절된 경우에만 지갑 연결 안내를 연다.
   const pageDrawingModel: typeof drawingModel = {
@@ -63,14 +84,23 @@ const MainCanvasPage = () => {
     },
   };
   return (
-    <div className="main-canvas-layout main-canvas-page cameo-light" data-mode={mode}>
+    <div
+      className="main-canvas-layout main-canvas-page cameo-light"
+      data-mode={mode}
+      // 휠 확대·끌어 옮기기 중에는 CSS가 도화지 외의 UI(헤더·팔레트·통계·안내 바)를 잠시 숨긴다.
+      data-navigating={zoom.navigating || undefined}
+    >
       {/* 왼쪽 영역은 여러 패널을 담는 공간이며, 각 패널의 내부 배치는 해당 컴포넌트가 소유한다. */}
-      <aside className="canvas-left-sidebar">
-        <ColorPalette
-          value={brushSettings}
-          onValueChange={setBrushSettings}
-          defaultOpen={!isMobile}
-        />
+      <aside ref={leftColumnRef} className="canvas-left-sidebar">
+        {/* 팔레트와 지도(Figma: 팔레트 아래 왼쪽 아래)는 한 덩어리로 화면 높이에 맞춰 줄어든다. */}
+        <div ref={leftContentRef} className="main-canvas-left-fit">
+          <ColorPalette
+            value={brushSettings}
+            onValueChange={setBrushSettings}
+            defaultOpen={!isMobile}
+          />
+          <CanvasNavigator zoom={zoom} drawingModel={drawingModel} />
+        </div>
       </aside>
       <CanvasViewport
         worldWidth={CANVAS_SIZE}
@@ -78,9 +108,12 @@ const MainCanvasPage = () => {
         brushSettings={brushSettings}
         mode={mode}
         drawingModel={pageDrawingModel}
+        // 휴대폰은 확대 도구를 숨기므로 휠 확대도 끄고 도화지 전체 보기로 고정한다.
+        zoom={isMobile ? undefined : zoom}
       >
         {/* 연습 중에는 도화지에 옅은 회색을 겹쳐 실제 도화지와 구분한다. 입력은 아래 canvas가 받는다. */}
         {isPracticeMode && <div className="main-canvas-practice-paper" aria-hidden="true" />}
+        {showLoading && <CanvasLoadingOverlay />}
       </CanvasViewport>
       {/* 오른쪽 영역은 독립 패널을 배치하는 공간이며, 각 패널이 자체 UI를 소유한다. */}
       <aside className="canvas-right-area">
@@ -93,7 +126,8 @@ const MainCanvasPage = () => {
         >
           {t(isPracticeMode ? 'exitPractice' : 'practiceMode')}
         </Button>
-        <CanvasSyncStatus sync={sync} onRetry={retryRecovery} />
+        {/* 도화지 위 표시와 같은 문구를 오른쪽에 한 번 더 띄우지 않는다. */}
+        {!showLoading && <CanvasSyncStatus sync={sync} onRetry={retryRecovery} />}
       </aside>
       <CanvasStrokeNotice mode={mode} strokeUsed={sync.strokeUsed} />
       <CanvasStrokeLimitDialog

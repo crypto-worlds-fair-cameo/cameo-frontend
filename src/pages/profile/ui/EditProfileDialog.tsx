@@ -16,19 +16,19 @@ import {
 } from '@/shared/ui/dialog';
 import { Field } from '@/shared/ui/field';
 import { Input } from '@/shared/ui/input';
-import { useDisplayNameMutation } from '../api/profile.queries';
+import { useSaveProfileMutation } from '../api/profile.queries';
 import { NICKNAME_MAX_LENGTH } from '../lib/profileValidation';
 import { getProfileSaveErrorKey, useProfileEditForm } from '../model/useProfileEditForm';
 import './profile-edit.css';
 
 type ProfileUser = AuthenticatedSession['user'];
-type DisplayNameMutation = ReturnType<typeof useDisplayNameMutation>;
+type SaveProfileMutation = ReturnType<typeof useSaveProfileMutation>;
 
 /** 수정 버튼으로 여는 프로필 수정 모달. 저장 중에는 닫기를 막아 결과를 확인할 수 있게 한다. */
 export function EditProfileDialog({ user, trigger }: { user: ProfileUser; trigger: ReactNode }) {
   const { t } = useTranslation('profile');
   const [open, setOpen] = useState(false);
-  const mutation = useDisplayNameMutation();
+  const mutation = useSaveProfileMutation();
 
   function changeOpen(next: boolean) {
     if (!next && mutation.isPending) return;
@@ -65,7 +65,7 @@ function EditProfileForm({
   onSaved,
 }: {
   user: ProfileUser;
-  mutation: DisplayNameMutation;
+  mutation: SaveProfileMutation;
   onSaved: () => void;
 }) {
   const { t } = useTranslation('profile');
@@ -87,7 +87,7 @@ function EditProfileForm({
       onSubmit={event => {
         event.preventDefault();
         if (!canSave || mutation.isPending) return;
-        mutation.mutate(form.nickname.trim(), {
+        mutation.mutate(form.changes(), {
           onSuccess: () => {
             toast(t('edit.saved'));
             onSaved();
@@ -136,6 +136,8 @@ function EditProfileForm({
             onChange={event => {
               form.selectAvatar(event.target.files?.[0]);
               event.target.value = '';
+              // 사진을 다시 고르면 이전 저장 실패 안내를 지운다.
+              if (mutation.isError) mutation.reset();
             }}
           />
           <Button

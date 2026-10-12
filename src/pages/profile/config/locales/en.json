@@ -1,7 +1,6 @@
 {
   "loading": "Loading profile",
   "fallbackName": "Account",
-  "sampleNotice": "Joined date, balance, transactions and My Seasons are sample data.",
   "comingSoon": "This will work once the API is connected.",
   "navigation": {
     "label": "Profile sections",
@@ -14,27 +13,15 @@
     "edit": "Edit",
     "joinedCanvases": "Joined Canvases"
   },
-  "summary": {
-    "joined": "Joined",
-    "balance": "Balance"
-  },
   "status": {
     "active": "Active",
     "ended": "Ended",
     "scheduled": "Scheduled",
     "cancelled": "Cancelled"
   },
-  "transactions": {
-    "title": "Transactions",
-    "empty": "No transactions yet."
-  },
   "seasons": {
     "title": "My Seasons",
-    "newSeason": "New Season",
-    "empty": "You haven't created a season yet.",
-    "participants_one": "{{count}} participant",
-    "participants_other": "{{count}} participants",
-    "sample": "Sample"
+    "newSeason": "New Season"
   },
   "joined": {
     "title": "Joined Canvases",
@@ -50,7 +37,6 @@
     "strokes_other": "{{count}} strokes"
   },
   "activityError": {
-    "message": "Your activity could not be loaded.",
     "retry": "Try again"
   },
   "signedOut": {
@@ -67,7 +53,7 @@
     "description": "Change your profile image and nickname.",
     "imageLabel": "Profile Image",
     "imageHint": "JPG or PNG, up to 2MB",
-    "imageSelected": "New image selected (preview only)",
+    "imageSelected": "New image selected. Save to apply it.",
     "changeImage": "Change Image",
     "imageErrors": {
       "type": "Use a JPG or PNG image.",
@@ -82,6 +68,8 @@
     "saved": "Profile updated",
     "errors": {
       "invalid": "Use 1 to 20 characters.",
+      "imageInvalid": "This image can't be used. Choose a JPG or PNG up to 2MB.",
+      "imageUnavailable": "Profile photos can't be saved right now.",
       "sessionExpired": "Your session expired. Please connect your wallet again.",
       "rateLimited": "Too many requests. Please try again shortly.",
       "network": "Could not reach the server. Check your connection.",

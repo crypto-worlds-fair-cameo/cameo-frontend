@@ -1,7 +1,6 @@
 {
   "loading": "프로필을 불러오는 중",
   "fallbackName": "계정",
-  "sampleNotice": "가입일, 잔액, 거래 내역과 내 시즌 목록은 샘플 데이터입니다.",
   "comingSoon": "API가 연결되면 사용할 수 있습니다.",
   "navigation": {
     "label": "프로필 메뉴",
@@ -14,27 +13,15 @@
     "edit": "수정",
     "joinedCanvases": "참여한 캔버스"
   },
-  "summary": {
-    "joined": "가입일",
-    "balance": "잔액"
-  },
   "status": {
     "active": "진행 중",
     "ended": "종료",
     "scheduled": "예정",
     "cancelled": "취소"
   },
-  "transactions": {
-    "title": "거래 내역",
-    "empty": "거래 내역이 없습니다."
-  },
   "seasons": {
     "title": "내 시즌",
-    "newSeason": "새 시즌",
-    "empty": "아직 만든 시즌이 없습니다.",
-    "participants_one": "참가자 {{count}}명",
-    "participants_other": "참가자 {{count}}명",
-    "sample": "샘플"
+    "newSeason": "새 시즌"
   },
   "joined": {
     "title": "참여한 캔버스",
@@ -49,7 +36,6 @@
     "strokeLabel": "획"
   },
   "activityError": {
-    "message": "활동 내역을 불러오지 못했습니다.",
     "retry": "다시 시도"
   },
   "signedOut": {
@@ -66,7 +52,7 @@
     "description": "프로필 사진과 닉네임을 변경합니다.",
     "imageLabel": "프로필 사진",
     "imageHint": "JPG 또는 PNG, 최대 2MB",
-    "imageSelected": "새 사진 선택됨 (미리보기만 가능)",
+    "imageSelected": "새 사진 선택됨. 저장하면 적용됩니다.",
     "changeImage": "사진 변경",
     "imageErrors": {
       "type": "JPG 또는 PNG 사진을 선택하세요.",
@@ -81,6 +67,8 @@
     "saved": "프로필을 저장했습니다",
     "errors": {
       "invalid": "1~20자로 입력하세요.",
+      "imageInvalid": "이 사진은 사용할 수 없습니다. 2MB 이하의 JPG 또는 PNG를 선택하세요.",
+      "imageUnavailable": "지금은 프로필 사진을 저장할 수 없습니다.",
       "sessionExpired": "세션이 만료되었습니다. 지갑을 다시 연결하세요.",
       "rateLimited": "요청이 많습니다. 잠시 후 다시 시도하세요.",
       "network": "서버에 연결할 수 없습니다. 네트워크를 확인하세요.",

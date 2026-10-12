@@ -63,5 +63,11 @@
     "saving": "Saving your stroke…",
     "pendingCapacity": "Too many points are waiting to be sent. Drawing transmission has stopped.",
     "error": "The drawing could not be synchronized. The confirmed drawing is preserved."
+  },
+  "zoom": {
+    "in": "Zoom in",
+    "out": "Zoom out",
+    "map": "Canvas map. Click or drag to move the view, or use the arrow keys.",
+    "mapSize": "{{width}} x {{height}} px"
   }
 }

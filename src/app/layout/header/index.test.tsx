@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
-import type { AuthenticatedSession } from '@/entities/session';
+import { sessionMutationKey, type AuthenticatedSession } from '@/entities/session';
 import { getSession } from '@/entities/session/api/session.api';
 import { useModalStore } from '@/shared/ui/modal/model/modalStore';
 import { logout } from './api/wallet-auth.api';
@@ -47,6 +47,7 @@ function renderHeader() {
       </MemoryRouter>
     </QueryClientProvider>
   );
+  return queryClient;
 }
 
 describe('header account button', () => {
@@ -82,6 +83,24 @@ describe('header account button', () => {
 
     await waitFor(() => expect(useModalStore.getState().isModalOpen).toBe(true));
     expect(screen.queryByRole('menuitem')).toBeNull();
+    useModalStore.getState().closeModal();
+  });
+
+  it('does not carry a previous wallet error into a newly opened dialog', async () => {
+    vi.mocked(getSession).mockResolvedValue(null);
+    const user = userEvent.setup();
+    const queryClient = renderHeader();
+    // 지난번 창에서 서명을 거절한 로그인 요청이 캐시에 남아 있는 상태를 만든다.
+    const rejected = queryClient.getMutationCache().build(queryClient, {
+      mutationKey: sessionMutationKey,
+      mutationFn: () => Promise.reject(Object.assign(new Error('declined'), { code: 4001 })),
+    });
+    await rejected.execute(undefined).catch(() => {});
+    expect(queryClient.getMutationCache().findAll({ status: 'error' })).toHaveLength(1);
+
+    await user.click(await screen.findByRole('button', { name: '지갑 연결' }));
+
+    expect(queryClient.getMutationCache().findAll({ status: 'error' })).toHaveLength(0);
     useModalStore.getState().closeModal();
   });
 });

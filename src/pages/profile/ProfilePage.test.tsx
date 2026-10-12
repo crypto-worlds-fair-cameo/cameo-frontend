@@ -5,13 +5,12 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AuthenticatedSession } from '@/entities/session';
 import { getSession } from '@/entities/session/api/session.api';
-import { getParticipatedSeasons, getProfileActivity, updateDisplayName } from './api/profile.api';
+import { getParticipatedSeasons, updateDisplayName } from './api/profile.api';
 import ProfilePage from './ProfilePage';
 
 vi.mock('@/entities/session/api/session.api', () => ({ getSession: vi.fn() }));
 vi.mock('./api/profile.api', async importOriginal => ({
   ...(await importOriginal<typeof import('./api/profile.api')>()),
-  getProfileActivity: vi.fn(),
   updateDisplayName: vi.fn(),
   getParticipatedSeasons: vi.fn(),
 }));
@@ -88,12 +87,9 @@ function renderProfile(path = '/profile') {
 }
 
 describe('profile page', () => {
-  beforeEach(async () => {
+  beforeEach(() => {
     vi.mocked(getSession).mockReset();
     vi.mocked(updateDisplayName).mockReset();
-    const originalApi =
-      await vi.importActual<typeof import('./api/profile.api')>('./api/profile.api');
-    vi.mocked(getProfileActivity).mockReset().mockImplementation(originalApi.getProfileActivity);
   });
 
   it('asks signed-out visitors to connect a wallet', async () => {
@@ -113,7 +109,7 @@ describe('profile page', () => {
     expect(await screen.findByRole('heading', { name: '지갑을 연결하세요' })).toBeTruthy();
   });
 
-  it('shows the signed-in profile with sample activity and switches tabs', async () => {
+  it('shows only real profile data and switches to joined canvases', async () => {
     vi.mocked(getSession).mockResolvedValue(session);
     const user = userEvent.setup();
     renderProfile();
@@ -121,44 +117,42 @@ describe('profile page', () => {
     expect(await screen.findByRole('heading', { name: '@jisun' })).toBeTruthy();
     expect(screen.getByText('Acti…2222')).toBeTruthy();
     expect(screen.queryByText('Firs…1111')).toBeNull();
-    expect(await screen.findByText('Season entry')).toBeTruthy();
-    const sampleNotice = screen.getByText(/샘플 데이터/);
-    expect(
-      sampleNotice.compareDocumentPosition(screen.getByText('잔액')) &
-        Node.DOCUMENT_POSITION_FOLLOWING
-    ).toBeTruthy();
+    expect(screen.getByRole('button', { name: '수정' })).toBeTruthy();
+    // 서버 API가 없는 가입일·잔액·거래 내역·내 시즌은 샘플로도 표시하지 않는다.
+    expect(screen.queryByText(/샘플 데이터/)).toBeNull();
+    expect(screen.queryByText('잔액')).toBeNull();
+    expect(screen.queryByText('거래 내역')).toBeNull();
 
+    // 내 시즌 탭은 메뉴와 새 시즌 버튼만 두고 가짜 시즌 목록은 표시하지 않는다.
     await user.click(screen.getByRole('link', { name: '내 시즌' }));
-    expect(await screen.findByText('Design the UI')).toBeTruthy();
     expect(screen.getByRole('link', { name: '내 시즌' }).getAttribute('aria-current')).toBe('page');
-    expect(screen.queryByRole('button', { name: 'NFT 만들기' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'NFT 보기' })).toBeNull();
+    expect(screen.getByRole('link', { name: '새 시즌' }).getAttribute('href')).toBe(
+      '/season-canvas'
+    );
+    expect(screen.queryByText('Design the UI')).toBeNull();
+    expect(within(screen.getByRole('region', { name: '내 시즌' })).queryByRole('list')).toBeNull();
+    expect(screen.getByRole('button', { name: '수정' })).toBeTruthy();
 
-    // 시안처럼 참여한 캔버스 탭에서는 수정 버튼과 요약 카드를 숨긴다.
+    // 시안처럼 참여한 캔버스 탭에서는 수정 버튼을 숨긴다.
     await user.click(screen.getByRole('button', { name: '참여한 캔버스' }));
     const joinedCanvases = await screen.findByRole('region', { name: '참여한 캔버스' });
     expect((await within(joinedCanvases).findByRole('article')).textContent).toMatch(/12\s*획/);
     expect(screen.getByTestId(`nft-${joinedSeason.seasonId}`)).toBeTruthy();
-    expect(screen.queryByText(/샘플 데이터/)).toBeNull();
+    expect(screen.getByRole('link', { name: '참여한 캔버스' }).getAttribute('aria-current')).toBe(
+      'page'
+    );
     expect(screen.queryByRole('button', { name: '수정' })).toBeNull();
-    expect(screen.queryByText('잔액')).toBeNull();
   });
 
   it('opens the tab named in the URL and falls back to the profile tab', async () => {
     vi.mocked(getSession).mockResolvedValue(session);
     renderProfile('/profile?tab=unknown');
-    expect(await screen.findByText('Season entry')).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: '@jisun' })).toBeTruthy();
     expect(screen.getByRole('link', { name: '프로필' }).getAttribute('aria-current')).toBe('page');
   });
 
-  it('shows empty activity states for each tab and offers a link to browse seasons', async () => {
+  it('shows the empty joined canvases state with a link to browse seasons', async () => {
     vi.mocked(getSession).mockResolvedValue(session);
-    vi.mocked(getProfileActivity).mockResolvedValue({
-      joinedAt: '2026-09-10T12:00:00Z',
-      balanceSol: 0,
-      transactions: [],
-      mySeasons: [],
-    });
     vi.mocked(getParticipatedSeasons).mockResolvedValue({
       items: [],
       total: 0,
@@ -168,42 +162,11 @@ describe('profile page', () => {
     const user = userEvent.setup();
     renderProfile();
 
-    expect(await screen.findByText('거래 내역이 없습니다.')).toBeTruthy();
-    expect(screen.queryByRole('list', { name: '거래 내역' })).toBeNull();
-    expect(screen.getByText(/샘플 데이터/)).toBeTruthy();
-
-    await user.click(screen.getByRole('link', { name: '내 시즌' }));
-    expect(await screen.findByText('아직 만든 시즌이 없습니다.')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'NFT 만들기' })).toBeNull();
-    expect(screen.getByRole('link', { name: '새 시즌' }).getAttribute('href')).toBe(
-      '/season-canvas'
-    );
-
-    await user.click(screen.getByRole('link', { name: '참여한 캔버스' }));
+    await user.click(await screen.findByRole('link', { name: '참여한 캔버스' }));
     expect(await screen.findByText('아직 참여한 캔버스가 없습니다.')).toBeTruthy();
     expect(screen.getByRole('link', { name: '시즌 둘러보기' }).getAttribute('href')).toBe(
       '/season-canvas'
     );
-    expect(screen.queryByText('잔액')).toBeNull();
-  });
-
-  it('keeps the profile identity visible and recovers from an activity load failure', async () => {
-    vi.mocked(getSession).mockResolvedValue(session);
-    vi.mocked(getProfileActivity).mockRejectedValueOnce(new Error('activity offline'));
-    const user = userEvent.setup();
-    renderProfile();
-
-    expect((await screen.findByRole('alert')).textContent).toContain(
-      '활동 내역을 불러오지 못했습니다.'
-    );
-    expect(screen.getByRole('heading', { name: '@jisun' })).toBeTruthy();
-    expect(screen.queryByText('잔액')).toBeNull();
-
-    await user.click(screen.getByRole('button', { name: '다시 시도' }));
-    expect(await screen.findByText('Season entry')).toBeTruthy();
-    expect(screen.queryByRole('alert')).toBeNull();
-    expect(screen.getByText('잔액')).toBeTruthy();
-    expect(vi.mocked(getProfileActivity)).toHaveBeenCalledTimes(2);
   });
 
   it('validates the nickname and saves it through the existing API', async () => {

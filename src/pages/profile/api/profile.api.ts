@@ -10,34 +10,6 @@ interface ApiResponse<T> {
 export type ProfileSeasonStatus = 'scheduled' | 'active' | 'ended' | 'cancelled';
 export type ProfileThumbnail = string | [string, string];
 
-export interface ProfileTransaction {
-  id: string;
-  label: string;
-  occurredAt: string;
-  amountSol: number;
-}
-
-interface ProfileCanvasBase {
-  id: string;
-  title: string;
-  startsAt: string;
-  endsAt: string;
-  status: ProfileSeasonStatus;
-  // 이미지 URL을 사용하고, 이미지가 없는 항목은 기존 장식용 색 두 개로 표시한다.
-  thumbnail: ProfileThumbnail;
-}
-
-export interface ProfileSeason extends ProfileCanvasBase {
-  participantCount: number;
-}
-
-export interface ProfileActivity {
-  joinedAt: string;
-  balanceSol: number;
-  transactions: ProfileTransaction[];
-  mySeasons: ProfileSeason[];
-}
-
 export interface ParticipatedSeason {
   seasonId: string;
   title: string;
@@ -56,47 +28,6 @@ export interface ParticipatedSeasonsPage {
   limit: number;
   offset: number;
 }
-
-// 가입일·잔액·거래 내역·시즌 목록 API가 아직 없어 디자인 시안(P · 프로필)의 값을 그대로 쓴다.
-// 실제 API를 연결할 때 getProfileActivity만 http-client 요청으로 교체한다.
-const sampleActivity: ProfileActivity = {
-  joinedAt: '2026-09-10T12:00:00Z',
-  balanceSol: 1222.33,
-  transactions: [
-    { id: 'tx-1', label: 'Brush stroke', occurredAt: '2026-09-28T12:00:00Z', amountSol: -0.01 },
-    { id: 'tx-2', label: 'Ink purchase', occurredAt: '2026-09-28T12:00:00Z', amountSol: -0.01 },
-    { id: 'tx-3', label: 'Season entry', occurredAt: '2026-09-28T12:00:00Z', amountSol: -0.01 },
-  ],
-  mySeasons: [
-    {
-      id: 'season-design-the-ui',
-      title: 'Design the UI',
-      startsAt: '2026-10-12T12:00:00Z',
-      endsAt: '2026-11-01T12:00:00Z',
-      participantCount: 7,
-      status: 'ended',
-      thumbnail: '/images/profile/season-design-ui.png',
-    },
-    {
-      id: 'season-pixel-battle',
-      title: 'Pixel Battle',
-      startsAt: '2026-09-25T12:00:00Z',
-      endsAt: '2026-10-30T12:00:00Z',
-      participantCount: 128,
-      status: 'active',
-      thumbnail: '/images/profile/season-pixel-battle.png',
-    },
-    {
-      id: 'season-night-sky',
-      title: 'Night Sky',
-      startsAt: '2026-08-01T12:00:00Z',
-      endsAt: '2026-08-20T12:00:00Z',
-      participantCount: 64,
-      status: 'ended',
-      thumbnail: '/images/profile/season-night-sky.png',
-    },
-  ],
-};
 
 const uuidV4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
@@ -205,11 +136,6 @@ export async function getParticipatedSeasons(
   return envelope.data;
 }
 
-/** 프로필 활동 샘플을 반환한다. 백엔드 요청은 하지 않는다. */
-export async function getProfileActivity(): Promise<ProfileActivity> {
-  return sampleActivity;
-}
-
 /** 기존 닉네임 변경 API를 사용한다. 서버는 앞뒤 공백을 제거한 1~20자만 허용한다. */
 export async function updateDisplayName(displayName: string) {
   const response = await axiosInstance.patch<ApiResponse<{ id: string; displayName: string }>>(
@@ -218,5 +144,17 @@ export async function updateDisplayName(displayName: string) {
     { withCredentials: true }
   );
   if (response.status !== 200) throw new Error('Unexpected nickname update response');
+  return response.data.data;
+}
+
+/** 고른 JPG·PNG 파일을 변환 없이 본문으로 올린다. 서버가 형식·크기를 다시 검사하고 새 사진 주소를 돌려준다. */
+export async function uploadProfileImage(file: File) {
+  const response = await axiosInstance.put<ApiResponse<{ id: string; avatarUrl: string }>>(
+    '/users/me/profile-image',
+    file,
+    // 최대 2MB 사진을 해외 서버로 올리므로 기본 10초보다 오래 기다린다.
+    { headers: { 'Content-Type': file.type }, withCredentials: true, timeout: 60_000 }
+  );
+  if (response.status !== 200) throw new Error('Unexpected profile image response');
   return response.data.data;
 }

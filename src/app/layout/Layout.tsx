@@ -1,5 +1,5 @@
 import '@/app/layout/layout.css';
-import { Suspense, useEffect, useRef } from 'react';
+import { Suspense, useEffect, useLayoutEffect, useRef } from 'react';
 import { ErrorBoundary } from '../errors/ErrorBoundary';
 import { useRouteScroll } from './model/useRouteScroll';
 import { Outlet, useLocation, matchPath } from 'react-router';
@@ -54,6 +54,22 @@ const Layout = ({
       }
     };
   }, [scrollMode]);
+
+  // 캔버스 화면은 도화지를 배경 없는 헤더 밑까지 깔 수 있도록 헤더 높이를 CSS 변수로 알린다.
+  useLayoutEffect(() => {
+    const shell = mainRef.current?.parentElement;
+    const header = shell?.querySelector<HTMLElement>('.layout-header');
+    if (!isCanvas || !shell || !header) return;
+    const update = () =>
+      shell.style.setProperty('--layout-header-height', `${header.offsetHeight}px`);
+    const observer = new ResizeObserver(update);
+    observer.observe(header);
+    update();
+    return () => {
+      observer.disconnect();
+      shell.style.removeProperty('--layout-header-height');
+    };
+  }, [isCanvas, showHeader]);
 
   return (
     <SidebarProvider>
