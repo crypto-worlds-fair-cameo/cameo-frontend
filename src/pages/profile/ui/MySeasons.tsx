@@ -54,7 +54,9 @@ export function MySeasons({ seasons }: { seasons: ProfileSeason[] }) {
                         {t('status.active')}
                       </span>
                     ) : (
-                      <StatusBadge status={season.status}>{t(`status.${season.status}`)}</StatusBadge>
+                      <StatusBadge status={season.status}>
+                        {t(`status.${season.status}`)}
+                      </StatusBadge>
                     )}
                     {/* 샘플 항목의 화살표는 이동 가능한 실제 시즌이 연결될 때까지 장식으로 표시한다. */}
                     <img

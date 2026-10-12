@@ -1,0 +1,33 @@
+name: CI
+
+# PR을 올리거나 main·dev에 푸시할 때마다 자동으로 검사한다. 배포는 Vercel이 따로 맡는다.
+on:
+  pull_request:
+  push:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+# 같은 브랜치에 새로 푸시하면 이전 검사는 취소해 시간을 아낀다.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: 검사·테스트·빌드
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Node 버전은 .nvmrc(24.21.0)를 따른다.
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm test
+      - run: npm run build
