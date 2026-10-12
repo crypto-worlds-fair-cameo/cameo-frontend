@@ -23,12 +23,3 @@ export function formatDateRange(startIso: string, endIso: string, locale: string
   const start = sameYear ? formatMonthDay(startIso, locale) : formatDate(startIso, locale);
   return `${start} – ${formatDate(endIso, locale)}`;
 }
-
-/** SOL 금액을 소수 2~4자리로 표시한다. 출금은 디자인과 같은 마이너스 기호(−)를 붙인다. */
-export function formatSol(amount: number, locale: string) {
-  const value = new Intl.NumberFormat(locale, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 4,
-  }).format(Math.abs(amount));
-  return `${amount < 0 ? '−' : ''}${value} SOL`;
-}

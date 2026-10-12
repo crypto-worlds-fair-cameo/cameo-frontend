@@ -1,5 +1,8 @@
 // 페이지는 작업 공간의 공개 진입점만 사용하고 연결·복구의 내부 구현은 이 모듈이 소유한다.
 export { CanvasViewport } from './ui/CanvasViewport';
+export { CanvasNavigator } from './ui/CanvasNavigator';
+export { useCanvasZoom } from './model/useCanvasZoom';
+export type { CanvasZoomController } from './model/useCanvasZoom';
 export { useCanvasRealtime } from './model/useCanvasRealtime';
 export { useCanvasMode } from './model/useCanvasMode';
 export type { CanvasMode } from './model/useCanvasMode';

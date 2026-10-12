@@ -200,6 +200,9 @@ export function createCanvasDrawingRenderer() {
           }
         }
       }
+      // 청크 픽셀은 기기 픽셀 좌표(bounds)로 복사하므로 전체 재생에서 건 도화지 좌표 변환을 먼저 해제한다.
+      // 해제하지 않으면 새로고침·리사이즈·확대처럼 다시 그릴 때 획이 도화지 왼쪽 위로 축소되어 찍힌다.
+      layerContext.setTransform(1, 0, 0, 1, 0, 0);
       for (const chunk of ordered) {
         const key = strokeKey(chunk.userId, chunk.clientStrokeId);
         const progress = strokeProgress.get(key);

@@ -23,8 +23,10 @@ import { SidebarTrigger } from '@/shared/ui/sidebar';
 import { Menu, UserRound } from 'lucide-react';
 import HeaderLogo from '@/app/layout/header/HeaderLogo';
 import HeaderNav from '@/app/layout/header/HeaderNav';
-import { useModalStore } from '@/shared/ui/modal/model/modalStore';
+import { useQueryClient } from '@tanstack/react-query';
+import { sessionMutationKey } from '@/entities/session';
 import { WalletConnectContent, WalletConnectTitle } from './ui/WalletConnectContent';
+import { openWalletDialogStep } from './model/openWalletDialogStep';
 import { useTranslation } from 'react-i18next';
 import { useWalletAuthentication } from './model/useWalletAuthentication';
 import { cn } from '@/shared/lib/utils';
@@ -36,21 +38,28 @@ interface HeaderProps {
 
 const Header = ({ menuItems, showSidebar = false }: HeaderProps) => {
   const navigation = useMobileNavigation();
-  const openModal = useModalStore(state => state.openModal);
+  const queryClient = useQueryClient();
   const { t } = useTranslation('wallet');
   const { t: tCommon } = useTranslation('common');
   const { t: tNavigation } = useTranslation('navigation');
   const auth = useWalletAuthentication();
   const accountButtonRef = useRef<HTMLButtonElement>(null);
   const openWalletDialog = useCallback(
-    (returnFocusElement = accountButtonRef.current) =>
-      openModal({
+    (returnFocusElement: HTMLElement | null = accountButtonRef.current) => {
+      // 지난 시도의 오류(서명 거절 등)가 새로 연 창에 남지 않도록 끝난 요청의 오류 기록을 지운다.
+      const mutations = queryClient.getMutationCache();
+      for (const mutation of mutations.findAll({
+        mutationKey: sessionMutationKey,
+        status: 'error',
+      }))
+        mutations.remove(mutation);
+      openWalletDialogStep({
         title: <WalletConnectTitle />,
-        titleClassName: 'pr-12',
         content: <WalletConnectContent />,
         returnFocusElement,
-      }),
-    [openModal]
+      });
+    },
+    [queryClient]
   );
   const walletLabel = auth.walletAddress
     ? `${auth.walletAddress.slice(0, 4)}…${auth.walletAddress.slice(-4)}`

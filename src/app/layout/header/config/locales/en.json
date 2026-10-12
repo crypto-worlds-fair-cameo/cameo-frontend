@@ -1,6 +1,5 @@
 {
   "connect": "Connect Wallet",
-  "connecting": "Connecting…",
   "connected": "Wallet Connected",
   "account": "Wallet Account",
   "connectedWallet": "Connected wallet: {{address}}",
@@ -8,23 +7,30 @@
     "profile": "Profile"
   },
   "disconnect": "Disconnect Wallet",
-  "disconnecting": "Disconnecting…",
   "installPhantom": "Install Phantom",
   "nickname": {
-    "title": "Change your nickname",
-    "label": "Nickname",
-    "placeholder": "Enter your nickname",
-    "hint": "{{count}}/20",
+    "title": "Create Nickname",
+    "label": "name",
+    "count": "{{count}}/20",
+    "description": "Choose a nickname of up to 20 characters.",
+    "tooLong": "Write it in under 20 characters.",
     "complete": "Done",
-    "updated": "Profile updated!",
-    "saving": "Saving…"
+    "saving": "Saving…",
+    "created": "Profile created!",
+    "viewProfile": "View Profile"
   },
   "dialog": {
-    "title": "Connect your wallet",
+    "title": "Connect Wallet",
     "description": "Choose a wallet to connect.",
-    "phantom": "Connect with Phantom",
-    "connectedTitle": "Wallet connected",
-    "connectedDescription": "You are signed in with your wallet."
+    "phantom": "Phantom",
+    "connecting": "Connecting to wallet…",
+    "rejected": "Request rejected",
+    "failed": "Connection failed",
+    "next": "Next",
+    "done": "Done",
+    "cancel": "Cancel",
+    "tryAgain": "Try Again",
+    "connectedTitle": "Wallet connected!"
   },
   "errors": {
     "nicknameInvalid": "Enter a nickname with 1–20 characters, excluding leading and trailing spaces.",

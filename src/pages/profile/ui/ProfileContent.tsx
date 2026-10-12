@@ -1,24 +1,19 @@
 import { useTranslation } from 'react-i18next';
 import type { AuthenticatedSession } from '@/entities/session';
-import { Button } from '@/shared/ui/button';
 import { Navigation } from '@/shared/ui/navigation';
-import { useProfileActivityQuery } from '../api/profile.queries';
 import { useProfileTab } from '../model/useProfileTab';
 import { JoinedCanvases } from './JoinedCanvases';
 import { MySeasons } from './MySeasons';
 import { ProfileHeader } from './ProfileHeader';
-import { ActivitySkeleton } from './ProfileSkeleton';
-import { ProfileSummary } from './ProfileSummary';
-import { ProfileTransactions } from './ProfileTransactions';
 
-/** 로그인한 사용자의 프로필. 왼쪽 탭 메뉴와 탭별 섹션을 조합한다. */
+/**
+ * 로그인한 사용자의 프로필. 왼쪽 탭 메뉴와 탭별 섹션을 조합한다.
+ * 가입일·잔액·거래 내역·내가 만든 시즌 목록은 서버 API가 없어 표시하지 않는다.
+ */
 export function ProfileContent({ session }: { session: AuthenticatedSession }) {
   const { t } = useTranslation('profile');
   const { tab, hrefs, select } = useProfileTab();
-  const activity = useProfileActivityQuery(session.user.id);
   const walletAddress = session.activeWallet.address;
-  // 시안처럼 참여한 캔버스 탭에서는 요약 카드와 상단 버튼 없이 목록만 보여준다.
-  const showOverview = tab !== 'joined';
 
   return (
     <div className="profile-page">
@@ -36,40 +31,15 @@ export function ProfileContent({ session }: { session: AuthenticatedSession }) {
         />
       </aside>
       <div className="profile-main">
+        {/* 시안처럼 참여한 캔버스 탭에서는 상단 버튼 없이 목록만 보여준다. */}
         <ProfileHeader
           user={session.user}
           walletAddress={walletAddress}
-          showActions={showOverview}
+          showActions={tab !== 'joined'}
           onShowJoined={() => select(hrefs.joined)}
         />
-        {/* 샘플 잔액을 실제 값으로 오해하지 않도록 요약 카드보다 먼저 안내한다.
-            참여한 캔버스는 실제 API를 쓰므로 안내하지 않는다. */}
-        {showOverview && <p className="profile-sample-notice">{t('sampleNotice')}</p>}
-        {tab === 'joined' ? (
-          <JoinedCanvases userId={session.user.id} />
-        ) : activity.isError ? (
-          <div className="profile-activity-error" role="alert">
-            <p>{t('activityError.message')}</p>
-            <Button variant="secondary" size="sm" onClick={() => void activity.refetch()}>
-              {t('activityError.retry')}
-            </Button>
-          </div>
-        ) : activity.isPending ? (
-          <div role="status" aria-label={t('loading')}>
-            <ActivitySkeleton />
-          </div>
-        ) : (
-          <>
-            {showOverview && (
-              <ProfileSummary
-                joinedAt={activity.data.joinedAt}
-                balanceSol={activity.data.balanceSol}
-              />
-            )}
-            {tab === 'profile' && <ProfileTransactions transactions={activity.data.transactions} />}
-            {tab === 'seasons' && <MySeasons seasons={activity.data.mySeasons} />}
-          </>
-        )}
+        {tab === 'seasons' && <MySeasons />}
+        {tab === 'joined' && <JoinedCanvases userId={session.user.id} />}
       </div>
     </div>
   );

@@ -18,6 +18,13 @@ describe('profile save errors', () => {
     // 닉네임 중복은 허용하며, 계약에 없는 409는 일반 저장 실패로 처리한다.
     expect(getProfileSaveErrorKey(httpError(409))).toBe('failed');
     expect(getProfileSaveErrorKey(httpError(429))).toBe('rateLimited');
+    expect(getProfileSaveErrorKey(httpError(400, { code: 'USER_PROFILE_IMAGE_INVALID' }))).toBe(
+      'imageInvalid'
+    );
+    expect(getProfileSaveErrorKey(httpError(413))).toBe('imageInvalid');
+    expect(getProfileSaveErrorKey(httpError(503, { code: 'USER_PROFILE_IMAGE_UNAVAILABLE' }))).toBe(
+      'imageUnavailable'
+    );
     expect(getProfileSaveErrorKey(new AxiosError('offline'))).toBe('network');
     expect(getProfileSaveErrorKey(new Error('unknown'))).toBe('failed');
   });

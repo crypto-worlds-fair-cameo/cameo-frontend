@@ -1,0 +1,29 @@
+/* 지갑 연결 단계 창. 공용 팝업 상자(shared/ui)는 그대로 두고, 내용(.wallet-dialog)을 담은 상자만
+   Figma W(지갑 연동) 카드처럼 넓은 여백과 아래쪽 버튼 배치로 바꾼다.
+   닫기는 각 단계의 Cancel·Done 버튼이 맡으므로 오른쪽 위 X는 숨긴다. */
+.cameo-dialog-content:has(> .wallet-dialog) {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 32px 24px;
+  border-radius: 10px;
+}
+
+.cameo-dialog-content:has(> .wallet-dialog) > .cameo-dialog-close {
+  display: none;
+}
+
+.wallet-dialog {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+/* PC에서는 Figma 카드(약 492×440px) 크기를 유지하고, 휴대폰에서는 높이를 고정하지 않는다. */
+@media (min-width: 640px) {
+  .cameo-dialog-content:has(> .wallet-dialog) {
+    max-width: 492px;
+    min-height: 440px;
+    padding: 56px 56px 64px;
+  }
+}

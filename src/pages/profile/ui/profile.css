@@ -81,37 +81,6 @@
 .profile-joined-button {
   min-width: 150px;
 }
-/* 샘플 안내는 시안에 없는 줄이라 헤더 바로 아래에 붙여 시안 간격을 크게 바꾸지 않는다. */
-.profile-sample-notice {
-  margin-top: calc(var(--space-6) * -1);
-  color: var(--color-gray-500);
-  font-size: 12px;
-  line-height: 18px;
-}
-.profile-summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
-  gap: var(--space-4);
-}
-.profile-summary .cameo-card {
-  min-height: 104px;
-  padding: 16px 21px;
-  border: 1px solid var(--color-gray-200);
-  border-radius: var(--radius-button);
-  background: var(--background);
-  box-shadow: none;
-}
-.profile-summary dt {
-  color: var(--text-primary);
-  font-size: 16px;
-  line-height: 26px;
-}
-.profile-summary dd {
-  margin: 0;
-  font-size: 24px;
-  line-height: 38px;
-  overflow-wrap: anywhere;
-}
 .profile-section {
   display: grid;
   gap: var(--space-4);
@@ -254,12 +223,6 @@
   font-size: 12px;
   line-height: 18px;
 }
-.profile-season-chevron {
-  display: block;
-  flex-shrink: 0;
-  margin: 0 8px 0 11px;
-  transform: scaleX(-1);
-}
 .profile-strokes {
   display: inline-flex;
   align-items: center;
@@ -276,35 +239,6 @@
 }
 .profile-thumbnail {
   display: block;
-}
-/* 공통 거래 목록을 유지하며 날짜를 금액 바로 옆으로 배치한다. */
-.profile-transactions .cameo-transactions li {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 110px;
-  align-items: start;
-  gap: 10px;
-  min-height: 40px;
-  padding: 0;
-  border: 0;
-  font-size: 14px;
-  line-height: 22px;
-}
-.profile-transactions .cameo-transactions li > span:first-child {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 80px;
-  gap: var(--space-2);
-}
-.profile-transactions .cameo-transactions small {
-  margin-top: 2px;
-  color: var(--color-gray-500);
-  font-family: inherit;
-  font-size: 12px;
-  line-height: 18px;
-  text-align: right;
-}
-.profile-transactions .cameo-transactions [data-direction] {
-  font-family: inherit;
-  text-align: right;
 }
 .profile-empty {
   display: grid;
@@ -325,10 +259,6 @@
   border: 1px solid var(--color-gray-200);
   border-radius: var(--radius-button);
   color: var(--color-gray-500);
-}
-.profile-activity-skeleton {
-  display: grid;
-  gap: var(--space-8);
 }
 @media (min-width: 768px) {
   .profile-page {
@@ -357,16 +287,5 @@
   }
   .profile-list .cameo-list-copy {
     flex-basis: calc(100% - 64px);
-  }
-  .profile-transactions .cameo-transactions li {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-  .profile-transactions .cameo-transactions li > span:first-child {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0;
-  }
-  .profile-transactions .cameo-transactions small {
-    margin: 0;
-    text-align: left;
   }
 }

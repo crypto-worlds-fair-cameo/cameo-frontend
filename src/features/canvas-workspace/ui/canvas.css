@@ -155,6 +155,14 @@
   background: #fff9db;
 }
 
+/* 1배 도화지 자리를 재는 보이지 않는 상자. 페이지가 inset을 바꾸면 그 안에 전체 보기를 맞춘다. */
+.canvas-fit-area {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .drawing-canvas {
   position: absolute;
   inset: 0;
@@ -174,6 +182,111 @@
   transform: translate(-50%, -50%);
   overflow: visible;
   pointer-events: none;
+}
+
+/* 스페이스바를 누르고 있거나 끄는 중에는 손 모양 커서로 화면 옮기기를 알리고 브러쉬 커서는 숨긴다. */
+.canvas-viewport[data-pan='ready'],
+.canvas-viewport[data-pan='ready'] .drawing-canvas {
+  cursor: grab;
+}
+
+.canvas-viewport[data-pan='active'],
+.canvas-viewport[data-pan='active'] .drawing-canvas {
+  cursor: grabbing;
+}
+
+.canvas-viewport[data-pan] .canvas-brush-cursor {
+  display: none;
+}
+
+/* 왼쪽 아래 지도와 확대·축소 버튼 */
+.canvas-navigator {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.canvas-navigator-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.canvas-navigator-map {
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-gray-300);
+  background: #fff;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.canvas-navigator-map:focus-visible {
+  outline: 2px solid var(--color-black);
+  outline-offset: 2px;
+}
+
+.canvas-navigator-map canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* 지금 화면에 보이는 영역 */
+.canvas-navigator-viewport {
+  position: absolute;
+  box-sizing: border-box;
+  min-width: 4px;
+  min-height: 4px;
+  border: 1.5px solid #171717;
+  background: rgb(23 23 23 / 6%);
+  pointer-events: none;
+}
+
+/* Figma: 지도 윗변보다 조금 아래에 46px 정사각형 버튼 두 개 */
+.canvas-navigator-buttons {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: 10px;
+}
+
+.canvas-navigator-buttons button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--color-black);
+  cursor: pointer;
+}
+
+.canvas-navigator-buttons button:hover:not(:disabled) {
+  background: var(--color-gray-50);
+}
+
+.canvas-navigator-buttons button:focus-visible {
+  outline: 2px solid var(--color-black);
+  outline-offset: 2px;
+}
+
+.canvas-navigator-buttons button:disabled {
+  color: var(--color-gray-300);
+  cursor: default;
+}
+
+.canvas-navigator-buttons svg {
+  width: 18px;
+  height: 18px;
+}
+
+.canvas-navigator-size {
+  margin: 0;
+  color: var(--color-gray-500);
+  font-size: 12px;
 }
 
 .canvas-error {

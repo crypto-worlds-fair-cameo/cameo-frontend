@@ -10,7 +10,6 @@ import './ui/profile.css';
 /**
  * 프로필 페이지 진입점. 세션 상태에 따라 오류·로딩·미로그인·프로필 화면을 나눈다.
  * 닉네임·사진·지갑 주소는 세션에서 읽고, 닉네임 저장은 기존 API를 사용한다.
- * 가입일·잔액·거래 내역·시즌 목록은 API가 생길 때까지 샘플 요청 함수가 제공한다.
  */
 const ProfilePage = () => {
   const { t } = useTranslation('profile');

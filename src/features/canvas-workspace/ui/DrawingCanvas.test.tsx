@@ -11,6 +11,7 @@ const props = {
   worldWidth: 10_000,
   worldHeight: 10_000,
   view: { scale: 0.0288, offsetX: 16, offsetY: 176 },
+  frame: { x: 16, y: 176, width: 288, height: 288 },
 };
 
 function CanvasProbe({ dimensions = props }: { dimensions?: typeof props }) {
@@ -129,6 +130,11 @@ describe('canvas initialization recovery', () => {
       fillRect: vi.fn(),
       strokeRect: vi.fn(),
       clearRect: vi.fn(),
+      save: vi.fn(),
+      restore: vi.fn(),
+      beginPath: vi.fn(),
+      rect: vi.fn(),
+      clip: vi.fn(),
     } as unknown as CanvasRenderingContext2D);
     fireEvent.click(screen.getByRole('button', { name: '다시 시도' }));
 

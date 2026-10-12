@@ -16,18 +16,7 @@ export function ProfileSkeleton() {
           <Skeleton className={`size-16 rounded-full ${pulse}`} />
           <Skeleton className={`h-6 w-40 ${pulse}`} />
         </div>
-        <ActivitySkeleton />
       </div>
-    </div>
-  );
-}
-
-/** 활동 목록 조회 중 자리. 상태 안내는 감싸는 영역이 담당한다. */
-export function ActivitySkeleton() {
-  return (
-    <div className="profile-activity-skeleton" aria-hidden="true">
-      <Skeleton className={`h-24 w-full ${pulse}`} />
-      <Skeleton className={`h-40 w-full ${pulse}`} />
     </div>
   );
 }

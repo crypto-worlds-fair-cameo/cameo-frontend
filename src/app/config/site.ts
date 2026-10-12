@@ -36,7 +36,8 @@ export const layoutPresets = {
     contentWidth: 'content',
     showHeader: true,
     showSidebar: false,
-    showFooter: true,
+    // 시안에 꼬리말이 없어 사용 중인 레이아웃에서는 표시하지 않는다.
+    showFooter: false,
   },
 } as const satisfies Record<string, LayoutPreset>;
 

@@ -7,7 +7,13 @@ import {
   type PointerEvent,
   type RefObject,
 } from 'react';
-import { screenToWorld, type CanvasPoint, type CanvasView } from '../lib/canvasTransform';
+import {
+  screenToWorld,
+  worldToScreen,
+  type CanvasPoint,
+  type CanvasRect,
+  type CanvasView,
+} from '../lib/canvasTransform';
 import type { CanvasDrawingModel } from './useCanvasDrawing';
 import type { CanvasMode } from './useCanvasMode';
 
@@ -18,7 +24,9 @@ export function useCanvasPointer(
   mode: CanvasMode,
   model: CanvasDrawingModel,
   worldWidth: number,
-  worldHeight: number
+  worldHeight: number,
+  /** 도화지 틀(CSS px). 확대 중에는 틀 밖에 보이지 않는 도화지가 있으므로 틀 안에서만 그리기를 시작한다. */
+  frame?: CanvasRect
 ) {
   const viewKey = `${view.scale}:${view.offsetX}:${view.offsetY}`;
   const [position, setPosition] = useState<{
@@ -85,9 +93,26 @@ export function useCanvasPointer(
     };
   }
 
-  /** 도화지 안에서는 원본 위치의 커서를 표시하고, 여백이나 경계 밖에서는 숨긴다. */
+  /** 화면 좌표가 도화지 틀 안인지 확인한다. 틀이 없으면 도화지 경계만 본다. */
+  function insideFrame(point: CanvasPoint) {
+    if (!frame) return true;
+    const screen = worldToScreen(point, view);
+    return (
+      screen.x >= frame.x &&
+      screen.y >= frame.y &&
+      screen.x <= frame.x + frame.width &&
+      screen.y <= frame.y + frame.height
+    );
+  }
+
+  /** 도화지 안에서는 원본 위치의 커서를 표시하고, 여백이나 경계·틀 밖에서는 숨긴다. */
   function updateCursor(point: CanvasPoint) {
-    const inside = point.x >= 0 && point.y >= 0 && point.x <= worldWidth && point.y <= worldHeight;
+    const inside =
+      point.x >= 0 &&
+      point.y >= 0 &&
+      point.x <= worldWidth &&
+      point.y <= worldHeight &&
+      insideFrame(point);
     setPosition(inside ? { point, mode, viewKey, inputVersion: model.inputVersion } : null);
   }
 
@@ -95,7 +120,7 @@ export function useCanvasPointer(
   function onPointerDown(event: PointerEvent<HTMLCanvasElement>) {
     if (!event.isPrimary || event.button !== 0 || capturedPointer.current !== null) return;
     const point = getPoint(event);
-    if (!model.startStroke(event.pointerId, point)) return;
+    if (!insideFrame(point) || !model.startStroke(event.pointerId, point)) return;
     event.preventDefault();
     capturedPointer.current = event.pointerId;
     event.currentTarget.setPointerCapture(event.pointerId);
