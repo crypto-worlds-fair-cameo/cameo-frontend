@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { createInitialSeasonDraft, toLocalDateTimeInput, validateSeasonDraft } from './seasonForm';
+import {
+  createInitialSeasonDraft,
+  formatSol,
+  toLocalDateTimeInput,
+  validateSeasonDraft,
+} from './seasonForm';
 
 const now = new Date('2026-10-07T00:00:00.000Z');
 
@@ -22,6 +27,19 @@ describe('season form contract', () => {
     expect(result.input).not.toHaveProperty('description');
   });
 
+  it('accepts a 1000-character description and rejects one more code point', () => {
+    const draft = createInitialSeasonDraft(now);
+    draft.title = 'now';
+    draft.description = '가'.repeat(1000);
+    draft.endsAt = toLocalDateTimeInput(new Date(now.getTime() + 24 * 60 * 60 * 1000));
+    const accepted = validateSeasonDraft(draft, now);
+    expect(accepted.errors.description).toBeUndefined();
+    expect(accepted.input?.description).toHaveLength(1000);
+
+    draft.description = '가'.repeat(1001);
+    expect(validateSeasonDraft(draft, now).errors.description).toBe('descriptionLength');
+  });
+
   it('rejects blank numbers before Number conversion and counts Unicode code points', () => {
     const draft = createInitialSeasonDraft(now);
     draft.title = '😀'.repeat(51);
@@ -30,6 +48,31 @@ describe('season form contract', () => {
     expect(result.errors.title).toBe('titleLength');
     expect(result.errors.capacity).toBe('requiredNumber');
     expect(result.input).toBeUndefined();
+  });
+
+  it('sends null capacity, the entry rule and an exact lamports fee', () => {
+    const draft = createInitialSeasonDraft(now);
+    draft.title = 'paid';
+    draft.unlimitedCapacity = true;
+    draft.capacity = '';
+    draft.entryRule = 'wallet_holders';
+    draft.paidEntry = true;
+    draft.entryFee = '0.1';
+    expect(validateSeasonDraft(draft, now).input).toMatchObject({
+      capacity: null,
+      entryRule: 'wallet_holders',
+      entryFeeLamports: '100000000',
+    });
+    expect(formatSol('100000000')).toBe('0.1');
+
+    for (const fee of ['0.0009', '100.000000001', '1e3', '']) {
+      draft.entryFee = fee;
+      expect(validateSeasonDraft(draft, now).errors.entryFee).toBe(
+        fee === '' ? 'requiredNumber' : 'entryFeeRange'
+      );
+    }
+    draft.paidEntry = false;
+    expect(validateSeasonDraft(draft, now).input?.entryFeeLamports).toBe('0');
   });
 
   it('uses one hour for scheduled seasons and a 61 minute margin for immediate seasons', () => {

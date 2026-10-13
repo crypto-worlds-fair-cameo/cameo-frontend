@@ -38,8 +38,7 @@
 }
 
 .layout-header-inner {
-  width: min(100%, 96rem);
-  margin: 0 auto;
+  width: 100%;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
@@ -49,6 +48,39 @@
 
 .layout-header-actions {
   justify-self: end;
+}
+
+.layout-header .layout-header-connect.cameo-button--primary {
+  gap: 6px;
+  border-color: var(--color-gray-200);
+  background: #fff;
+  color: var(--color-gray-500);
+  box-shadow: none;
+  font-weight: 500;
+}
+
+.layout-header .layout-header-connect.cameo-button--primary:hover,
+.layout-header .layout-header-connect.cameo-button--primary:active {
+  background: var(--color-gray-50);
+  color: var(--color-black);
+}
+
+.layout-header-menu .cameo-navigation,
+.layout-header-menu .cameo-navigation a {
+  font-family: 'Montserrat Alternates', 'Noto Sans KR', ui-sans-serif, system-ui, sans-serif;
+  font-size: 16px;
+  font-style: italic;
+  font-weight: 600;
+  line-height: 16px;
+}
+
+/* 지금 화면이 아닌 메뉴는 스펙의 비활성 글자색이다. */
+.layout-header-menu .cameo-navigation a {
+  color: var(--text-disabled);
+}
+
+.layout-header-menu .cameo-navigation a[aria-current='page'] {
+  color: var(--color-black);
 }
 
 @media (max-width: 639px) {
@@ -127,8 +159,12 @@
 }
 
 @media (min-width: 768px) {
+  /* 로고 왼쪽·계정 버튼 오른쪽을 캔버스 팔레트·통계 카드와 같은 56px 끝에 둔다.
+     헤더는 페이지와 관계없이 이 자리를 쓴다. */
   .layout-header-inner {
-    padding: var(--space-4) var(--space-6);
+    padding: var(--space-4) 56px;
+    /* 스크롤바가 있는 페이지도 계정 버튼 오른쪽이 캔버스 통계 카드와 같은 화면 끝에 오게 한다. */
+    padding-right: max(0px, calc(56px - (100vw - 100%)));
   }
 
   .layout-main {

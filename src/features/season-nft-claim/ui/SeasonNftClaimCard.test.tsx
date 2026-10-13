@@ -103,6 +103,35 @@ describe('SeasonNftClaimCard', () => {
     expect(startClaim).toHaveBeenCalledTimes(1);
   });
 
+  it('starts claim preparation once when opened from an outside claim button', () => {
+    const startClaim = vi.fn();
+    model.useSeasonNftClaim.mockReturnValue(result({ startClaim }));
+    const { rerender } = render(
+      <SeasonNftClaimCard seasonId="season-a" source="detail" autoStart />
+    );
+    rerender(<SeasonNftClaimCard seasonId="season-a" source="detail" autoStart />);
+    expect(startClaim).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not auto-start for a mismatched wallet or a claim already in progress', () => {
+    const startClaim = vi.fn();
+    model.useSeasonNftClaim.mockReturnValue(
+      result({
+        startClaim,
+        session: { activeWallet: { address: '22222222222222222222222222222222' } },
+      })
+    );
+    const { unmount } = render(
+      <SeasonNftClaimCard seasonId="season-a" source="detail" autoStart />
+    );
+    unmount();
+    const processing = fullView();
+    processing.claim = { ...processing.claim, state: 'PROCESSING' };
+    model.useSeasonNftClaim.mockReturnValue(result({ startClaim, view: processing }));
+    render(<SeasonNftClaimCard seasonId="season-a" source="detail" autoStart />);
+    expect(startClaim).not.toHaveBeenCalled();
+  });
+
   it.each([
     ['ALLOWLIST_PROOF', '참여 자격 등록 서명', '참여 자격 등록 예상 비용'],
     ['MINT', 'NFT 발행 서명', 'NFT 발행 예상 비용'],

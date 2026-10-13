@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { CircleAlert } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/button';
 import { ErrorState } from '@/shared/ui/error-state/ErrorState';
 
@@ -32,22 +33,28 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   render() {
     if (!this.state.failed) return this.props.children;
 
-    return (
-      <ErrorState
-        role="alert"
-        fullScreen={this.props.scope === 'app'}
-        symbol={<CircleAlert />}
-        title={this.props.scope === 'app' ? '앱을 표시하지 못했어요' : '페이지를 표시하지 못했어요'}
-        description="새로고침 후 다시 시도해 주세요."
-        actions={
-          <>
-            <Button onClick={() => window.location.reload()}>새로고침</Button>
-            <Button variant="secondary" asChild>
-              <a href="/">홈으로 이동</a>
-            </Button>
-          </>
-        }
-      />
-    );
+    return <ErrorFallback scope={this.props.scope} />;
   }
+}
+
+function ErrorFallback({ scope }: { scope: 'app' | 'page' }) {
+  const { t } = useTranslation('common');
+
+  return (
+    <ErrorState
+      role="alert"
+      fullScreen={scope === 'app'}
+      symbol={<CircleAlert />}
+      title={scope === 'app' ? t('error.appTitle') : t('error.pageTitle')}
+      description={t('error.description')}
+      actions={
+        <>
+          <Button onClick={() => window.location.reload()}>{t('error.refresh')}</Button>
+          <Button variant="secondary" asChild>
+            <a href="/">{t('error.home')}</a>
+          </Button>
+        </>
+      }
+    />
+  );
 }

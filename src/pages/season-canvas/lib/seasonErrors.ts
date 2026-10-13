@@ -1,4 +1,8 @@
-import { SeasonRequestError } from '../api/seasons.types';
+import {
+  ENTRY_PAYMENT_PENDING,
+  SeasonRequestError,
+  WALLET_SIGNING_FAILED,
+} from '../api/seasons.types';
 
 export type SeasonErrorKey =
   | 'inputInvalid'
@@ -10,6 +14,12 @@ export type SeasonErrorKey =
   | 'ownerRequired'
   | 'stateConflict'
   | 'notFound'
+  | 'walletMismatch'
+  | 'entryFeeUnavailable'
+  | 'walletSigning'
+  | 'paymentExpired'
+  | 'paymentFailed'
+  | 'paymentPending'
   | 'unavailable'
   | 'unknown';
 
@@ -37,6 +47,19 @@ export function getSeasonErrorKey(error: unknown): SeasonErrorKey {
       return 'stateConflict';
     case 'SEASON_NOT_FOUND':
       return 'notFound';
+    case 'SEASON_PARTICIPATION_WALLET_MISMATCH':
+      return 'walletMismatch';
+    case 'SEASON_ENTRY_FEE_UNAVAILABLE':
+      return 'entryFeeUnavailable';
+    case WALLET_SIGNING_FAILED:
+      return 'walletSigning';
+    case 'SEASON_ENTRY_PAYMENT_EXPIRED':
+      return 'paymentExpired';
+    case 'SEASON_ENTRY_PAYMENT_FAILED':
+    case 'SEASON_ENTRY_TRANSACTION_INVALID':
+      return 'paymentFailed';
+    case ENTRY_PAYMENT_PENDING:
+      return 'paymentPending';
     default:
       return 'unknown';
   }

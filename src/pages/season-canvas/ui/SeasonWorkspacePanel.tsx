@@ -1,15 +1,25 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
 import { canRetryCanvasRecovery, type CanvasMode } from '@/features/canvas-workspace';
-import { SeasonNftClaimCard } from '@/features/season-nft-claim';
 import type { useSeasonWorkspace } from '../model/useSeasonWorkspace';
 import { SeasonStatusBadge } from './SeasonStatusBadge';
 import { formatSeasonDate, formatSeasonDateRange } from '../lib/seasonDate';
+import { formatSol } from '../lib/seasonForm';
+import { useSeasonRoomJoin } from '../model/useSeasonRoomJoin';
 import { useSeasonWorkspaceEnd } from '../model/useSeasonWorkspaceEnd';
+import { useSeasonHoldersQuery } from '../api/seasons.queries';
+import type { SeasonHoldersPage } from '../api/seasons.types';
 import { SeasonEndDialog } from './SeasonEndDialog';
+import { SEASON_HOLDERS_PAGE_SIZE, SeasonHoldersDialog } from './SeasonHoldersDialog';
 import { SeasonInviteDialog } from './SeasonInviteDialog';
+import { SeasonJoinDialog } from './SeasonJoinDialog';
+
+function explorerCollectionUrl(collection: NonNullable<SeasonHoldersPage['collection']>) {
+  const cluster = collection.network === 'devnet' ? '?cluster=devnet' : '';
+  return `https://explorer.solana.com/address/${encodeURIComponent(collection.address)}${cluster}`;
+}
 
 /** 참가 등록과 현재 관람 연결 수를 분리하고 서버 승인·저장 상태를 안내한다. */
 export function SeasonWorkspacePanel({
@@ -24,7 +34,19 @@ export function SeasonWorkspacePanel({
   const { sync, connection } = realtime;
   const [infoOpen, setInfoOpen] = useState(true);
   const [inviteVersion, setInviteVersion] = useState<number | null>(null);
+  const [holdersVersion, setHoldersVersion] = useState<number | null>(null);
   const management = useSeasonWorkspaceEnd(scope, model.query);
+  const roomJoin = useSeasonRoomJoin(model);
+  const joinButtonRef = useRef<HTMLButtonElement>(null);
+  const infoToggleRef = useRef<HTMLButtonElement>(null);
+  const ended = status === 'ended' && Boolean(season);
+  const holders = useSeasonHoldersQuery(
+    scope.sessionKey,
+    season?.id,
+    { page: 1, limit: SEASON_HOLDERS_PAGE_SIZE, search: '' },
+    ended && Boolean(scope.isReady)
+  );
+  const collection = ended ? (holders.data?.collection ?? null) : null;
   const isOwner = Boolean(
     model.isOwner && scope.isReady && scope.session?.user.id === season?.creatorId
   );
@@ -52,6 +74,7 @@ export function SeasonWorkspacePanel({
             <span className="season-workspace-host-badge">{t('workspace.hostBadge')}</span>
           )}
           <Button
+            ref={infoToggleRef}
             variant="ghost"
             size="icon"
             aria-label={t('workspace.info')}
@@ -135,6 +158,20 @@ export function SeasonWorkspacePanel({
           )}
         </div>
       )}
+      {ended && (
+        <div className="season-workspace-ended-actions">
+          <Button variant="web3" onClick={() => setHoldersVersion(scope.resetVersion)}>
+            {t('workspace.viewParticipants')}
+          </Button>
+          {collection && (
+            <Button variant="secondary" asChild>
+              <a href={explorerCollectionUrl(collection)} target="_blank" rel="noreferrer">
+                {t('workspace.viewOnExplorer')}
+              </a>
+            </Button>
+          )}
+        </div>
+      )}
       {management.error && <p role="alert">{t(`errors.${management.error}`)}</p>}
       {model.query.isLoading && <p role="status">{t('detail.loading')}</p>}
       {model.query.isError && (
@@ -177,37 +214,57 @@ export function SeasonWorkspacePanel({
       {sync.submissionStatus === 'saved' && <p role="status">{t('workspace.saved')}</p>}
       {mode === 'practice' ? (
         <p>{t('workspace.practiceNotice')}</p>
-      ) : !scope.session ? (
+      ) : ended ? null : !scope.session ? (
         <p>{t('workspace.login')}</p>
       ) : status !== 'active' ? (
         <p>{t('workspace.readOnly')}</p>
       ) : !model.isParticipant ? (
         <p>{t('workspace.joinRequired')}</p>
-      ) : !model.canDraw && !sync.error ? (
-        <p>{t('workspace.readOnly')}</p>
       ) : null}
       {scope.session && status === 'active' && !model.isParticipant && (
         <>
           <Button
+            ref={joinButtonRef}
             disabled={!model.canJoin || model.join.isJoining}
             loading={model.join.isJoining}
-            onClick={() => void model.join.join()}
+            onClick={() => season && roomJoin.open(season)}
           >
-            {t('workspace.join')}
+            {season && season.entryFeeLamports !== '0'
+              ? model.join.isJoining
+                ? t('detail.paying')
+                : t('detail.joinPaid', { amount: formatSol(season.entryFeeLamports) })
+              : t('workspace.join')}
           </Button>
-          {season && season.participantCount >= season.capacity && (
+          {season && season.capacity !== null && season.participantCount >= season.capacity && (
             <p>{t('errors.capacityReached')}</p>
           )}
         </>
       )}
-      {model.join.error && <p role="alert">{t(`errors.${model.join.error}`)}</p>}
-      {season && <SeasonNftClaimCard seasonId={season.id} source="workspace" />}
       <span className="sr-only">{t('workspace.rule')}</span>
+      <SeasonJoinDialog
+        notice={roomJoin.notice}
+        joiningId={roomJoin.joiningId}
+        onClose={roomJoin.close}
+        onPay={season => void roomJoin.pay(season)}
+        onRetry={season => void roomJoin.pay(season)}
+        restoreFocusTo={joinButtonRef}
+        fallbackFocusTo={infoToggleRef}
+        inRoom
+      />
       {season && (
         <SeasonInviteDialog
           open={inviteVersion === scope.resetVersion && canShare}
           season={season}
           onOpenChange={open => !open && setInviteVersion(null)}
+        />
+      )}
+      {ended && season && (
+        <SeasonHoldersDialog
+          open={holdersVersion === scope.resetVersion}
+          seasonId={season.id}
+          title={season.title}
+          sessionKey={scope.sessionKey}
+          onOpenChange={open => !open && setHoldersVersion(null)}
         />
       )}
       <SeasonEndDialog

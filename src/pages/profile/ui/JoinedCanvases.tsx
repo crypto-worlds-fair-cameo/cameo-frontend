@@ -1,13 +1,24 @@
 import { useId, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
-import { SeasonNftClaimCard } from '@/features/season-nft-claim';
+import { SeasonNftClaimCard, type SeasonNftSummary } from '@/features/season-nft-claim';
 import { Button } from '@/shared/ui/button';
 import { MediaListItem } from '@/shared/ui/list-item';
 import { StatusBadge } from '@/shared/ui/status-badge';
 import { useParticipatedSeasonsQuery } from '../api/profile.queries';
 import { formatDateRange } from '../lib/profileFormat';
 import { SeasonThumbnail } from './SeasonThumbnail';
+
+/**
+ * 시안의 목록은 한 줄씩만 보이므로, NFT 카드는 지금 받을 수 있거나 받는 중일 때만 붙인다.
+ * 시즌 진행 중·준비 중·기능 꺼짐·수령 대상 아님에는 할 일이 없고, 받은 뒤에는 날짜 줄로 알린다.
+ */
+function needsNftCard({ availability, claim }: SeasonNftSummary) {
+  if (claim.state === 'PROCESSING') return true;
+  return (
+    availability === 'READY' && claim.eligibility === 'ELIGIBLE' && claim.state === 'UNCLAIMED'
+  );
+}
 
 /** 실제 참여 시즌 목록과 각 시즌의 서버 기준 NFT 수령 상태를 함께 표시한다. */
 export function JoinedCanvases({ userId }: { userId: string }) {
@@ -67,7 +78,12 @@ export function JoinedCanvases({ userId }: { userId: string }) {
                     />
                   }
                   title={canvas.title}
-                  description={formatDateRange(canvas.startsAt, canvas.endsAt, i18n.language)}
+                  description={[
+                    formatDateRange(canvas.startsAt, canvas.endsAt, i18n.language),
+                    canvas.nft.claim.state === 'CLAIMED' ? t('joined.minted') : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
                   action={
                     <div className="profile-list-actions">
                       <span className="profile-strokes">
@@ -88,12 +104,14 @@ export function JoinedCanvases({ userId }: { userId: string }) {
                     </div>
                   }
                 />
-                <SeasonNftClaimCard
-                  seasonId={canvas.seasonId}
-                  source="profile"
-                  initialSummary={canvas.nft}
-                  previewImageUrl={canvas.finalImageUrl}
-                />
+                {needsNftCard(canvas.nft) && (
+                  <SeasonNftClaimCard
+                    seasonId={canvas.seasonId}
+                    source="profile"
+                    initialSummary={canvas.nft}
+                    previewImageUrl={canvas.finalImageUrl}
+                  />
+                )}
               </li>
             ))}
           </ul>

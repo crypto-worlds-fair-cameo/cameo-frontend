@@ -1,17 +1,25 @@
-import type { CreateSeasonInput } from '../api/seasons.types';
+import type { CreateSeasonInput, SeasonEntryRule } from '../api/seasons.types';
 
 const MINUTE = 60_000;
 const DAY = 24 * 60 * MINUTE;
 const MAX_DURATION = 30 * DAY;
+const LAMPORTS_PER_SOL = 1_000_000_000n;
+/** 서버 입장료 범위. 0.001 SOL 미만은 빈 수령 지갑으로 전송이 실패할 수 있다. */
+const MIN_ENTRY_FEE_LAMPORTS = 1_000_000n;
+const MAX_ENTRY_FEE_LAMPORTS = 100n * LAMPORTS_PER_SOL;
 
 export interface SeasonFormDraft {
   title: string;
   description: string;
   width: string;
   height: string;
+  unlimitedCapacity: boolean;
   capacity: string;
   unlimitedStrokes: boolean;
   strokeLimitPerUser: string;
+  entryRule: SeasonEntryRule;
+  paidEntry: boolean;
+  entryFee: string;
   scheduled: boolean;
   startsAt: string;
   endsAt: string;
@@ -21,6 +29,7 @@ export type SeasonFormField = keyof SeasonFormDraft;
 export type SeasonFormErrorKey =
   | 'requiredNumber'
   | 'integerRange'
+  | 'entryFeeRange'
   | 'titleLength'
   | 'descriptionLength'
   | 'invalidDateTime'
@@ -51,9 +60,13 @@ export function createInitialSeasonDraft(now = new Date()): SeasonFormDraft {
     description: '',
     width: '1000',
     height: '1000',
+    unlimitedCapacity: false,
     capacity: '20',
     unlimitedStrokes: false,
     strokeLimitPerUser: '1',
+    entryRule: 'anyone',
+    paidEntry: false,
+    entryFee: '',
     scheduled: false,
     startsAt: toLocalDateTimeInput(startsAt),
     endsAt: toLocalDateTimeInput(endsAt),
@@ -64,11 +77,18 @@ function codePointLength(value: string): number {
   return Array.from(value).length;
 }
 
-/** 서버 시즌 설명 제한(앞뒤 공백 제거 후 100자). 입력 중 글자 수 표시도 같은 기준으로 센다. */
-export const DESCRIPTION_MAX_LENGTH = 100;
+/** 서버 시즌 제목·설명 제한. 입력 중 글자 수도 앞뒤 공백을 뺀 Unicode code point로 센다. */
+export const TITLE_MAX_LENGTH = 50;
+export const DESCRIPTION_MAX_LENGTH = 1000;
 
-export function descriptionLength(value: string): number {
+export function textLength(value: string): number {
   return codePointLength(value.trim());
+}
+
+/** 입력칸이 디자인 한도를 넘지 않게 앞부분만 남긴다. */
+export function limitText(value: string, max: number): string {
+  const characters = Array.from(value);
+  return characters.length <= max ? value : characters.slice(0, max).join('');
 }
 
 function parseInteger(
@@ -90,6 +110,36 @@ function parseInteger(
   return number;
 }
 
+/** SOL 소수 문자열을 부동소수 오차 없이 lamports 10진 문자열로 바꾼다. */
+function parseEntryFee(value: string, errors: SeasonFormErrors): string | undefined {
+  const trimmed = value.trim();
+  if (trimmed === '') {
+    errors.entryFee = 'requiredNumber';
+    return undefined;
+  }
+  const match = /^(\d{1,3})(?:\.(\d{1,9}))?$/.exec(trimmed);
+  const lamports = match
+    ? BigInt(match[1]) * LAMPORTS_PER_SOL + BigInt((match[2] ?? '').padEnd(9, '0'))
+    : undefined;
+  if (
+    lamports === undefined ||
+    lamports < MIN_ENTRY_FEE_LAMPORTS ||
+    lamports > MAX_ENTRY_FEE_LAMPORTS
+  ) {
+    errors.entryFee = 'entryFeeRange';
+    return undefined;
+  }
+  return lamports.toString();
+}
+
+/** lamports 10진 문자열을 뒤 0 없이 SOL 표기로 바꾼다. */
+export function formatSol(lamports: string): string {
+  const value = BigInt(lamports);
+  const whole = value / LAMPORTS_PER_SOL;
+  const fraction = (value % LAMPORTS_PER_SOL).toString().padStart(9, '0').replace(/0+$/, '');
+  return fraction ? `${whole}.${fraction}` : whole.toString();
+}
+
 /** datetime-local 값을 로컬 시각으로 엄격히 해석해 DST 자동 보정도 거절한다. */
 function parseLocalDateTime(value: string): Date | undefined {
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return undefined;
@@ -106,15 +156,17 @@ export function validateSeasonDraft(
   const errors: SeasonFormErrors = {};
   const title = draft.title.trim();
   const description = draft.description.trim();
-  if (codePointLength(title) < 1 || codePointLength(title) > 50) errors.title = 'titleLength';
-  if (descriptionLength(description) > DESCRIPTION_MAX_LENGTH)
-    errors.description = 'descriptionLength';
+  if (textLength(title) < 1 || textLength(title) > TITLE_MAX_LENGTH) errors.title = 'titleLength';
+  if (textLength(description) > DESCRIPTION_MAX_LENGTH) errors.description = 'descriptionLength';
   const width = parseInteger(draft.width, 'width', 500, 10_000, errors);
   const height = parseInteger(draft.height, 'height', 500, 10_000, errors);
-  const capacity = parseInteger(draft.capacity, 'capacity', 2, 100, errors);
+  const capacity = draft.unlimitedCapacity
+    ? null
+    : parseInteger(draft.capacity, 'capacity', 2, 100, errors);
   const strokeLimit = draft.unlimitedStrokes
     ? null
     : parseInteger(draft.strokeLimitPerUser, 'strokeLimitPerUser', 1, 10, errors);
+  const entryFeeLamports = draft.paidEntry ? parseEntryFee(draft.entryFee, errors) : '0';
   const startsAt = draft.scheduled ? parseLocalDateTime(draft.startsAt) : undefined;
   const endsAt = parseLocalDateTime(draft.endsAt);
   if (draft.scheduled && !startsAt) errors.startsAt = 'invalidDateTime';
@@ -138,7 +190,14 @@ export function validateSeasonDraft(
   if (Object.keys(errors).length > 0 || width === undefined || height === undefined) {
     return { errors };
   }
-  if (capacity === undefined || strokeLimit === undefined || !endsAt) return { errors };
+  if (
+    capacity === undefined ||
+    strokeLimit === undefined ||
+    entryFeeLamports === undefined ||
+    !endsAt
+  ) {
+    return { errors };
+  }
 
   const input: CreateSeasonInput = {
     title,
@@ -146,6 +205,8 @@ export function validateSeasonDraft(
     height,
     capacity,
     strokeLimitPerUser: strokeLimit,
+    entryRule: draft.entryRule,
+    entryFeeLamports,
     endsAt: endsAt.toISOString(),
   };
   // 빈 설명은 null 대신 필드를 생략하고 예약에서만 절대 시작 시각을 전달한다.

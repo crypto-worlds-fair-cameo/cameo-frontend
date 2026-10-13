@@ -137,6 +137,8 @@ beforeEach(() => {
     width: 800,
     height: 600,
     capacity: 4,
+    entryRule: 'anyone',
+    entryFeeLamports: '0',
     participantCount: 1,
     strokeLimitPerUser: 2,
     status: 'active',

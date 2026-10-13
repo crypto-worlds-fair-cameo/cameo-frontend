@@ -1,4 +1,4 @@
-import { useMemo, type RefObject } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/button';
 import { Checkbox } from '@/shared/ui/checkbox';
@@ -15,19 +15,23 @@ import { Field } from '@/shared/ui/field';
 import { Input } from '@/shared/ui/input';
 import { Slider } from '@/shared/ui/slider';
 import { restoreDialogFocus } from './restoreDialogFocus';
+import { SeasonTimeDial } from './SeasonTimeDial';
 import type { SeasonErrorKey } from '../lib/seasonErrors';
 import {
   DESCRIPTION_MAX_LENGTH,
-  descriptionLength,
+  TITLE_MAX_LENGTH,
+  limitText,
   toLocalDateTimeInput,
   type SeasonFormDraft,
   type SeasonFormErrorKey,
   type SeasonFormErrors,
 } from '../lib/seasonForm';
+import './season-dialog.css';
 
 const formErrorKeys: Record<SeasonFormErrorKey, `form.errors.${SeasonFormErrorKey}`> = {
   requiredNumber: 'form.errors.requiredNumber',
   integerRange: 'form.errors.integerRange',
+  entryFeeRange: 'form.errors.entryFeeRange',
   titleLength: 'form.errors.titleLength',
   descriptionLength: 'form.errors.descriptionLength',
   invalidDateTime: 'form.errors.invalidDateTime',
@@ -87,7 +91,12 @@ export function SeasonCreateDialog(props: SeasonCreateDialogProps) {
       <DialogContent
         className="season-dialog season-create-dialog"
         showCloseButton={false}
-        onEscapeKeyDown={event => props.isPending && event.preventDefault()}
+        onEscapeKeyDown={event => {
+          // 다이얼이 열려 있으면 개설 창보다 먼저 다이얼만 닫는다.
+          if (props.isPending || document.querySelector('.season-form__time-dial')) {
+            event.preventDefault();
+          }
+        }}
         onPointerDownOutside={event => props.isPending && event.preventDefault()}
         onCloseAutoFocus={event => {
           event.preventDefault();
@@ -113,37 +122,25 @@ export function SeasonCreateDialog(props: SeasonCreateDialogProps) {
               {field => (
                 <Input
                   {...field}
+                  maxLength={TITLE_MAX_LENGTH}
                   value={props.draft.title}
-                  maxLength={100}
-                  onChange={event => props.onUpdate('title', event.target.value)}
+                  onChange={event =>
+                    props.onUpdate('title', limitText(event.target.value, TITLE_MAX_LENGTH))
+                  }
                 />
               )}
             </Field>
             <Field label={t('form.descriptionLabel')} error={errorText('description')}>
-              {field => {
-                // 오류를 보기 전에 한도를 알 수 있도록 서버 기준 글자 수를 입력칸 아래에 표시한다.
-                const count = descriptionLength(props.draft.description);
-                const countId = `${field.id}-count`;
-                return (
-                  <>
-                    <FieldTextarea
-                      {...field}
-                      aria-describedby={[countId, field['aria-describedby']]
-                        .filter(Boolean)
-                        .join(' ')}
-                      value={props.draft.description}
-                      onChange={value => props.onUpdate('description', value)}
-                    />
-                    <p
-                      id={countId}
-                      className="season-form__counter"
-                      data-over={count > DESCRIPTION_MAX_LENGTH || undefined}
-                    >
-                      {t('form.descriptionCount', { count, max: DESCRIPTION_MAX_LENGTH })}
-                    </p>
-                  </>
-                );
-              }}
+              {field => (
+                <FieldTextarea
+                  {...field}
+                  maxLength={DESCRIPTION_MAX_LENGTH}
+                  value={props.draft.description}
+                  onChange={value =>
+                    props.onUpdate('description', limitText(value, DESCRIPTION_MAX_LENGTH))
+                  }
+                />
+              )}
             </Field>
             <section className="season-form__strokes">
               <Slider
@@ -175,7 +172,11 @@ export function SeasonCreateDialog(props: SeasonCreateDialogProps) {
               <Field label={t('form.capacity')} required error={errorText('capacity')}>
                 {field => (
                   <div className="season-form__option-row">
-                    <Checkbox checked={false} disabled label={t('form.unlimited')} />
+                    <Checkbox
+                      checked={props.draft.unlimitedCapacity}
+                      label={t('form.unlimited')}
+                      onChange={event => props.onUpdate('unlimitedCapacity', event.target.checked)}
+                    />
                     <Input
                       {...field}
                       type="number"
@@ -183,6 +184,7 @@ export function SeasonCreateDialog(props: SeasonCreateDialogProps) {
                       max="100"
                       step="1"
                       title="2–100"
+                      disabled={props.draft.unlimitedCapacity}
                       value={props.draft.capacity}
                       onChange={event => props.onUpdate('capacity', event.target.value)}
                     />
@@ -194,14 +196,49 @@ export function SeasonCreateDialog(props: SeasonCreateDialogProps) {
             <fieldset className="season-form__entry">
               <legend>{t('form.entryRules')}</legend>
               <div className="season-form__option-row">
-                <Checkbox checked disabled label={t('form.anyone')} />
-                <Checkbox checked={false} disabled label={t('form.walletOnly')} />
+                <Checkbox
+                  checked={props.draft.entryRule === 'anyone'}
+                  label={t('form.anyone')}
+                  onChange={() => props.onUpdate('entryRule', 'anyone')}
+                />
+                <Checkbox
+                  checked={props.draft.entryRule === 'wallet_holders'}
+                  label={t('form.walletOnly')}
+                  onChange={() => props.onUpdate('entryRule', 'wallet_holders')}
+                />
               </div>
               <div className="season-form__option-row season-form__fee">
-                <Checkbox checked disabled label={t('form.noFee')} />
-                <Input aria-label={t('form.entryFee')} value="0" disabled />
+                <Checkbox
+                  checked={!props.draft.paidEntry}
+                  label={t('form.noFee')}
+                  onChange={event => props.onUpdate('paidEntry', !event.target.checked)}
+                />
+                <Input
+                  aria-label={t('form.entryFee')}
+                  aria-invalid={props.errors.entryFee ? true : undefined}
+                  aria-describedby={props.errors.entryFee ? 'season-fee-error' : undefined}
+                  inputMode="decimal"
+                  placeholder="0.001–100"
+                  data-inactive={!props.draft.paidEntry || undefined}
+                  value={props.draft.paidEntry ? props.draft.entryFee : '0'}
+                  onPointerDown={() => {
+                    if (!props.draft.paidEntry) props.onUpdate('paidEntry', true);
+                  }}
+                  onFocus={() => {
+                    if (!props.draft.paidEntry) props.onUpdate('paidEntry', true);
+                  }}
+                  onChange={event => props.onUpdate('entryFee', event.target.value)}
+                />
                 <span>SOL</span>
               </div>
+              {errorText('entryFee') && (
+                <p id="season-fee-error" className="cameo-field-error">
+                  {errorText('entryFee')}
+                </p>
+              )}
+              {props.draft.paidEntry && (
+                <p className="season-form__fee-note">{t('form.feeNote')}</p>
+              )}
             </fieldset>
             <details
               className="season-form__dimensions"
@@ -322,11 +359,13 @@ function FieldTextarea({
   value,
   placeholder,
   onChange,
+  maxLength,
   ...props
 }: {
   value: string;
   placeholder?: string;
   onChange: (value: string) => void;
+  maxLength?: number;
   id?: string;
   required?: boolean;
   'aria-describedby'?: string;
@@ -338,9 +377,151 @@ function FieldTextarea({
       className="season-textarea"
       value={value}
       placeholder={placeholder}
-      maxLength={200}
+      maxLength={maxLength}
       onChange={event => onChange(event.target.value)}
     />
+  );
+}
+
+const DIAL_CLEARANCE = 288;
+
+function padTime(value: number) {
+  return String(value).padStart(2, '0');
+}
+
+function readClock(value: string) {
+  const match = /^(\d{2}):(\d{2})$/.exec(value);
+  const hour24 = match ? Number(match[1]) : 0;
+  const minute = match ? Number(match[2]) : 0;
+  const hour = hour24 >= 0 && hour24 <= 23 ? hour24 : 0;
+  const safeMinute = minute >= 0 && minute <= 59 ? minute : 0;
+  const period = hour >= 12 ? 'PM' : 'AM';
+  return {
+    hour,
+    minute: safeMinute,
+    label: `${hour % 12 || 12}:${padTime(safeMinute)} ${period}`,
+  };
+}
+
+/** 시간 선택은 12시간 시계 다이얼과 AM/PM으로 고른다. */
+function SeasonTimeField({
+  value,
+  label,
+  onChange,
+  ...props
+}: {
+  value: string;
+  label: string;
+  onChange: (value: string) => void;
+  id?: string;
+  required?: boolean;
+  disabled?: boolean;
+  'aria-describedby'?: string;
+  'aria-invalid'?: true;
+}) {
+  const [open, setOpen] = useState(false);
+  const [placement, setPlacement] = useState<'top' | 'bottom'>('top');
+  const rootRef = useRef<HTMLDivElement>(null);
+  const clock = readClock(value);
+  if (props.disabled && open) setOpen(false);
+  const shown = open && !props.disabled;
+
+  useEffect(() => {
+    if (!shown) return;
+    function closeOnOutside(event: PointerEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key !== 'Escape') return;
+      setOpen(false);
+      rootRef.current
+        ?.querySelector<HTMLButtonElement>('.season-form__time-trigger')
+        ?.focus({ preventScroll: true });
+    }
+    document.addEventListener('pointerdown', closeOnOutside);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutside);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [shown]);
+
+  useLayoutEffect(() => {
+    if (!shown || !rootRef.current) return;
+    const root = rootRef.current;
+    const dialog = root.closest('.season-dialog');
+    let adjusted = false;
+
+    const spaceAround = () => {
+      const field = root.getBoundingClientRect();
+      const bounds = dialog?.getBoundingClientRect();
+      return {
+        above: bounds ? field.top - bounds.top : field.top,
+        below: bounds ? bounds.bottom - field.bottom : window.innerHeight - field.bottom,
+        bounds,
+      };
+    };
+
+    const place = () => {
+      const { above, below, bounds } = spaceAround();
+      if (
+        !adjusted &&
+        dialog &&
+        bounds &&
+        bounds.height > 0 &&
+        Math.max(above, below) < DIAL_CLEARANCE
+      ) {
+        adjusted = true;
+        root.scrollIntoView({ block: above >= below ? 'end' : 'start', inline: 'nearest' });
+      }
+      const next = spaceAround();
+      const fitsTop = next.above >= DIAL_CLEARANCE;
+      const fitsBottom = next.below >= DIAL_CLEARANCE;
+      if (fitsTop && !fitsBottom) setPlacement('top');
+      else if (fitsBottom && !fitsTop) setPlacement('bottom');
+      else setPlacement(next.above >= next.below ? 'top' : 'bottom');
+    };
+
+    place();
+    window.addEventListener('resize', place);
+    dialog?.addEventListener('scroll', place);
+    return () => {
+      window.removeEventListener('resize', place);
+      dialog?.removeEventListener('scroll', place);
+    };
+  }, [shown]);
+
+  function commit(nextHour: number, nextMinute: number, close: boolean) {
+    onChange(`${padTime(nextHour)}:${padTime(nextMinute)}`);
+    if (close) setOpen(false);
+  }
+
+  return (
+    <div className="season-form__time-input" ref={rootRef}>
+      <button
+        {...props}
+        type="button"
+        className="cameo-input season-form__time-trigger"
+        aria-haspopup="dialog"
+        aria-expanded={shown}
+        aria-label={label}
+        onClick={() => {
+          if (!props.disabled) setOpen(current => !current);
+        }}
+      >
+        {clock.label}
+      </button>
+      <img src="/images/season-time-chevron.svg" alt="" />
+      {shown && (
+        <SeasonTimeDial
+          label={label}
+          hour={clock.hour}
+          minute={clock.minute}
+          placement={placement}
+          onCommit={commit}
+        />
+      )}
+    </div>
   );
 }
 
@@ -372,19 +553,18 @@ function SeasonDateTimeInputs({
           value={date}
           onChange={event => onChange(`${event.target.value}T${time}`)}
         />
+        <span className="season-form__date-value" aria-hidden="true">
+          {date.replace(/-/g, '.')}
+        </span>
         <img src="/images/season-calendar.svg" alt="" />
       </div>
-      <div className="season-form__time-input">
-        <DateTimePicker
-          {...props}
-          id={props.id ? `${props.id}-time` : undefined}
-          aria-label={`${label} ${timeLabel}`}
-          type="time"
-          value={time}
-          onChange={event => onChange(`${date}T${event.target.value}`)}
-        />
-        <img src="/images/season-time-chevron.svg" alt="" />
-      </div>
+      <SeasonTimeField
+        {...props}
+        id={props.id ? `${props.id}-time` : undefined}
+        label={`${label} ${timeLabel}`}
+        value={time.slice(0, 5)}
+        onChange={next => onChange(`${date}T${next}`)}
+      />
     </div>
   );
 }

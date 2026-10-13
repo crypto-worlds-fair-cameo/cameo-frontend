@@ -3,8 +3,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import { sessionQueryKey } from '@/entities/session';
 import { useJoinSeasonMutation } from '../api/seasons.mutations';
 import { seasonQueryKeys } from '../api/seasons.queries';
+import type { Season } from '../api/seasons.types';
 import { getSeasonErrorKey, type SeasonErrorKey } from '../lib/seasonErrors';
+import { getEntryPayer } from './seasonEntryPayer';
 import type { useSeasonSessionScope } from './useSeasonSessionScope';
+
+/** 현재 계정의 요청 결과. 중복 클릭이나 이전 계정의 늦은 응답은 결과 없이 끝난다. */
+export type SeasonJoinResult = { status: 'joined' } | { status: 'failed'; error: SeasonErrorKey };
 
 /** 참가 성공 후 새 소켓을 열고, 미확정 응답은 같은 요청의 명시적 재시도를 허용한다. */
 export function useSeasonJoin(
@@ -15,14 +20,7 @@ export function useSeasonJoin(
   const mutation = useJoinSeasonMutation(scope.isCurrentScope);
   const queryClient = useQueryClient();
   const requestRef = useRef<object | null>(null);
-  const [errorState, setErrorState] = useState<{
-    version: number;
-    id: string;
-    value: SeasonErrorKey;
-  } | null>(null);
   const [joiningScope, setJoiningScope] = useState<{ version: number; id: string } | null>(null);
-  const error =
-    errorState?.version === scope.resetVersion && errorState.id === id ? errorState.value : null;
   const isJoining = joiningScope?.version === scope.resetVersion && joiningScope.id === id;
   useEffect(() => {
     // 계정이나 대상이 바뀌면 이전 요청의 버튼 상태와 안내도 폐기한다.
@@ -32,21 +30,25 @@ export function useSeasonJoin(
     };
   }, [scope.resetVersion, id]);
 
-  async function join() {
+  async function join(season?: Season): Promise<SeasonJoinResult | undefined> {
     const token = scope.captureScope();
     if (!token || !scope.session || requestRef.current) return;
     const request = {};
     requestRef.current = request;
     setJoiningScope({ version: scope.resetVersion, id });
-    setErrorState(null);
     try {
-      await mutation.mutateAsync({ id, scope: token });
+      await mutation.mutateAsync({
+        id,
+        scope: token,
+        payerWalletAddress: season && getEntryPayer(season, scope.session),
+      });
       // 늦은 이전 계정의 성공은 새 계정 소켓을 재연결하지 않는다.
-      if (scope.isCurrentScope(token) && requestRef.current === request) onJoined();
+      if (!scope.isCurrentScope(token) || requestRef.current !== request) return;
+      onJoined();
+      return { status: 'joined' };
     } catch (cause) {
       if (!scope.isCurrentScope(token) || requestRef.current !== request) return;
       const key = getSeasonErrorKey(cause);
-      setErrorState({ version: scope.resetVersion, id, value: key });
       if (key === 'sessionInvalid' || key === 'userUnavailable') {
         void queryClient.invalidateQueries({ queryKey: sessionQueryKey });
       }
@@ -55,6 +57,8 @@ export function useSeasonJoin(
         queryKey: seasonQueryKeys.detail(token.sessionKey, id),
       });
       await queryClient.invalidateQueries({ queryKey: seasonQueryKeys.lists(token.sessionKey) });
+      if (!scope.isCurrentScope(token) || requestRef.current !== request) return;
+      return { status: 'failed', error: key };
     } finally {
       if (requestRef.current === request) {
         requestRef.current = null;
@@ -62,5 +66,5 @@ export function useSeasonJoin(
       }
     }
   }
-  return { join, error, isJoining };
+  return { join, isJoining };
 }

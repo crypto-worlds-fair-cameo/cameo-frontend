@@ -55,7 +55,12 @@ function isSeasonNftView(value: unknown): value is SeasonNftView {
     isEnum(value.network, ['devnet', 'mainnet-beta']) &&
     isEnum(value.availability, ['WAITING_FOR_END', 'PREPARING', 'READY', 'EMPTY', 'UNAVAILABLE']) &&
     (value.reason === null ||
-      isEnum(value.reason, ['CANCELLED', 'FORCE_ENDED', 'FEATURE_DISABLED'])) &&
+      isEnum(value.reason, [
+        'CANCELLED',
+        'FORCE_ENDED',
+        'FEATURE_DISABLED',
+        'TOO_MANY_CONTRIBUTORS',
+      ])) &&
     isNullableString(value.name) &&
     (value.imageUrl === null ||
       (typeof value.imageUrl === 'string' && isCanonicalArweaveUrl(value.imageUrl))) &&

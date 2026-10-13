@@ -15,10 +15,10 @@ export function ZoomControls({
   step?: number;
 }) {
   return (
-    <div className="cameo-zoom" role="group" aria-label="확대 및 축소">
+    <div className="cameo-zoom" role="group" aria-label="Zoom">
       <button
         type="button"
-        aria-label="축소"
+        aria-label="Zoom out"
         disabled={value <= min}
         onClick={() => onValueChange(Math.max(min, value - step))}
       >
@@ -27,7 +27,7 @@ export function ZoomControls({
       <output aria-live="polite">{value}%</output>
       <button
         type="button"
-        aria-label="확대"
+        aria-label="Zoom in"
         disabled={value >= max}
         onClick={() => onValueChange(Math.min(max, value + step))}
       >

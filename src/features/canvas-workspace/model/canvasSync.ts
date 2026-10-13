@@ -57,6 +57,8 @@ export interface CanvasSyncState {
   submissionStatus: 'idle' | 'drawing' | 'saving' | 'saved' | 'failed';
   canDraw: boolean;
   strokeUsed: boolean;
+  /** 시즌 ready의 사용 획 수에 이 연결에서 서버가 승인한 새 획을 더한 값. 모르면 null. */
+  strokesUsedCount: number | null;
   resetVersion: number;
   snapshotBase: CanvasSnapshotBase | null;
 }
@@ -71,6 +73,7 @@ export const initialCanvasSync: CanvasSyncState = {
   submissionStatus: 'idle',
   canDraw: false,
   strokeUsed: false,
+  strokesUsedCount: null,
   resetVersion: 0,
   snapshotBase: null,
 };
@@ -157,6 +160,9 @@ export function createCanvasSync(
   // 사용 확정은 연결·그림 epoch와 별개로 보관해 재접속이나 계정 전환으로 횟수를 돌려주지 않는다.
   const usedAccounts = new Set<string>();
   const exhaustedAccounts = new Set<string>();
+  // ready가 알려 준 시즌 사용 획 수와, 그 뒤 첫 묶음이 승인된 이 연결의 새 획 ID.
+  let readyStrokesUsed: number | null = null;
+  const strokesSinceReady = new Set<string>();
   const requestTimes = { append: [] as number[], sync: [] as number[], bootstrap: [] as number[] };
   const rateWaits = new Map<ReturnType<typeof setTimeout>, () => void>();
 
@@ -197,6 +203,8 @@ export function createCanvasSync(
     state = {
       ...next,
       strokeUsed,
+      strokesUsedCount:
+        readyStrokesUsed === null ? null : readyStrokesUsed + strokesSinceReady.size,
       canDraw: next.canDraw && !strokeUsed,
       optimisticStrokes: [...pending.values()].map(item => ({
         stroke: { ...item.stroke, points: [...item.stroke.points] },
@@ -927,6 +935,9 @@ export function createCanvasSync(
       target = { canvasKey, width: payload.season.width, height: payload.season.height };
       // 재연결 ready는 종료 상태도 새 sync로 확인하며 이전 프로세스 head는 폐기한다.
       terminalBoundary = undefined;
+      // 첫 묶음이 이미 승인된 미확정 획은 서버 집계에 들어 있고, 다시 첫 묶음을 보내지 않는다.
+      readyStrokesUsed = userId === undefined ? null : (payload.season.strokesUsed ?? null);
+      strokesSinceReady.clear();
     }
     drawingAllowed =
       payload.canDraw &&
@@ -1052,7 +1063,10 @@ export function createCanvasSync(
         );
       }
       // accepted=false인 중복 ACK도 서버 승인이다. 첫 묶음의 승인부터 계정의 새 획을 막는다.
-      if (request.input.chunkIndex === 0) usedAccounts.add(item.userId);
+      if (request.input.chunkIndex === 0) {
+        usedAccounts.add(item.userId);
+        if (item.userId === state.userId) strokesSinceReady.add(id);
+      }
       // 다른 메모리 세대의 픽셀은 복구로 확인하지만 이미 승인된 사용 횟수는 되돌리지 않는다.
       if (preview.epoch !== state.epoch) {
         publish();
@@ -1197,6 +1211,8 @@ export function createCanvasSync(
   function resetSession() {
     interrupted();
     clearPending();
+    readyStrokesUsed = null;
+    strokesSinceReady.clear();
     publish({ userId: undefined, canDraw: false, error: null, submissionStatus: 'idle' });
   }
 

@@ -1,5 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { cancelSeason, createSeason, listSeasons, joinSeason } from './seasons.api';
+import {
+  cancelSeason,
+  createSeason,
+  getLatestSeasonSnapshotUrl,
+  listSeasonHolders,
+  listSeasons,
+  joinSeason,
+} from './seasons.api';
 import { SeasonRequestError, type Season } from './seasons.types';
 
 const { get, post } = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
@@ -14,6 +21,8 @@ const season: Season = {
   height: 1000,
   strokeLimitPerUser: null,
   capacity: 20,
+  entryRule: 'anyone',
+  entryFeeLamports: '0',
   participantCount: 1,
   startsAt: '2026-10-10T00:00:00.000Z',
   endsAt: '2026-10-11T00:00:00.000Z',
@@ -97,6 +106,69 @@ describe('season API contract', () => {
     );
     expect(post).toHaveBeenCalledWith(`/seasons/${season.id}/cancel`, undefined, {
       withCredentials: true,
+    });
+  });
+
+  it('reads only the latest snapshot image and rejects unsafe image addresses', async () => {
+    const imageUrl = 'http://localhost:5000/canvas-snapshots/snapshots/seasons/a/b/image.png';
+    const history = (items: unknown[]) => ({
+      data: { success: true, data: { items, nextCursor: null, hasNext: false } },
+    });
+    get.mockResolvedValueOnce(history([{ imageUrl }]));
+    expect(await getLatestSeasonSnapshotUrl(season.id)).toBe(imageUrl);
+    expect(get).toHaveBeenCalledWith(`/canvases/${season.id}/history?limit=1`, {
+      withCredentials: true,
+      signal: undefined,
+    });
+
+    get.mockResolvedValueOnce(history([]));
+    expect(await getLatestSeasonSnapshotUrl(season.id)).toBeNull();
+
+    get.mockResolvedValueOnce(history([{ imageUrl: 'javascript:alert(1)' }]));
+    await expect(getLatestSeasonSnapshotUrl(season.id)).rejects.toMatchObject({
+      kind: 'invalid-response',
+    });
+  });
+
+  it('lists season holders with a trimmed search and rejects an unsafe collection address', async () => {
+    const page = (collection: unknown) => ({
+      data: {
+        success: true,
+        data: {
+          items: [
+            { displayName: 'Mina', walletAddress: 'wallet-1', amount: 1 },
+            { displayName: null, walletAddress: 'wallet-2', amount: null },
+          ],
+          page: 1,
+          limit: 4,
+          total: 2,
+          collection,
+        },
+      },
+    });
+    const collection = {
+      network: 'devnet',
+      address: 'BhBXZAzWGGx2wZCwbkDC9NDQh5NBreTJ3TvDe2GNW1aD',
+    };
+    get.mockResolvedValueOnce(page(collection));
+    expect(await listSeasonHolders(season.id, { page: 1, limit: 4, search: '  mi ' })).toEqual(
+      page(collection).data.data
+    );
+    expect(get).toHaveBeenCalledWith(`/seasons/${season.id}/holders?page=1&limit=4&search=mi`, {
+      withCredentials: true,
+      signal: undefined,
+    });
+
+    get.mockResolvedValueOnce(page(null));
+    await listSeasonHolders(season.id, { page: 2, limit: 4, search: '   ' });
+    expect(get).toHaveBeenLastCalledWith(`/seasons/${season.id}/holders?page=2&limit=4`, {
+      withCredentials: true,
+      signal: undefined,
+    });
+
+    get.mockResolvedValueOnce(page({ network: 'devnet', address: '../../evil' }));
+    await expect(listSeasonHolders(season.id, { page: 1, limit: 4 })).rejects.toMatchObject({
+      kind: 'invalid-response',
     });
   });
 });

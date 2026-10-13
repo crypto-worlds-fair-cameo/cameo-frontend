@@ -5,7 +5,15 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AuthenticatedSession } from '@/entities/session';
 import { getSession } from '@/entities/session/api/session.api';
-import { getParticipatedSeasons, updateDisplayName } from './api/profile.api';
+import { i18n } from '@/app/i18n/i18n';
+import {
+  getHostedSeasons,
+  getParticipatedSeasons,
+  getTransactions,
+  getWalletBalance,
+  updateDisplayName,
+} from './api/profile.api';
+import { formatDate } from './lib/profileFormat';
 import ProfilePage from './ProfilePage';
 
 vi.mock('@/entities/session/api/session.api', () => ({ getSession: vi.fn() }));
@@ -13,6 +21,9 @@ vi.mock('./api/profile.api', async importOriginal => ({
   ...(await importOriginal<typeof import('./api/profile.api')>()),
   updateDisplayName: vi.fn(),
   getParticipatedSeasons: vi.fn(),
+  getHostedSeasons: vi.fn(),
+  getWalletBalance: vi.fn(),
+  getTransactions: vi.fn(),
 }));
 vi.mock('@/features/season-nft-claim', () => ({
   SeasonNftClaimCard: ({ seasonId }: { seasonId: string }) => (
@@ -25,6 +36,7 @@ const session: AuthenticatedSession = {
     id: 'user-1',
     displayName: 'jisun',
     avatarUrl: null,
+    createdAt: '2026-09-10T12:00:00.000Z',
     wallets: [
       { chainNamespace: 'solana', address: 'FirstWalletabcdefghijklmnop1111' },
       { chainNamespace: 'solana', address: 'ActiveWalletabcdefghijklmnop2222' },
@@ -64,6 +76,16 @@ const joinedSeason = {
   },
 };
 
+const hostedSeason = {
+  seasonId: '22222222-2222-4222-8222-222222222222',
+  title: 'Design the UI',
+  lifecycleStatus: 'active' as const,
+  startsAt: '2026-10-01T12:00:00.000Z',
+  endsAt: '2026-10-20T12:00:00.000Z',
+  participantCount: 3,
+  finalImageUrl: null,
+};
+
 beforeEach(() => {
   vi.mocked(getParticipatedSeasons).mockResolvedValue({
     items: [joinedSeason],
@@ -71,6 +93,18 @@ beforeEach(() => {
     limit: 20,
     offset: 0,
   });
+  vi.mocked(getHostedSeasons).mockResolvedValue({
+    items: [hostedSeason],
+    total: 1,
+    limit: 20,
+    offset: 0,
+  });
+  vi.mocked(getWalletBalance).mockResolvedValue({
+    walletAddress: 'ActiveWalletabcdefghijklmnop2222',
+    network: 'devnet',
+    lamports: '1222330000000',
+  });
+  vi.mocked(getTransactions).mockResolvedValue({ items: [], total: 0, limit: 20, offset: 0 });
 });
 
 function renderProfile(path = '/profile') {
@@ -118,19 +152,29 @@ describe('profile page', () => {
     expect(screen.getByText('Acti…2222')).toBeTruthy();
     expect(screen.queryByText('Firs…1111')).toBeNull();
     expect(screen.getByRole('button', { name: '수정' })).toBeTruthy();
-    // 서버 API가 없는 가입일·잔액·거래 내역·내 시즌은 샘플로도 표시하지 않는다.
+    expect(screen.getByText('가입일')).toBeTruthy();
+    expect(screen.getByText(formatDate('2026-09-10T12:00:00.000Z', i18n.language))).toBeTruthy();
+    expect(screen.getByText('잔액')).toBeTruthy();
+    expect(await screen.findByText('1,222.33 SOL')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: '거래 내역' })).toBeTruthy();
+    expect(await screen.findByText('거래 내역이 없습니다.')).toBeTruthy();
     expect(screen.queryByText(/샘플 데이터/)).toBeNull();
-    expect(screen.queryByText('잔액')).toBeNull();
-    expect(screen.queryByText('거래 내역')).toBeNull();
+    expect(screen.queryByText('Brush stroke')).toBeNull();
 
-    // 내 시즌 탭은 메뉴와 새 시즌 버튼만 두고 가짜 시즌 목록은 표시하지 않는다.
+    // 내 시즌 탭은 서버가 돌려준 내가 개설한 시즌만 보여 주고, 화살표로 해당 시즌에 들어간다.
     await user.click(screen.getByRole('link', { name: '내 시즌' }));
     expect(screen.getByRole('link', { name: '내 시즌' }).getAttribute('aria-current')).toBe('page');
     expect(screen.getByRole('link', { name: '새 시즌' }).getAttribute('href')).toBe(
       '/season-canvas'
     );
-    expect(screen.queryByText('Design the UI')).toBeNull();
-    expect(within(screen.getByRole('region', { name: '내 시즌' })).queryByRole('list')).toBeNull();
+    const mySeasons = screen.getByRole('region', { name: '내 시즌' });
+    const hosted = await within(mySeasons).findByRole('article');
+    expect(hosted.textContent).toContain('Design the UI');
+    expect(hosted.textContent).toContain('참여자 3명');
+    expect(hosted.textContent).toContain('진행 중');
+    expect(
+      within(mySeasons).getByRole('link', { name: 'Design the UI 열기' }).getAttribute('href')
+    ).toBe(`/season-canvas/${hostedSeason.seasonId}`);
     expect(screen.getByRole('button', { name: '수정' })).toBeTruthy();
 
     // 시안처럼 참여한 캔버스 탭에서는 수정 버튼을 숨긴다.
@@ -142,6 +186,52 @@ describe('profile page', () => {
       'page'
     );
     expect(screen.queryByRole('button', { name: '수정' })).toBeNull();
+  });
+
+  it('lists confirmed SOL entries from the server and hides an unknown balance', async () => {
+    vi.mocked(getSession).mockResolvedValue(session);
+    vi.mocked(getWalletBalance).mockRejectedValue(new Error('rpc down'));
+    vi.mocked(getTransactions).mockResolvedValue({
+      items: [
+        {
+          id: '33333333-3333-4333-8333-333333333333',
+          type: 'season_entry',
+          direction: 'outgoing',
+          seasonId: joinedSeason.seasonId,
+          seasonTitle: 'Night Sky',
+          lamports: '10000000',
+          network: 'devnet',
+          signature: 'sig-out',
+          occurredAt: '2026-09-28T12:00:00.000Z',
+        },
+        {
+          id: '44444444-4444-4444-8444-444444444444',
+          type: 'season_entry',
+          direction: 'incoming',
+          seasonId: hostedSeason.seasonId,
+          seasonTitle: 'Design the UI',
+          lamports: '25000000',
+          network: 'devnet',
+          signature: 'sig-in',
+          occurredAt: '2026-09-27T12:00:00.000Z',
+        },
+      ],
+      total: 2,
+      limit: 20,
+      offset: 0,
+    });
+    renderProfile();
+
+    const list = await screen.findByRole('list', { name: '거래 내역' });
+    const rows = within(list).getAllByRole('listitem');
+    expect(rows.map(row => row.textContent)).toEqual([
+      expect.stringContaining('시즌 입장료'),
+      expect.stringContaining('입장료 수령'),
+    ]);
+    expect(rows[0].textContent).toContain('−0.01 SOL');
+    expect(rows[1].textContent).toContain('+0.025 SOL');
+    await waitFor(() => expect(vi.mocked(getWalletBalance)).toHaveBeenCalled());
+    expect(screen.getByText('잔액').nextElementSibling?.textContent).toBe('—');
   });
 
   it('opens the tab named in the URL and falls back to the profile tab', async () => {

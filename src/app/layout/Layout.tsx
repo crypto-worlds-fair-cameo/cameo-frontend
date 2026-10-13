@@ -34,10 +34,11 @@ const Layout = ({
 }: LayoutProps) => {
   const { key, pathname } = useLocation();
   // 페이지가 app을 참조하지 않도록, 바깥 레이아웃 선택은 app의 라우트 메타데이터로 관리한다.
-  const isCanvas = appRoutes.some(
-    route =>
-      matchPath({ path: route.path, end: true }, pathname) && route.contentLayout === 'canvas'
+  const matchedRoute = appRoutes.find(route =>
+    matchPath({ path: route.path, end: true }, pathname)
   );
+  const isCanvas = matchedRoute?.contentLayout === 'canvas';
+  const showRouteHeader = showHeader && matchedRoute?.showHeader !== false;
   // 캔버스는 기기 종류와 관계없이 화면 높이를 고정한다. 기존 mobile 모드의 문서 스크롤
   // 잠금과 main 스크롤 소유권을 재사용하고, 캔버스 전용 CSS에서 main의 스크롤도 막는다.
   const scrollMode = isCanvas ? 'mobile' : mode;
@@ -69,7 +70,7 @@ const Layout = ({
       observer.disconnect();
       shell.style.removeProperty('--layout-header-height');
     };
-  }, [isCanvas, showHeader]);
+  }, [isCanvas, showRouteHeader]);
 
   return (
     <SidebarProvider>
@@ -81,10 +82,13 @@ const Layout = ({
         data-frame={frame}
         data-content-layout={isCanvas ? 'canvas' : undefined}
       >
-        {showHeader && <Header menuItems={menuConfig} showSidebar={showSidebar} />}
+        {showRouteHeader && <Header menuItems={menuConfig} showSidebar={showSidebar} />}
 
         <main ref={mainRef} className="layout-main">
-          <div className="layout-content" data-content-width={contentWidth}>
+          <div
+            className="layout-content"
+            data-content-width={matchedRoute?.contentWidth ?? contentWidth}
+          >
             <ErrorBoundary resetKey={key} scope="page">
               <Suspense fallback={<RouteLoading />}>
                 <Outlet />

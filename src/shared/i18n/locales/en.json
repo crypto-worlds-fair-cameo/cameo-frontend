@@ -3,6 +3,13 @@
   "loading": "Loading",
   "loadingPage": "Loading page",
   "close": "Close",
+  "error": {
+    "appTitle": "Couldn't display the app",
+    "pageTitle": "Couldn't display this page",
+    "description": "Refresh and try again.",
+    "refresh": "Refresh",
+    "home": "Go home"
+  },
   "seasonNft": {
     "eyebrow": "Season NFT",
     "title": "Season Canvas NFT",
@@ -18,7 +25,8 @@
     "unavailable": {
       "CANCELLED": "Cancelled seasons are not eligible for NFT claims.",
       "FORCE_ENDED": "Force-ended seasons are not eligible for NFT claims.",
-      "FEATURE_DISABLED": "NFT claims are unavailable."
+      "FEATURE_DISABLED": "NFT claims are unavailable.",
+      "TOO_MANY_CONTRIBUTORS": "Seasons with more than 100 contributors do not issue NFTs."
     },
     "notParticipant": "Only season participants can claim this NFT.",
     "noValidStroke": "Only participants with a valid stroke can claim this NFT.",

@@ -5,14 +5,29 @@ import { useJoinSeasonMutation } from '../api/seasons.mutations';
 import { seasonQueryKeys } from '../api/seasons.queries';
 import type { Season } from '../api/seasons.types';
 import { getSeasonErrorKey, type SeasonErrorKey } from '../lib/seasonErrors';
+import { getEntryPayer } from './seasonEntryPayer';
 import type { useSeasonSessionScope } from './useSeasonSessionScope';
 
 /** 상세의 참가 버튼 뒤에 띄우는 안내 팝업. 지갑 안내는 손님의 시즌 개설 시도에도 쓴다. */
 export type SeasonJoinNotice =
   | { kind: 'wallet'; action?: 'create' }
+  | { kind: 'fee'; season: Season }
   | { kind: 'full' }
   | { kind: 'joined'; seasonId: string }
-  | { kind: 'error'; season: Season; error: SeasonErrorKey };
+  | { kind: 'error'; season: Season; error: SeasonErrorKey; payment: boolean };
+
+const paymentFailure = new Set<SeasonErrorKey>([
+  'walletSigning',
+  'paymentExpired',
+  'paymentFailed',
+]);
+
+/** 참가 실패를 정원 초과·결제 실패·일반 실패 팝업 중 하나로 나눈다. */
+export function joinFailureNotice(season: Season, error: SeasonErrorKey): SeasonJoinNotice {
+  return error === 'capacityReached'
+    ? { kind: 'full' }
+    : { kind: 'error', season, error, payment: paymentFailure.has(error) };
+}
 
 /** 목록 상세에서 참가를 요청하고 지갑 연결·정원 초과·참가 완료·실패 팝업으로 이어 준다. */
 export function useSeasonJoinFlow(
@@ -42,26 +57,39 @@ export function useSeasonJoinFlow(
     setNoticeState({ version: scope.resetVersion, value });
   };
 
-  async function join(season: Season) {
+  function isFull(season: Season) {
+    return (
+      !season.isParticipant &&
+      season.capacity !== null &&
+      season.participantCount >= season.capacity
+    );
+  }
+
+  async function confirmPayment(season: Season) {
     if (!scope.session) return show({ kind: 'wallet' });
-    // 정원은 서버가 최종 판단하지만, 이미 가득 찬 상세에서는 요청 없이 안내한다.
-    if (!season.isParticipant && season.participantCount >= season.capacity) {
-      return show({ kind: 'full' });
-    }
+    if (isFull(season)) return show({ kind: 'full' });
     const token = scope.captureScope();
     if (!token || requestRef.current) return;
+    // 유료 참가는 결제 중 문구를 입장료 팝업에 유지한다.
+    if (season.entryFeeLamports !== '0') {
+      setNoticeState({ version: scope.resetVersion, value: { kind: 'fee', season } });
+    }
     const request = {};
     requestRef.current = request;
     setJoiningState({ version: scope.resetVersion, id: season.id });
     try {
-      const joined = await mutation.mutateAsync({ id: season.id, scope: token });
+      const joined = await mutation.mutateAsync({
+        id: season.id,
+        scope: token,
+        payerWalletAddress: getEntryPayer(season, scope.session),
+      });
       // 늦게 도착한 이전 계정의 응답은 현재 화면에 팝업을 띄우지 않는다.
       if (!scope.isCurrentScope(token) || requestRef.current !== request) return;
       show({ kind: 'joined', seasonId: joined.id });
     } catch (cause) {
       if (!scope.isCurrentScope(token) || requestRef.current !== request) return;
       const error = getSeasonErrorKey(cause);
-      show(error === 'capacityReached' ? { kind: 'full' } : { kind: 'error', season, error });
+      show(joinFailureNotice(season, error));
       if (error === 'sessionInvalid' || error === 'userUnavailable') {
         void queryClient.invalidateQueries({ queryKey: sessionQueryKey });
       }
@@ -78,10 +106,22 @@ export function useSeasonJoinFlow(
     }
   }
 
+  async function join(season: Season) {
+    if (!scope.session) return show({ kind: 'wallet' });
+    // 정원은 서버가 최종 판단하지만, 이미 가득 찬 상세에서는 요청 없이 안내한다.
+    if (isFull(season)) return show({ kind: 'full' });
+    // 유료 참가는 결제를 시작하기 전에 입장료 확인 팝업을 연다.
+    if (season.entryFeeLamports !== '0' && !season.isParticipant) {
+      return show({ kind: 'fee', season });
+    }
+    return confirmPayment(season);
+  }
+
   return {
     notice,
     joiningId,
     join,
+    confirmPayment,
     askWalletToCreate: () => show({ kind: 'wallet', action: 'create' }),
     closeNotice: () => setNoticeState(null),
   };

@@ -4,6 +4,7 @@ import { cn } from '@/shared/lib/utils';
 import { Card } from '@/shared/ui/card';
 import type { Season } from '../api/seasons.types';
 import { formatSeasonDateRange, getSeasonDaysRemaining } from '../lib/seasonDate';
+import { formatSol } from '../lib/seasonForm';
 import { SeasonPreview } from './SeasonPreview';
 
 /** 시즌 최종 이미지와 서버의 시즌 기간·참가 현황을 보여 주고 상세 화면을 연다. */
@@ -16,8 +17,9 @@ export function SeasonCard({
 }) {
   const { t, i18n } = useTranslation('seasonCanvas');
   // 참가 등록은 영구 자리를 사용하므로 정원에서 누적 참가 인원을 빼서 남은 자리를 표시한다.
-  const remaining = Math.max(0, season.capacity - season.participantCount);
-  const capacity = Math.max(1, season.capacity);
+  const remaining =
+    season.capacity === null ? null : Math.max(0, season.capacity - season.participantCount);
+  const capacity = Math.max(1, season.capacity ?? 1);
   const registered = Math.min(capacity, Math.max(0, season.participantCount));
   const daysRemaining = getSeasonDaysRemaining(season);
   // 조기 종료 기록이 있으면 예정 종료일 대신 실제 종료일까지의 기간을 보여 준다.
@@ -63,6 +65,14 @@ export function SeasonCard({
               <User aria-hidden="true" fill="currentColor" />
               {t('card.artists', { count: season.participantCount })}
             </span>
+          ) : remaining === null ? (
+            <>
+              <span className="season-card__participants">
+                <User aria-hidden="true" fill="currentColor" />
+                {t('card.artists', { count: season.participantCount })}
+              </span>
+              <span className="season-card__remaining">{t('card.unlimited')}</span>
+            </>
           ) : (
             <>
               <span
@@ -85,6 +95,11 @@ export function SeasonCard({
                 {t('card.remaining', { count: remaining })}
               </span>
             </>
+          )}
+          {season.status !== 'ended' && season.entryFeeLamports !== '0' && (
+            <span className="season-card__fee">
+              {t('detail.sol', { amount: formatSol(season.entryFeeLamports) })}
+            </span>
           )}
         </div>
       </div>

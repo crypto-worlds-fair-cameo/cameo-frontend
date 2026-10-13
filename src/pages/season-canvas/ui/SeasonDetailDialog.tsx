@@ -1,9 +1,9 @@
-import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { ArrowRight } from 'lucide-react';
 import type { UseQueryResult } from '@tanstack/react-query';
-import { SeasonNftClaimCard } from '@/features/season-nft-claim';
+import { SeasonNftClaimCard, useSeasonNftClaimState } from '@/features/season-nft-claim';
 import { Button } from '@/shared/ui/button';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import {
@@ -20,6 +20,7 @@ import { Skeleton } from '@/shared/ui/skeleton';
 import { SeasonRequestError, type Season } from '../api/seasons.types';
 import type { SeasonErrorKey } from '../lib/seasonErrors';
 import { formatSeasonDate, formatSeasonDateRange, formatSeasonDateTime } from '../lib/seasonDate';
+import { formatSol } from '../lib/seasonForm';
 import type { SeasonManageAction } from '../model/useSeasonDetail';
 import { restoreDialogFocus } from './restoreDialogFocus';
 import { SeasonPreview } from './SeasonPreview';
@@ -66,6 +67,9 @@ export function SeasonDetailDialog(props: SeasonDetailDialogProps) {
           : null;
   // 404가 아니면 목록의 미리보기로 제목을 먼저 보여 주고, 조회된 상세로 갱신한다.
   const summary = notFound ? undefined : (season ?? props.preview);
+  const nftClaim = useSeasonNftClaimState(actionable?.id, actionable?.status === 'ended');
+  const [claimOpenFor, setClaimOpenFor] = useState<string | null>(null);
+  const claimOpen = actionable?.status === 'ended' && claimOpenFor === actionable.id;
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
   const endButtonRef = useRef<HTMLButtonElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -102,6 +106,7 @@ export function SeasonDetailDialog(props: SeasonDetailDialogProps) {
               seasonId={summary?.id}
               status={summary?.status}
               variant="detail"
+              live={summary && { requiresSession: summary.entryRule === 'wallet_holders' }}
               className="season-detail__preview"
             />
             <div className="season-detail__info">
@@ -141,7 +146,6 @@ export function SeasonDetailDialog(props: SeasonDetailDialogProps) {
                     </div>
                   )}
                   <SeasonDetail season={season} />
-                  <SeasonNftClaimCard seasonId={season.id} source="detail" />
                 </>
               ) : null}
               {/* 관리 요청의 실패는 상세 정보 옆에 남겨 다시 확인할 수 있게 한다. */}
@@ -166,7 +170,13 @@ export function SeasonDetailDialog(props: SeasonDetailDialogProps) {
                       loading={props.isJoining}
                       onClick={() => props.onJoin(actionable)}
                     >
-                      {props.isJoining ? t('detail.joining') : t('detail.join')}
+                      {props.isJoining
+                        ? t('detail.joining')
+                        : actionable.entryFeeLamports === '0'
+                          ? t('detail.join')
+                          : t('detail.joinFor', {
+                              amount: formatSol(actionable.entryFeeLamports),
+                            })}
                     </Button>
                   ))}
                 {/* 종료된 시즌의 완성된 캔버스는 누구나 볼 수 있다. */}
@@ -174,6 +184,17 @@ export function SeasonDetailDialog(props: SeasonDetailDialogProps) {
                   <Button asChild>
                     <Link to={`/season-canvas/${actionable.id}`}>{t('detail.view')}</Link>
                   </Button>
+                )}
+                {/* 받을 수 있거나 받는 중인 참가자에게만 보이고, 누르면 비용 안내와 서명 단계가 있는 수령 카드로 바뀐다. */}
+                {actionable?.status === 'ended' &&
+                  !claimOpen &&
+                  (nftClaim === 'claimable' || nftClaim === 'processing') && (
+                    <Button variant="web3" onClick={() => setClaimOpenFor(actionable.id)}>
+                      {t('detail.claimNft')}
+                    </Button>
+                  )}
+                {claimOpen && (
+                  <SeasonNftClaimCard seasonId={actionable.id} source="detail" autoStart />
                 )}
                 {/* 서버가 제공한 관리 권한에 따라 취소·조기 종료 버튼을 표시한다. */}
                 {season?.canCancel && (
@@ -274,7 +295,10 @@ function SeasonDetail({ season }: { season: Season }) {
           ? t('detail.unlimited')
           : t('detail.perPerson', { count: season.strokeLimitPerUser }),
     },
-    { label: t('detail.capacity'), value: `${season.participantCount}/${season.capacity}` },
+    {
+      label: t('detail.capacity'),
+      value: `${season.participantCount}/${season.capacity ?? t('detail.unlimited')}`,
+    },
   ];
   return (
     <div className="season-detail">

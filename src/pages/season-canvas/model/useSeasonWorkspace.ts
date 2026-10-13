@@ -44,9 +44,12 @@ export function useSeasonWorkspace(id: string, brush: BrushSettings, mode: Canva
       });
   };
   const join = useSeasonJoin(id, scope, reconnect);
+  // 지갑 보유자 전용 시즌은 서버가 손님 연결을 거절하므로 로그인 전에는 연결하지 않는다.
+  const walletRequired =
+    scope.isReady && !scope.session && query.data?.entryRule === 'wallet_holders';
   const realtime = useCanvasRealtime(brush, mode, {
     canvasKey: `season:${id}`,
-    enabled: scope.isReady && !canvasUnavailable,
+    enabled: scope.isReady && !canvasUnavailable && !walletRequired,
     sessionVersion: scope.resetVersion,
     reconnectVersion: reconnectVersion + scope.resetVersion,
     allowLiveInput: Boolean(
@@ -135,7 +138,7 @@ export function useSeasonWorkspace(id: string, brush: BrushSettings, mode: Canva
     !isParticipant &&
     season &&
     !query.isError &&
-    season.participantCount < season.capacity
+    (season.capacity === null || season.participantCount < season.capacity)
   );
   return {
     scope,
@@ -151,5 +154,6 @@ export function useSeasonWorkspace(id: string, brush: BrushSettings, mode: Canva
     join,
     realtime,
     canvasUnavailable,
+    walletRequired,
   };
 }

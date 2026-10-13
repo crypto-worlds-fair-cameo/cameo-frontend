@@ -45,10 +45,11 @@ const MainCanvasPage = () => {
   const { connection, sync, retryRecovery, drawingModel, strokeNotice, onStrokeNoticeOpenChange } =
     useCanvasRealtime(brushSettings, mode);
   const isPracticeMode = mode === 'practice';
-  // 낮은 화면에서는 팔레트와 지도를 스크롤 없이 전부 보이도록 함께 줄인다.
+  // 낮은 화면에서는 팔레트만 줄인다. 미니맵은 디자인 치수를 유지하고, 그 높이만큼 팔레트 공간에서 뺀다.
   const leftColumnRef = useRef<HTMLElement>(null);
   const leftContentRef = useRef<HTMLDivElement>(null);
-  useFitToHeight(leftColumnRef, leftContentRef, !isMobile);
+  const navigatorRef = useRef<HTMLDivElement>(null);
+  useFitToHeight(leftColumnRef, leftContentRef, !isMobile, navigatorRef);
   // 확대 상태는 페이지가 소유하고 도화지·지도·배율 표시가 함께 읽는다.
   const zoom = useCanvasZoom(CANVAS_SIZE, CANVAS_SIZE);
   const [walletNoticeOpen, setWalletNoticeOpen] = useState(false);
@@ -92,13 +93,15 @@ const MainCanvasPage = () => {
     >
       {/* 왼쪽 영역은 여러 패널을 담는 공간이며, 각 패널의 내부 배치는 해당 컴포넌트가 소유한다. */}
       <aside ref={leftColumnRef} className="canvas-left-sidebar">
-        {/* 팔레트와 지도(Figma: 팔레트 아래 왼쪽 아래)는 한 덩어리로 화면 높이에 맞춰 줄어든다. */}
+        {/* 팔레트만 화면 높이에 맞춰 줄어든다. 지도는 그 아래 48px에 디자인 크기 그대로 둔다. */}
         <div ref={leftContentRef} className="main-canvas-left-fit">
           <ColorPalette
             value={brushSettings}
             onValueChange={setBrushSettings}
             defaultOpen={!isMobile}
           />
+        </div>
+        <div ref={navigatorRef}>
           <CanvasNavigator zoom={zoom} drawingModel={drawingModel} />
         </div>
       </aside>

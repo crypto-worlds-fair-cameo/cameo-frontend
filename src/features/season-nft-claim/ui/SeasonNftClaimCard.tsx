@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ExternalLink, ImageOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/button';
@@ -17,6 +17,8 @@ export interface SeasonNftClaimCardProps {
   source: 'detail' | 'workspace' | 'profile';
   initialSummary?: SeasonNftSummary;
   previewImageUrl?: string | null;
+  /** 사용자가 바깥의 "NFT 받기" 버튼으로 카드를 연 경우, 같은 버튼을 다시 누르지 않게 수령 준비를 한 번 시작한다. */
+  autoStart?: boolean;
 }
 
 const base58Address = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/u;
@@ -180,6 +182,21 @@ export function SeasonNftClaimCard(props: SeasonNftClaimCardProps) {
   const busy = model.isStarting || model.isSigning || model.isRefreshingError;
   const transaction = attempt?.transaction ?? null;
   const claimed = view?.claim.state === 'CLAIMED';
+  // 수령 준비는 서명 전 단계라 비용이 나가지 않는다. 비용은 준비가 끝난 뒤 서명 버튼 위에 표시된다.
+  const canAutoStart =
+    props.autoStart === true &&
+    content.action === 'start' &&
+    !content.disabled &&
+    !busy &&
+    view?.claim.state === 'UNCLAIMED';
+  const autoStartedRef = useRef(false);
+  const startClaim = model.startClaim;
+
+  useEffect(() => {
+    if (!canAutoStart || autoStartedRef.current) return;
+    autoStartedRef.current = true;
+    void startClaim();
+  }, [canAutoStart, startClaim]);
 
   return (
     <Card className="season-nft-card" data-source={props.source} aria-busy={busy || undefined}>

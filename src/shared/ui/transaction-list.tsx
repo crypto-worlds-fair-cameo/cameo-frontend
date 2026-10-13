@@ -10,7 +10,7 @@ type TransactionItem = {
 };
 export function TransactionList({
   items,
-  label = '거래 내역',
+  label = 'Transactions',
 }: {
   items: TransactionItem[];
   label?: string;
@@ -18,7 +18,7 @@ export function TransactionList({
   return (
     <ul className="cameo-transactions" aria-label={label}>
       {items.length === 0 ? (
-        <li>거래 내역이 없습니다.</li>
+        <li>No transactions.</li>
       ) : (
         items.map(item => (
           <li key={item.id}>
@@ -27,7 +27,9 @@ export function TransactionList({
               {item.date && <small>{item.date}</small>}
             </span>
             <span data-direction={item.direction}>
-              <span className="sr-only">{item.direction === 'outgoing' ? '출금 ' : '입금 '}</span>
+              <span className="sr-only">
+                {item.direction === 'outgoing' ? 'Outgoing ' : 'Incoming '}
+              </span>
               {item.amount}
             </span>
           </li>

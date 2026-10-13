@@ -17,6 +17,25 @@ export function formatMonthDay(iso: string, locale: string) {
   return new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' }).format(new Date(iso));
 }
 
+/** lamports를 Number로 바꾸지 않고 SOL로 표기한다. 소수는 maxFractionDigits에서 버린다. 예: 1,222.33 */
+export function formatSol(lamports: string, locale: string, maxFractionDigits = 9) {
+  const value = BigInt(lamports);
+  const whole = new Intl.NumberFormat(locale).format(value / 1_000_000_000n);
+  const fraction = (value % 1_000_000_000n)
+    .toString()
+    .padStart(9, '0')
+    .slice(0, maxFractionDigits)
+    .replace(/0+$/u, '');
+  return fraction ? `${whole}.${fraction}` : whole;
+}
+
+/** 올해 날짜는 월·일만, 다른 해는 연도까지 표시한다. */
+export function formatActivityDate(iso: string, locale: string, now = new Date()) {
+  return new Date(iso).getFullYear() === now.getFullYear()
+    ? formatMonthDay(iso, locale)
+    : formatDate(iso, locale);
+}
+
 /** 같은 해의 기간은 시작일의 연도를 생략한다. 예: Oct 12 – Nov 1, 2026 */
 export function formatDateRange(startIso: string, endIso: string, locale: string) {
   const sameYear = new Date(startIso).getFullYear() === new Date(endIso).getFullYear();

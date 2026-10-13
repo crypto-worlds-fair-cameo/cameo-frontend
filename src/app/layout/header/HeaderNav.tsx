@@ -15,7 +15,11 @@ const HeaderNav = ({ menuItems, stacked = false, onNavigate }: HeaderNavProps) =
   const { t } = useTranslation('navigation');
 
   return (
-    <div className={stacked ? undefined : 'layout-header-nav hidden lg:block'}>
+    <div
+      className={
+        stacked ? 'layout-header-menu' : 'layout-header-menu layout-header-nav hidden lg:block'
+      }
+    >
       <Navigation
         label={t('label')}
         items={menuItems.map(item => ({

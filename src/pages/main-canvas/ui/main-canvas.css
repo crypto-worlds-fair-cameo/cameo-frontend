@@ -62,7 +62,7 @@
   border-width: 3px;
 }
 
-/* 팔레트와 지도를 한 덩어리로 묶는다. 낮은 화면에서는 useFitToHeight가 --fit-scale을 줄여 전부 보이게 한다.
+/* 팔레트만 낮은 화면에서 줄인다. 미니맵은 이 변환 밖에 두어 지도 108px·버튼 46px 치수를 유지한다.
    크기만 줄이고 왼쪽 위 모서리는 그대로 두어 Figma의 정렬을 유지한다. */
 .main-canvas-left-fit {
   display: flex;
@@ -290,6 +290,8 @@
     position: relative;
     z-index: 1;
     flex: 0 0 282px;
+    /* 팔레트와 미니맵 사이 간격은 미니맵의 48px 여백이 담당한다. 칸 간격이 더해지지 않게 한다. */
+    gap: 0;
     padding: clamp(16px, 9.5vh, 102px) 0 var(--space-4) 56px;
     pointer-events: none;
   }

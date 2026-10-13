@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/dialog';
 import { restoreDialogFocus } from './restoreDialogFocus';
+import './season-dialog.css';
 
 export function SeasonCreatedDialog({
   createdId,

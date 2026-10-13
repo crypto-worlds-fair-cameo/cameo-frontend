@@ -5,11 +5,9 @@ import { useProfileTab } from '../model/useProfileTab';
 import { JoinedCanvases } from './JoinedCanvases';
 import { MySeasons } from './MySeasons';
 import { ProfileHeader } from './ProfileHeader';
+import { ProfileOverview } from './ProfileOverview';
 
-/**
- * 로그인한 사용자의 프로필. 왼쪽 탭 메뉴와 탭별 섹션을 조합한다.
- * 가입일·잔액·거래 내역·내가 만든 시즌 목록은 서버 API가 없어 표시하지 않는다.
- */
+/** 로그인한 사용자의 프로필. 왼쪽 탭 메뉴와 탭별 섹션을 조합한다. */
 export function ProfileContent({ session }: { session: AuthenticatedSession }) {
   const { t } = useTranslation('profile');
   const { tab, hrefs, select } = useProfileTab();
@@ -38,7 +36,14 @@ export function ProfileContent({ session }: { session: AuthenticatedSession }) {
           showActions={tab !== 'joined'}
           onShowJoined={() => select(hrefs.joined)}
         />
-        {tab === 'seasons' && <MySeasons />}
+        {tab === 'profile' && (
+          <ProfileOverview
+            userId={session.user.id}
+            walletAddress={walletAddress}
+            createdAt={session.user.createdAt}
+          />
+        )}
+        {tab === 'seasons' && <MySeasons userId={session.user.id} />}
         {tab === 'joined' && <JoinedCanvases userId={session.user.id} />}
       </div>
     </div>

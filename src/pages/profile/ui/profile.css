@@ -68,6 +68,89 @@
   flex-wrap: wrap;
   gap: var(--space-2);
 }
+.profile-overview {
+  display: grid;
+  gap: 28px;
+}
+.profile-stats {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin: 0;
+}
+.profile-stats > div {
+  min-height: 96px;
+  padding: 20px 24px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 16px;
+  background: #fff;
+}
+.profile-stats dt {
+  color: var(--color-black);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 22px;
+}
+.profile-stats dd {
+  margin: 10px 0 0;
+  color: var(--color-gray-700);
+  font-size: 16px;
+  line-height: 24px;
+}
+.profile-transactions h2 {
+  margin: 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-gray-200);
+  color: var(--color-black);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 22px;
+}
+.profile-transactions > p {
+  margin: 16px 0 0;
+  color: var(--color-gray-500);
+  font-size: 14px;
+  line-height: 22px;
+}
+.profile-transactions ul {
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  list-style: none;
+}
+.profile-transactions li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 40px;
+  font-size: 14px;
+  line-height: 22px;
+}
+.profile-transaction-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-black);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profile-transactions time {
+  flex: none;
+  color: var(--color-gray-400);
+  font-size: 12px;
+}
+.profile-transaction-amount {
+  flex: none;
+  min-width: 72px;
+  color: var(--color-black);
+  text-align: right;
+  white-space: nowrap;
+}
+.profile-transaction-amount[data-direction='outgoing'] {
+  color: var(--color-accent-red);
+}
+.profile-transactions .profile-activity-error {
+  margin-top: var(--space-4);
+}
 .profile-actions .cameo-button {
   height: 40px;
   border-color: var(--color-gray-200);
@@ -215,6 +298,27 @@
 .profile-joined .profile-list-actions {
   margin-right: 4px;
 }
+.profile-season-link {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-left: 3px;
+  border-radius: 8px;
+}
+.profile-season-link:hover {
+  background: var(--color-gray-100);
+}
+.profile-season-link:focus-visible {
+  outline: 2px solid var(--color-black);
+  outline-offset: 2px;
+}
+/* 원본 화살표 SVG는 왼쪽을 향하므로 좌우를 뒤집어 쓴다. */
+.profile-season-chevron {
+  display: block;
+  transform: scaleX(-1);
+}
 .profile-status--active {
   display: inline-flex;
   align-items: center;
@@ -260,6 +364,11 @@
   border-radius: var(--radius-button);
   color: var(--color-gray-500);
 }
+@media (min-width: 640px) {
+  .profile-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+}
 @media (min-width: 768px) {
   .profile-page {
     padding-top: 32px;
@@ -271,9 +380,11 @@
   }
 }
 @media (min-width: 1024px) {
-  /* 사이드바와 본문 비율은 시안을 따르되 폭은 레이아웃이 정한 본문 폭 안에서 나눈다. */
+  /* 시안처럼 메뉴 왼쪽은 헤더 로고, 목록 오른쪽은 헤더 계정 버튼과 같은 화면 끝 56px에 맞춘다.
+     본문 여백 24px에 32px을 더하고, 오른쪽은 헤더처럼 스크롤바가 생기면 그 폭만큼 줄인다. */
   .profile-page {
     padding-top: 70px;
+    padding-inline: 32px max(0px, calc(80px - (100vw - 100%)));
     grid-template-columns: minmax(226px, 27.3225664%) minmax(0, 1fr);
     column-gap: 0;
   }

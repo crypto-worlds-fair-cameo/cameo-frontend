@@ -227,6 +227,21 @@ describe('season recovery and append ownership', () => {
     await connect(b, { ...ready, canvasKey: bKey });
     expect(b.owner.transport.start(b.stroke())).toBe(true);
   });
+  it('counts used strokes from the ready total plus strokes the server accepted afterwards', async () => {
+    const system = setup();
+    await connect(system, { ...ready, season: { ...ready.season, strokesUsed: 3 } });
+    expect(system.state().strokesUsedCount).toBe(3);
+    const first = system.stroke();
+    system.owner.transport.start(first);
+    system.owner.transport.finish(first.clientStrokeId);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(system.state().strokesUsedCount).toBe(4);
+    // 재연결 ready의 서버 집계가 방금 그린 획을 포함하므로 다시 더하지 않는다.
+    await connect(system, { ...ready, season: { ...ready.season, strokesUsed: 4 } });
+    expect(system.state().strokesUsedCount).toBe(4);
+    await connect(system, { ...ready, viewer: { status: 'guest', userId: null } });
+    expect(system.state().strokesUsedCount).toBeNull();
+  });
   it('keeps viewing when the flag is disabled and never opens input from an active event alone', async () => {
     const system = setup();
     await connect(system, { ...ready, canDraw: false });

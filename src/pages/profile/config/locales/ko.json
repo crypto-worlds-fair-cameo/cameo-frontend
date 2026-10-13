@@ -13,6 +13,21 @@
     "edit": "수정",
     "joinedCanvases": "참여한 캔버스"
   },
+  "overview": {
+    "joined": "가입일",
+    "balance": "잔액",
+    "transactions": "거래 내역",
+    "empty": "거래 내역이 없습니다.",
+    "unavailable": "—",
+    "sol": "{{amount}} SOL",
+    "loading": "거래 내역을 불러오는 중입니다.",
+    "error": "거래 내역을 불러오지 못했습니다.",
+    "seasonEntry": "시즌 입장료",
+    "entryReceived": "입장료 수령",
+    "paid": "−{{amount}} SOL",
+    "received": "+{{amount}} SOL",
+    "loadMore": "더 보기"
+  },
   "status": {
     "active": "진행 중",
     "ended": "종료",
@@ -21,13 +36,22 @@
   },
   "seasons": {
     "title": "내 시즌",
-    "newSeason": "새 시즌"
+    "newSeason": "새 시즌",
+    "loading": "내 시즌을 불러오는 중입니다.",
+    "error": "내 시즌을 불러오지 못했습니다.",
+    "refreshError": "목록을 새로 고치지 못했습니다. 기존 내용을 표시합니다.",
+    "empty": "아직 만든 시즌이 없습니다.",
+    "loadMore": "더 보기",
+    "participants_one": "참여자 {{count}}명",
+    "participants_other": "참여자 {{count}}명",
+    "open": "{{title}} 열기"
   },
   "joined": {
     "title": "참여한 캔버스",
     "empty": "아직 참여한 캔버스가 없습니다.",
     "browse": "시즌 둘러보기",
     "loading": "참여한 캔버스를 불러오는 중입니다.",
+    "minted": "민팅 완료",
     "error": "참여한 캔버스를 불러오지 못했습니다.",
     "refreshError": "목록을 새로 고치지 못했습니다. 기존 내용을 표시합니다.",
     "loadMore": "더 보기",

@@ -1,0 +1,268 @@
+.cameo-dialog-overlay:has(+ .season-holders-dialog) {
+  background: rgb(31 27 27 / 84%);
+}
+
+.season-holders-dialog {
+  display: block;
+  width: 1451px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 32px);
+  padding: 40px 56px 38px 49px;
+  overflow-y: auto;
+  border: 0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.season-holders-header {
+  margin-left: 6px;
+  padding: 0 56px 23px 0;
+  border-bottom: 1px solid var(--color-black);
+}
+
+.season-holders-dialog [data-slot='dialog-title'] {
+  margin: 0 0 0 -5px;
+  color: var(--color-black);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 31px;
+  overflow-wrap: anywhere;
+}
+
+.season-holders-dialog .cameo-dialog-close {
+  top: 31px;
+  right: 37px;
+  color: var(--color-gray-600);
+}
+
+.season-holders-dialog .cameo-dialog-close svg {
+  width: 32px;
+  height: 32px;
+  stroke-width: 1.5;
+}
+
+.season-holders-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 320px;
+  max-width: calc(100% - 6px);
+  height: 40px;
+  margin: 24px 0 0 6px;
+  padding: 0 12px 0 10px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 8px;
+  background: #fff;
+  cursor: text;
+}
+
+.season-holders-search:focus-within {
+  border-color: var(--color-black);
+}
+
+.season-holders-search svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  color: var(--color-gray-300);
+}
+
+.season-holders-search .cameo-input {
+  flex: 1;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-black);
+  font-size: 14px;
+  line-height: 21px;
+  outline: none;
+}
+
+.season-holders-search .cameo-input::placeholder {
+  color: var(--color-gray-400);
+}
+
+.season-holders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.season-holders-list[aria-busy='true'] {
+  opacity: 0.6;
+}
+
+.season-holders-row {
+  display: grid;
+  grid-template-columns: minmax(0, 354fr) minmax(0, 771fr) minmax(0, 192fr);
+  align-items: center;
+  min-height: 64px;
+  padding: 13px 0 11px 27px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 12px;
+}
+
+.season-holders-row > div {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding-right: 16px;
+}
+
+.season-holders-row > div + div {
+  padding-left: 44px;
+}
+
+.season-holders-row > div + div::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 1px;
+  height: 40px;
+  background: var(--color-gray-300);
+  transform: translateY(-50%);
+}
+
+.season-holders-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.season-holders-row span:first-child {
+  color: var(--color-gray-400);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.season-holders-row span:last-child {
+  color: var(--color-black);
+  font-size: 15px;
+  line-height: 20px;
+}
+
+.season-holders-pages {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 22px;
+}
+
+.season-holders-pages button {
+  min-width: 44px;
+  height: 24px;
+  padding: 0 4px;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-black);
+  font-size: 13px;
+  line-height: 24px;
+  cursor: pointer;
+}
+
+.season-holders-pages button:hover {
+  background: var(--color-gray-50);
+}
+
+.season-holders-pages button[aria-current='page'] {
+  font-weight: 700;
+}
+
+.season-holders-pages button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.season-holders-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 292px;
+  margin: 24px 0 46px;
+  color: var(--color-gray-500);
+  font-size: 14px;
+  line-height: 21px;
+  text-align: center;
+}
+
+.season-holders-message p {
+  margin: 0;
+}
+
+.season-holders-error {
+  margin: 12px 0 0;
+  color: var(--color-accent-red);
+  font-size: 13px;
+  line-height: 20px;
+  text-align: center;
+}
+
+@media (max-width: 767px) {
+  .season-holders-dialog {
+    padding: 28px 20px 24px;
+  }
+
+  .season-holders-header,
+  .season-holders-search {
+    margin-left: 0;
+  }
+
+  .season-holders-header {
+    padding-bottom: 16px;
+  }
+
+  .season-holders-dialog [data-slot='dialog-title'] {
+    margin-left: 0;
+    font-size: 20px;
+    line-height: 28px;
+  }
+
+  .season-holders-dialog .cameo-dialog-close {
+    top: 18px;
+    right: 8px;
+  }
+
+  .season-holders-dialog .cameo-dialog-close svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .season-holders-search {
+    width: 100%;
+    max-width: none;
+    margin-top: 16px;
+  }
+
+  .season-holders-list {
+    margin-top: 16px;
+  }
+
+  .season-holders-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    padding: 12px 16px;
+  }
+
+  .season-holders-row > div + div {
+    padding-left: 0;
+  }
+
+  .season-holders-row > div + div::before {
+    content: none;
+  }
+
+  .season-holders-message {
+    min-height: 160px;
+    margin: 16px 0 24px;
+  }
+}
