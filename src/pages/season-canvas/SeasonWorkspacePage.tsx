@@ -1,6 +1,6 @@
 import { Link, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import {
   CanvasNavigator,
   CanvasViewport,
@@ -64,16 +64,11 @@ function SeasonWorkspace({ id }: { id: string }) {
     countMyStrokes(realtime.sync.previews, realtime.sync.optimisticStrokes, realtime.sync.userId);
   const used =
     limit === null ? counted : Math.min(limit, realtime.sync.strokeUsed ? limit : counted);
-  const zoomPercent = Math.round(zoom.zoom * 100);
-  const canvasSize =
-    realtime.dimensions.width === realtime.dimensions.height
-      ? String(realtime.dimensions.width)
-      : `${realtime.dimensions.width}×${realtime.dimensions.height}`;
-  const displayName =
-    session?.user.displayName?.trim() ||
-    (session?.activeWallet.address
-      ? `${session.activeWallet.address.slice(0, 4)}…${session.activeWallet.address.slice(-4)}`
-      : '');
+  const walletAddress = session?.activeWallet.address;
+  const shortWallet = walletAddress
+    ? `${walletAddress.slice(0, 4)}…${walletAddress.slice(-4)}`
+    : '';
+  const displayName = session?.user.displayName?.trim() || shortWallet;
   // HTTP의 404와 terminal 접근 거절은 이전 그림을 현재 접근 가능 정보처럼 표시하지 않는다.
   const unavailable =
     model.canvasUnavailable ||
@@ -102,7 +97,7 @@ function SeasonWorkspace({ id }: { id: string }) {
     >
       <aside className="canvas-left-sidebar">
         <Link to="/season-canvas" className="season-workspace-back">
-          <ChevronLeft aria-hidden="true" />
+          <ArrowLeft aria-hidden="true" />
           {t('workspace.leave')}
         </Link>
         <ColorPalette value={brush} onValueChange={setBrush} defaultOpen={!isMobile} />
@@ -110,7 +105,10 @@ function SeasonWorkspace({ id }: { id: string }) {
           <CanvasNavigator
             zoom={zoom}
             drawingModel={realtime.drawingModel}
-            caption={t('workspace.mapZoom', { percent: zoomPercent, size: canvasSize })}
+            caption={t('workspace.mapSize', {
+              width: realtime.dimensions.width,
+              height: realtime.dimensions.height,
+            })}
           />
         )}
       </aside>
@@ -121,7 +119,11 @@ function SeasonWorkspace({ id }: { id: string }) {
               <AvatarImage src={session.user.avatarUrl || undefined} alt="" />
               <AvatarFallback>{displayName.slice(0, 1)}</AvatarFallback>
             </Avatar>
-            <span>{displayName}</span>
+            {/* 시안처럼 이름 아래에 지갑 주소를 한 줄 더 보여 준다. */}
+            <span className="season-room-user-text">
+              <span>{displayName}</span>
+              {shortWallet && <small>{t('workspace.wallet', { address: shortWallet })}</small>}
+            </span>
           </div>
         )}
         <CanvasViewport
