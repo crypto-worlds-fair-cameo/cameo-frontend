@@ -21,7 +21,8 @@ import {
   DESCRIPTION_MAX_LENGTH,
   TITLE_MAX_LENGTH,
   limitText,
-  toLocalDateTimeInput,
+  parseUtcDateTimeInput,
+  toUtcDateTimeInput,
   type SeasonFormDraft,
   type SeasonFormErrorKey,
   type SeasonFormErrors,
@@ -61,9 +62,10 @@ interface SeasonCreateDialogProps {
 
 export function SeasonCreateDialog(props: SeasonCreateDialogProps) {
   const { t } = useTranslation('seasonCanvas');
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  // 시즌 시각은 보는 사람의 시간대와 상관없이 항상 UTC로 입력·표시한다.
+  const timezone = 'UTC';
   const immediateStart = useMemo(
-    () => (props.open ? toLocalDateTimeInput(new Date()) : ''),
+    () => (props.open ? toUtcDateTimeInput(new Date()) : ''),
     [props.open]
   );
   const errorText = (field: keyof SeasonFormDraft): string | undefined => {
@@ -73,16 +75,13 @@ export function SeasonCreateDialog(props: SeasonCreateDialogProps) {
   const selectMode = (scheduled: boolean) => {
     props.onUpdate('scheduled', scheduled);
     if (!scheduled) return;
-    const startsAt = new Date(props.draft.startsAt);
-    const endsAt = new Date(props.draft.endsAt);
+    const startsAt = parseUtcDateTimeInput(props.draft.startsAt);
+    const endsAt = parseUtcDateTimeInput(props.draft.endsAt);
     // 예약 전환 시 종료가 시작보다 늦지 않을 때만 2시간 뒤로 조정한다.
-    if (
-      Number.isFinite(startsAt.getTime()) &&
-      (!Number.isFinite(endsAt.getTime()) || endsAt <= startsAt)
-    ) {
+    if (startsAt && (!endsAt || endsAt <= startsAt)) {
       props.onUpdate(
         'endsAt',
-        toLocalDateTimeInput(new Date(startsAt.getTime() + 2 * 60 * 60 * 1000))
+        toUtcDateTimeInput(new Date(startsAt.getTime() + 2 * 60 * 60 * 1000))
       );
     }
   };

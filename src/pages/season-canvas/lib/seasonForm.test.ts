@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createInitialSeasonDraft,
   formatSol,
-  toLocalDateTimeInput,
+  toUtcDateTimeInput,
   validateSeasonDraft,
 } from './seasonForm';
 
@@ -15,7 +15,7 @@ describe('season form contract', () => {
     draft.description = '   ';
     draft.capacity = '20';
     draft.unlimitedStrokes = true;
-    draft.endsAt = toLocalDateTimeInput(new Date(now.getTime() + 24 * 60 * 60 * 1000));
+    draft.endsAt = toUtcDateTimeInput(new Date(now.getTime() + 24 * 60 * 60 * 1000));
     const result = validateSeasonDraft(draft, now);
     expect(result.errors).toEqual({});
     expect(result.input).toMatchObject({
@@ -31,7 +31,7 @@ describe('season form contract', () => {
     const draft = createInitialSeasonDraft(now);
     draft.title = 'now';
     draft.description = '가'.repeat(1000);
-    draft.endsAt = toLocalDateTimeInput(new Date(now.getTime() + 24 * 60 * 60 * 1000));
+    draft.endsAt = toUtcDateTimeInput(new Date(now.getTime() + 24 * 60 * 60 * 1000));
     const accepted = validateSeasonDraft(draft, now);
     expect(accepted.errors.description).toBeUndefined();
     expect(accepted.input?.description).toHaveLength(1000);
@@ -78,18 +78,18 @@ describe('season form contract', () => {
   it('uses one hour for scheduled seasons and a 61 minute margin for immediate seasons', () => {
     const immediate = createInitialSeasonDraft(now);
     immediate.title = 'now';
-    immediate.endsAt = toLocalDateTimeInput(new Date(now.getTime() + 60 * 60 * 1000));
+    immediate.endsAt = toUtcDateTimeInput(new Date(now.getTime() + 60 * 60 * 1000));
     expect(validateSeasonDraft(immediate, now).errors.endsAt).toBe('immediateDurationRange');
 
     const scheduled = {
       ...immediate,
       scheduled: true,
-      startsAt: toLocalDateTimeInput(new Date(now.getTime() + 24 * 60 * 60 * 1000)),
-      endsAt: toLocalDateTimeInput(new Date(now.getTime() + 25 * 60 * 60 * 1000)),
+      startsAt: toUtcDateTimeInput(new Date(now.getTime() + 24 * 60 * 60 * 1000)),
+      endsAt: toUtcDateTimeInput(new Date(now.getTime() + 25 * 60 * 60 * 1000)),
     };
     expect(validateSeasonDraft(scheduled, now).errors).toEqual({});
     expect(validateSeasonDraft(scheduled, now).input?.startsAt).toBe(
-      new Date(scheduled.startsAt).toISOString()
+      new Date(`${scheduled.startsAt}:00Z`).toISOString()
     );
   });
 });

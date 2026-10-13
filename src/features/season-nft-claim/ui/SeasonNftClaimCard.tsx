@@ -243,10 +243,11 @@ export function SeasonNftClaimCard(props: SeasonNftClaimCardProps) {
             <strong>{lamportsToSol(transaction.estimatedCostLamports)} SOL</strong>
             <time dateTime={transaction.estimatedAt}>
               {t('estimatedAt', {
-                value: new Intl.DateTimeFormat(i18n.language, {
+                value: `${new Intl.DateTimeFormat(i18n.language, {
                   dateStyle: 'medium',
                   timeStyle: 'short',
-                }).format(new Date(transaction.estimatedAt)),
+                  timeZone: 'UTC',
+                }).format(new Date(transaction.estimatedAt))} UTC`,
               })}
             </time>
             <small>{t('costDisclaimer')}</small>

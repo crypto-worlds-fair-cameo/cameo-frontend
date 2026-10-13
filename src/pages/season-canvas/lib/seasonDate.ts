@@ -1,18 +1,18 @@
 import type { Season } from '../api/seasons.types';
 
-/** 상세 기간의 ISO 시각을 브라우저 시간대의 YYYY.MM.DD HH:mm 형식으로 표시한다. */
+/** 상세 기간의 ISO 시각을 UTC 기준 YYYY.MM.DD HH:mm 형식으로 표시한다. */
 export function formatSeasonDateTime(value: string): string {
   const date = new Date(value);
   // 해석할 수 없는 시각은 원본을 남기고, 유효한 시각은 초 없이 24시간제로 표시한다.
   if (!Number.isFinite(date.getTime())) return value;
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hour = String(date.getHours()).padStart(2, '0');
-  const minute = String(date.getMinutes()).padStart(2, '0');
-  return `${date.getFullYear()}.${month}.${day} ${hour}:${minute}`;
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const hour = String(date.getUTCHours()).padStart(2, '0');
+  const minute = String(date.getUTCMinutes()).padStart(2, '0');
+  return `${date.getUTCFullYear()}.${month}.${day} ${hour}:${minute}`;
 }
 
-/** 서버 ISO 시각을 선택 언어와 브라우저 시간대로 표시한다. */
+/** 서버 ISO 시각을 선택 언어와 UTC 시간대로 표시한다. */
 export function formatSeasonDate(value: string, locale: string): string {
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) return value;
@@ -22,11 +22,12 @@ export function formatSeasonDate(value: string, locale: string): string {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: 'UTC',
     timeZoneName: 'short',
   }).format(date);
 }
 
-/** 카드의 시즌 기간을 브라우저 시간대의 날짜 범위로 축약해 표시한다. */
+/** 카드의 시즌 기간을 UTC 기준 날짜 범위로 축약해 표시한다. */
 export function formatSeasonDateRange(start: string, end: string, locale: string): string {
   const startDate = new Date(start);
   const endDate = new Date(end);
@@ -42,14 +43,16 @@ export function formatSeasonDateRange(start: string, end: string, locale: string
     year: 'numeric',
     month: 'short',
     day: 'numeric',
+    timeZone: 'UTC',
   }).format(endDate);
   // 같은 날짜에 시작·종료하면 날짜를 한 번만 표시한다.
-  if (startDate.toDateString() === endDate.toDateString()) return endLabel;
+  if (startDate.toISOString().slice(0, 10) === endDate.toISOString().slice(0, 10)) return endLabel;
   // 같은 해의 기간은 시작 날짜에서 연도를 생략하고, 해를 넘기면 양쪽 연도를 표시한다.
   const startLabel = new Intl.DateTimeFormat(locale, {
-    year: startDate.getFullYear() === endDate.getFullYear() ? undefined : 'numeric',
+    year: startDate.getUTCFullYear() === endDate.getUTCFullYear() ? undefined : 'numeric',
     month: 'short',
     day: 'numeric',
+    timeZone: 'UTC',
   }).format(startDate);
   return `${startLabel} – ${endLabel}`;
 }

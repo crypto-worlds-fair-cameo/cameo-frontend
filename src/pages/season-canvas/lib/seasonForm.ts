@@ -43,12 +43,20 @@ export interface SeasonFormValidation {
   errors: SeasonFormErrors;
 }
 
-/** 로컬 datetime-local 입력에 맞는 분 단위 문자열을 만든다. */
-export function toLocalDateTimeInput(date: Date): string {
+/** 시즌 시각은 항상 UTC로 다룬다. 날짜·시간 입력에 맞는 UTC 분 단위 문자열을 만든다. */
+export function toUtcDateTimeInput(date: Date): string {
   const pad = (value: number) => String(value).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
-    date.getHours()
-  )}:${pad(date.getMinutes())}`;
+  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}T${pad(
+    date.getUTCHours()
+  )}:${pad(date.getUTCMinutes())}`;
+}
+
+/** 입력 문자열(YYYY-MM-DDTHH:mm)을 UTC 시각으로 엄격히 해석한다. 없는 날짜는 거절한다. */
+export function parseUtcDateTimeInput(value: string): Date | undefined {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return undefined;
+  const date = new Date(`${value}:00Z`);
+  if (Number.isNaN(date.getTime()) || toUtcDateTimeInput(date) !== value) return undefined;
+  return date;
 }
 
 /** 폼을 연 시점으로부터 24시간 뒤 종료되는 기본 입력을 만든다. */
@@ -68,8 +76,8 @@ export function createInitialSeasonDraft(now = new Date()): SeasonFormDraft {
     paidEntry: false,
     entryFee: '',
     scheduled: false,
-    startsAt: toLocalDateTimeInput(startsAt),
-    endsAt: toLocalDateTimeInput(endsAt),
+    startsAt: toUtcDateTimeInput(startsAt),
+    endsAt: toUtcDateTimeInput(endsAt),
   };
 }
 
@@ -140,14 +148,6 @@ export function formatSol(lamports: string): string {
   return fraction ? `${whole}.${fraction}` : whole.toString();
 }
 
-/** datetime-local 값을 로컬 시각으로 엄격히 해석해 DST 자동 보정도 거절한다. */
-function parseLocalDateTime(value: string): Date | undefined {
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return undefined;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime()) || toLocalDateTimeInput(date) !== value) return undefined;
-  return date;
-}
-
 /** 폼 문자열을 서버 DTO로 바꾸며 즉시 시작은 startsAt을 넣지 않는다. */
 export function validateSeasonDraft(
   draft: SeasonFormDraft,
@@ -167,8 +167,8 @@ export function validateSeasonDraft(
     ? null
     : parseInteger(draft.strokeLimitPerUser, 'strokeLimitPerUser', 1, 10, errors);
   const entryFeeLamports = draft.paidEntry ? parseEntryFee(draft.entryFee, errors) : '0';
-  const startsAt = draft.scheduled ? parseLocalDateTime(draft.startsAt) : undefined;
-  const endsAt = parseLocalDateTime(draft.endsAt);
+  const startsAt = draft.scheduled ? parseUtcDateTimeInput(draft.startsAt) : undefined;
+  const endsAt = parseUtcDateTimeInput(draft.endsAt);
   if (draft.scheduled && !startsAt) errors.startsAt = 'invalidDateTime';
   if (!endsAt) errors.endsAt = 'invalidDateTime';
 

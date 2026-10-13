@@ -276,7 +276,8 @@ function SeasonDetail({ season }: { season: Season }) {
   const { t, i18n } = useTranslation('seasonCanvas');
   // 조기 종료일을 기간에 반영하고, null 획 제한은 무제한으로 표시한다.
   const periodEnd = season.forceEndedAt ?? season.endsAt;
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  // 시즌 시각은 항상 UTC로 표시한다.
+  const timezone = 'UTC';
   // 기간은 카드와 같은 날짜 범위로 보여 주고, 정확한 시각은 마우스를 올리면 확인한다.
   const exactPeriod = `${formatSeasonDateTime(season.startsAt)} - ${formatSeasonDateTime(periodEnd)}`;
   const facts: { label: string; value: ReactNode }[] = [

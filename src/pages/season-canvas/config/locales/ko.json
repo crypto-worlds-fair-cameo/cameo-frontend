@@ -127,7 +127,7 @@
     "scheduled": "예약 시작",
     "startsAt": "시작",
     "endsAt": "종료",
-    "timezone": "시각은 브라우저 시간대({{timezone}})로 표시됩니다.",
+    "timezone": "모든 시각은 {{timezone}} 기준입니다.",
     "cancel": "취소",
     "submit": "개설하기",
     "submitting": "개설 중",

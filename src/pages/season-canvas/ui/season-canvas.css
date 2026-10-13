@@ -594,13 +594,13 @@
   background: linear-gradient(
     to right,
     var(--color-accent-red) var(--slider-progress),
-    var(--color-gray-300) var(--slider-progress)
+    var(--color-gray-200) var(--slider-progress)
   );
 }
 .season-form__strokes .cameo-slider-field input::-moz-range-track {
   height: 8px;
   border-radius: 0;
-  background: var(--color-gray-300);
+  background: var(--color-gray-200);
 }
 .season-form__strokes .cameo-slider-field input::-moz-range-progress {
   height: 8px;
