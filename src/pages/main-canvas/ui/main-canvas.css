@@ -17,22 +17,6 @@
   background: transparent;
 }
 
-.main-canvas-page.main-canvas-layout[data-mode='practice'] .canvas-viewport {
-  background: transparent;
-}
-
-/* 도화지는 작업 공간에서 최소 16px 여백을 둔 정사각형이다. 같은 크기의 옅은 회색을 곱해 연습 도화지로 보이게 한다. */
-.main-canvas-practice-paper {
-  position: absolute;
-  top: var(--canvas-paper-y, 0);
-  left: var(--canvas-paper-x, 0);
-  width: var(--canvas-paper-width, 100%);
-  height: var(--canvas-paper-height, 100%);
-  background: #f7f7f7;
-  mix-blend-mode: multiply;
-  pointer-events: none;
-}
-
 /* 첫 그림을 받는 동안 도화지와 같은 자리에 불러오는 중을 표시한다. 받은 그림이 비쳐 보이도록 반투명이다. */
 .main-canvas-loading {
   position: absolute;

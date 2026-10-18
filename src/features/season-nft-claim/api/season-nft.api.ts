@@ -35,7 +35,7 @@ function isEnum<T extends string>(value: unknown, values: readonly T[]): value i
 function isClaim(value: unknown): value is SeasonNftClaimView {
   if (!isRecord(value)) return false;
   return (
-    isEnum(value.eligibility, ['ELIGIBLE', 'NOT_PARTICIPANT', 'NO_VALID_STROKE']) &&
+    isEnum(value.eligibility, ['ELIGIBLE', 'NOT_PARTICIPANT', 'NO_VALID_STROKE', 'CREATOR']) &&
     isEnum(value.state, ['UNCLAIMED', 'PROCESSING', 'CLAIMED']) &&
     isNullableString(value.walletAddress) &&
     (value.activeAttemptId === null ||
@@ -67,9 +67,9 @@ function isSeasonNftView(value: unknown): value is SeasonNftView {
     (value.metadataUri === null ||
       (typeof value.metadataUri === 'string' && isCanonicalArweaveUrl(value.metadataUri))) &&
     (value.eligibleCount === null ||
-      (Number.isInteger(value.eligibleCount) &&
-        Number(value.eligibleCount) >= 0 &&
-        Number(value.eligibleCount) <= 100)) &&
+      (typeof value.eligibleCount === 'number' &&
+        Number.isSafeInteger(value.eligibleCount) &&
+        value.eligibleCount >= 0)) &&
     isClaim(value.claim)
   );
 }

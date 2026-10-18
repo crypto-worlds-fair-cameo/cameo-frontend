@@ -29,7 +29,7 @@
       "TOO_MANY_CONTRIBUTORS": "참여자가 100명을 넘는 시즌은 NFT를 발행하지 않습니다."
     },
     "notParticipant": "이 시즌에 참여한 사용자만 수령할 수 있습니다.",
-    "noValidStroke": "유효한 획을 남긴 참여자만 수령할 수 있습니다.",
+    "noValidStroke": "이 시즌 NFT를 받을 수 있는 참가자가 아니에요.",
     "ready": "최종 이미지를 확인하고 NFT 수령을 준비하세요.",
     "queued": "거래를 준비하고 있습니다.",
     "awaitingSignature": "비용을 확인한 뒤 지갑에서 거래를 승인하세요.",

@@ -73,6 +73,9 @@ export function SeasonNftClaimCard(props: SeasonNftClaimCardProps) {
     if (view.claim.eligibility === 'NO_VALID_STROKE') {
       return { message: t('noValidStroke') };
     }
+    if (view.claim.eligibility === 'CREATOR') {
+      return { message: t('preparing') };
+    }
     if (model.startError && !attempt) {
       return { message: t('claimStartError'), action: 'refreshError' as const };
     }

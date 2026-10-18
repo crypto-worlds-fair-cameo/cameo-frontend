@@ -324,8 +324,10 @@ export function createCanvasDrawingRenderer() {
     try {
       clip(context, settings);
       // 빈 서버 스냅샷도 epoch 변경에 따라 이전 획별 상태를 초기화한다.
+      // 연습 중에도 캐시는 갱신해 두어, 연습을 끝내면 최신 공유 그림이 바로 돌아온다.
       updateLayer(drawing, settings);
-      if (hasCommitted && liveLayer) {
+      // 연습은 빈 도화지다. 공유 그림과 아직 확인되지 않은 실제 획은 화면에 올리지 않는다.
+      if (mode !== 'practice' && hasCommitted && liveLayer) {
         context.save();
         try {
           context.setTransform(1, 0, 0, 1, 0, 0);
@@ -334,30 +336,32 @@ export function createCanvasDrawingRenderer() {
           context.restore();
         }
       }
-      for (const { stroke, acknowledgedPoints } of optimistic) {
-        // 이미 확인된 획 전체는 서버 캐시에 있으므로 중복 합성하지 않는다.
-        if (acknowledgedPoints >= stroke.points.length) continue;
-        const stored =
-          drawing.userId && stroke.clientStrokeId
-            ? states.get(strokeKey(drawing.userId, stroke.clientStrokeId))
-            : undefined;
-        const state = stored ? cloneBrushStrokeState(stored) : createBrushStrokeState();
-        // 서버 상태를 찾지 못하면 확인 접두 구간을 픽셀 없이 소비해 분사 순번을 복원한다.
-        if (!stored && acknowledgedPoints > 0) {
+      if (mode !== 'practice') {
+        for (const { stroke, acknowledgedPoints } of optimistic) {
+          // 이미 확인된 획 전체는 서버 캐시에 있으므로 중복 합성하지 않는다.
+          if (acknowledgedPoints >= stroke.points.length) continue;
+          const stored =
+            drawing.userId && stroke.clientStrokeId
+              ? states.get(strokeKey(drawing.userId, stroke.clientStrokeId))
+              : undefined;
+          const state = stored ? cloneBrushStrokeState(stored) : createBrushStrokeState();
+          // 서버 상태를 찾지 못하면 확인 접두 구간을 픽셀 없이 소비해 분사 순번을 복원한다.
+          if (!stored && acknowledgedPoints > 0) {
+            drawBrushStroke(
+              context,
+              { ...stroke, points: stroke.points.slice(0, acknowledgedPoints) },
+              settings.pixelRatio * settings.view.scale,
+              state,
+              false
+            );
+          }
           drawBrushStroke(
             context,
-            { ...stroke, points: stroke.points.slice(0, acknowledgedPoints) },
+            { ...stroke, points: stroke.points.slice(acknowledgedPoints) },
             settings.pixelRatio * settings.view.scale,
-            state,
-            false
+            state
           );
         }
-        drawBrushStroke(
-          context,
-          { ...stroke, points: stroke.points.slice(acknowledgedPoints) },
-          settings.pixelRatio * settings.view.scale,
-          state
-        );
       }
       // 연습 및 로컬 전용 입력은 기존 모델과 공유 획 모델에 맞는 경로를 선택한다.
       for (const stroke of overlays) {

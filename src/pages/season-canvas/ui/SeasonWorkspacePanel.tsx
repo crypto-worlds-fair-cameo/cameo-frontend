@@ -15,6 +15,7 @@ import { SeasonEndDialog } from './SeasonEndDialog';
 import { SEASON_HOLDERS_PAGE_SIZE, SeasonHoldersDialog } from './SeasonHoldersDialog';
 import { SeasonInviteDialog } from './SeasonInviteDialog';
 import { SeasonJoinDialog } from './SeasonJoinDialog';
+import { SeasonNftEndedPrompt, SeasonNftMintDialog } from './SeasonNftMintDialog';
 
 function explorerCollectionUrl(collection: NonNullable<SeasonHoldersPage['collection']>) {
   const cluster = collection.network === 'devnet' ? '?cluster=devnet' : '';
@@ -35,6 +36,8 @@ export function SeasonWorkspacePanel({
   const [infoOpen, setInfoOpen] = useState(true);
   const [inviteVersion, setInviteVersion] = useState<number | null>(null);
   const [holdersVersion, setHoldersVersion] = useState<number | null>(null);
+  const [mintOpen, setMintOpen] = useState(false);
+  const [mintPromptDismissed, setMintPromptDismissed] = useState(false);
   const management = useSeasonWorkspaceEnd(scope, model.query);
   const roomJoin = useSeasonRoomJoin(model);
   const joinButtonRef = useRef<HTMLButtonElement>(null);
@@ -50,6 +53,19 @@ export function SeasonWorkspacePanel({
   const isOwner = Boolean(
     model.isOwner && scope.isReady && scope.session?.user.id === season?.creatorId
   );
+  const mintPromptKey = season ? `cameo.nft-mint-prompt.${season.id}` : '';
+  const showMintPrompt =
+    isOwner &&
+    ended &&
+    !collection &&
+    !holders.isLoading &&
+    !mintPromptDismissed &&
+    mintPromptKey.length > 0 &&
+    globalThis.sessionStorage.getItem(mintPromptKey) !== '1';
+  const dismissMintPrompt = () => {
+    if (mintPromptKey) globalThis.sessionStorage.setItem(mintPromptKey, '1');
+    setMintPromptDismissed(true);
+  };
   const canShare =
     isOwner && !model.query.isError && (status === 'active' || status === 'scheduled');
   const hostName = isOwner ? scope.session?.user.displayName?.trim() : undefined;
@@ -160,6 +176,11 @@ export function SeasonWorkspacePanel({
       )}
       {ended && (
         <div className="season-workspace-ended-actions">
+          {isOwner && !collection && (
+            <Button variant="web3" onClick={() => setMintOpen(true)}>
+              {t('workspace.createNft')}
+            </Button>
+          )}
           <Button variant="web3" onClick={() => setHoldersVersion(scope.resetVersion)}>
             {t('workspace.viewParticipants')}
           </Button>
@@ -257,6 +278,24 @@ export function SeasonWorkspacePanel({
           season={season}
           onOpenChange={open => !open && setInviteVersion(null)}
         />
+      )}
+      {ended && season && isOwner && (
+        <>
+          <SeasonNftEndedPrompt
+            open={showMintPrompt && !mintOpen}
+            onLater={dismissMintPrompt}
+            onCreate={() => {
+              dismissMintPrompt();
+              setMintOpen(true);
+            }}
+          />
+          <SeasonNftMintDialog
+            open={mintOpen}
+            seasonId={season.id}
+            walletAddress={scope.session?.activeWallet?.address ?? ''}
+            onOpenChange={setMintOpen}
+          />
+        </>
       )}
       {ended && season && (
         <SeasonHoldersDialog

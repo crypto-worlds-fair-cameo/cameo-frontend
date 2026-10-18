@@ -29,7 +29,7 @@
       "TOO_MANY_CONTRIBUTORS": "Seasons with more than 100 contributors do not issue NFTs."
     },
     "notParticipant": "Only season participants can claim this NFT.",
-    "noValidStroke": "Only participants with a valid stroke can claim this NFT.",
+    "noValidStroke": "You can't claim this season NFT.",
     "ready": "Review the final image and prepare your NFT claim.",
     "queued": "Preparing the transaction.",
     "awaitingSignature": "Review the cost, then approve the transaction in your wallet.",

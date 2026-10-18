@@ -114,8 +114,6 @@ const MainCanvasPage = () => {
         // 휴대폰은 확대 도구를 숨기므로 휠 확대도 끄고 도화지 전체 보기로 고정한다.
         zoom={isMobile ? undefined : zoom}
       >
-        {/* 연습 중에는 도화지에 옅은 회색을 겹쳐 실제 도화지와 구분한다. 입력은 아래 canvas가 받는다. */}
-        {isPracticeMode && <div className="main-canvas-practice-paper" aria-hidden="true" />}
         {showLoading && <CanvasLoadingOverlay />}
       </CanvasViewport>
       {/* 오른쪽 영역은 독립 패널을 배치하는 공간이며, 각 패널이 자체 UI를 소유한다. */}

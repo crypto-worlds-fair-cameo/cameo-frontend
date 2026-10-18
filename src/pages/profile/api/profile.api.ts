@@ -89,7 +89,7 @@ function isEnum<T extends string>(value: unknown, values: readonly T[]): value i
 function isClaim(value: unknown): value is SeasonNftSummary['claim'] {
   if (!isRecord(value)) return false;
   return (
-    isEnum(value.eligibility, ['ELIGIBLE', 'NOT_PARTICIPANT', 'NO_VALID_STROKE']) &&
+    isEnum(value.eligibility, ['ELIGIBLE', 'NOT_PARTICIPANT', 'NO_VALID_STROKE', 'CREATOR']) &&
     isEnum(value.state, ['UNCLAIMED', 'PROCESSING', 'CLAIMED']) &&
     isNullableString(value.walletAddress) &&
     (value.activeAttemptId === null ||

@@ -79,7 +79,7 @@ describe('SeasonNftClaimCard', () => {
 
   it.each([
     ['NOT_PARTICIPANT', '이 시즌에 참여한 사용자만 수령할 수 있습니다.'],
-    ['NO_VALID_STROKE', '유효한 획을 남긴 참여자만 수령할 수 있습니다.'],
+    ['NO_VALID_STROKE', '이 시즌 NFT를 받을 수 있는 참가자가 아니에요.'],
   ] as const)('renders ineligible reason %s without a button', (eligibility, message) => {
     const view = fullView();
     view.claim.eligibility = eligibility;
