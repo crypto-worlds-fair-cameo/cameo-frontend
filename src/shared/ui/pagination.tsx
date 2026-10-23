@@ -5,7 +5,7 @@ export function Pagination({
   page,
   totalPages,
   onPageChange,
-  label = '페이지 선택',
+  label = 'Pagination',
 }: {
   page: number;
   totalPages: number;
@@ -21,7 +21,7 @@ export function Pagination({
     <nav className="cameo-pagination" aria-label={label}>
       <button
         type="button"
-        aria-label="이전 페이지"
+        aria-label="Previous page"
         disabled={current === 1}
         onClick={() => onPageChange(current - 1)}
       >
@@ -36,7 +36,7 @@ export function Pagination({
           )}
           <button
             type="button"
-            aria-label={`${n} 페이지`}
+            aria-label={`Page ${n}`}
             aria-current={n === current ? 'page' : undefined}
             onClick={() => onPageChange(n)}
           >
@@ -46,7 +46,7 @@ export function Pagination({
       ))}
       <button
         type="button"
-        aria-label="다음 페이지"
+        aria-label="Next page"
         disabled={current === total}
         onClick={() => onPageChange(current + 1)}
       >

@@ -41,4 +41,23 @@ describe('fit to height', () => {
     const content = setup(920, 1000, false);
     expect(content.style.getPropertyValue('--fit-scale')).toBe('');
   });
+
+  it('shrinks only the content and leaves the reserved block at full size', () => {
+    const container = document.createElement('aside');
+    const content = document.createElement('div');
+    const reserved = document.createElement('div');
+    Object.defineProperty(container, 'clientHeight', { value: 920 });
+    Object.defineProperty(content, 'offsetHeight', { value: 800 });
+    Object.defineProperty(reserved, 'offsetHeight', { value: 180 });
+    container.style.paddingTop = '100px';
+    container.style.paddingBottom = '20px';
+    container.append(content, reserved);
+    document.body.append(container);
+    renderHook(() =>
+      useFitToHeight({ current: container }, { current: content }, true, { current: reserved })
+    );
+    // 사용 가능한 높이 = 920 - 100 - 20 - 180 = 620, 내용 800 → 0.775배
+    expect(content.style.getPropertyValue('--fit-scale')).toBe('0.775');
+    expect(content.style.getPropertyValue('--fit-trim')).toBe('-180px');
+  });
 });

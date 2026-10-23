@@ -2,9 +2,9 @@ import { useEffect, useLayoutEffect, useRef, type KeyboardEvent, type PointerEve
 import { Minus, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { createCanvasDrawingRenderer } from '../lib/createCanvasDrawingRenderer';
-import type { CanvasDrawing, CanvasDrawingModel, CanvasStroke } from '../model/useCanvasDrawing';
+import { withMinimumBrush } from '../lib/withMinimumBrush';
+import type { CanvasDrawingModel } from '../model/useCanvasDrawing';
 import type { CanvasZoomController } from '../model/useCanvasZoom';
-import type { StrokePreview } from '../api/canvasProtocol';
 
 /** 미니맵 한 변의 CSS 크기 (Figma 1920 기준 약 108px) */
 const MAP_SIZE = 108;
@@ -14,56 +14,18 @@ const MAP_REPAINT_MS = 250;
 const MAP_MIN_LINE = 1.5;
 
 /**
- * 미니맵 배율에서는 대부분의 획이 1px보다 가늘어 사라지므로, 위치가 보이도록 최소 굵기로 키워 그린다.
- * 에어브러시의 흩뿌린 점은 지도 크기에서 보이지 않으므로 같은 경로의 둥근 선으로 바꿔 그린다.
- */
-function withMinimumBrush(drawing: CanvasDrawing, minimum: number): CanvasDrawing {
-  const widenChunk = (chunk: StrokePreview): StrokePreview =>
-    chunk.brush.size >= minimum && chunk.brush.type !== 'airbrush'
-      ? chunk
-      : {
-          ...chunk,
-          brush: {
-            ...chunk.brush,
-            type: chunk.brush.type === 'airbrush' ? 'round' : chunk.brush.type,
-            size: Math.max(minimum, chunk.brush.size),
-          },
-        };
-  const widenStroke = (stroke: CanvasStroke): CanvasStroke =>
-    stroke.brush.brushSize >= minimum && stroke.brush.brushType !== 'airbrush'
-      ? stroke
-      : {
-          ...stroke,
-          brush: {
-            ...stroke.brush,
-            brushType: stroke.brush.brushType === 'airbrush' ? 'round' : stroke.brush.brushType,
-            brushSize: Math.max(minimum, stroke.brush.brushSize),
-          },
-        };
-  return {
-    ...drawing,
-    serverChunks: drawing.serverChunks?.map(widenChunk),
-    liveStrokes: drawing.liveStrokes.map(widenStroke),
-    optimisticStrokes: drawing.optimisticStrokes?.map(entry => ({
-      ...entry,
-      stroke: widenStroke(entry.stroke),
-    })),
-    activeStroke: drawing.activeStroke && widenStroke(drawing.activeStroke),
-    // 연습 획은 공유 도화지가 아니므로 지도에 표시하지 않는다.
-    practiceStroke: null,
-  };
-}
-
-/**
  * 왼쪽 아래 지도. 도화지 전체를 작게 보여 주고 지금 보고 있는 영역을 네모로 표시한다.
  * 지도를 누르거나 끌면 그 위치로 화면을 옮기고, 옆의 +/− 버튼으로 확대·축소한다.
  */
 export function CanvasNavigator({
   zoom,
   drawingModel,
+  caption,
 }: {
   zoom: CanvasZoomController;
   drawingModel: Pick<CanvasDrawingModel, 'drawing' | 'revision'>;
+  /** 시즌 방처럼 배율과 도화지 크기를 한 줄로 보여줄 때 기본 크기 문구를 대체한다. */
+  caption?: string;
 }) {
   const { t } = useTranslation('mainCanvas');
   const { worldWidth, worldHeight, visibleRect } = zoom;
@@ -219,7 +181,7 @@ export function CanvasNavigator({
         </div>
       </div>
       <p className="canvas-navigator-size">
-        {t('zoom.mapSize', { width: worldWidth, height: worldHeight })}
+        {caption ?? t('zoom.mapSize', { width: worldWidth, height: worldHeight })}
       </p>
     </div>
   );

@@ -2,7 +2,7 @@ import type { PropsWithChildren } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useSeasonJoin } from './useSeasonJoin';
+import { useSeasonJoin, type SeasonJoinResult } from './useSeasonJoin';
 import type { useSeasonSessionScope } from './useSeasonSessionScope';
 import { seasonQueryKeys } from '../api/seasons.queries';
 import { SeasonRequestError, type Season } from '../api/seasons.types';
@@ -60,7 +60,7 @@ describe('season join lifecycle', () => {
         })
     );
     const system = setup();
-    let request!: Promise<void>;
+    let request!: Promise<SeasonJoinResult | undefined>;
     act(() => {
       request = system.result.current.join();
       void system.result.current.join();
@@ -78,10 +78,11 @@ describe('season join lifecycle', () => {
   it('allows a user-triggered retry after an ambiguous timeout without automatic retry', async () => {
     api.joinSeason.mockRejectedValueOnce(new SeasonRequestError('timeout', 'transport'));
     const system = setup();
+    let failed: Awaited<ReturnType<typeof system.result.current.join>>;
     await act(async () => {
-      await system.result.current.join();
+      failed = await system.result.current.join();
     });
-    expect(system.result.current.error).toBe('unavailable');
+    expect(failed).toEqual({ status: 'failed', error: 'unavailable' });
     expect(api.joinSeason).toHaveBeenCalledTimes(1);
     api.joinSeason.mockResolvedValueOnce(season);
     await act(async () => {
@@ -96,10 +97,11 @@ describe('season join lifecycle', () => {
     );
     const system = setup();
     const invalidate = vi.spyOn(system.client, 'invalidateQueries');
+    let failed: Awaited<ReturnType<typeof system.result.current.join>>;
     await act(async () => {
-      await system.result.current.join();
+      failed = await system.result.current.join();
     });
-    expect(system.result.current.error).toBe('capacityReached');
+    expect(failed).toEqual({ status: 'failed', error: 'capacityReached' });
     expect(invalidate).toHaveBeenCalledWith({
       queryKey: seasonQueryKeys.detail('account-a', 'season-a'),
     });
@@ -114,7 +116,7 @@ describe('season join lifecycle', () => {
         })
     );
     const system = setup();
-    let request!: Promise<void>;
+    let request!: Promise<SeasonJoinResult | undefined>;
     act(() => {
       request = system.result.current.join();
     });

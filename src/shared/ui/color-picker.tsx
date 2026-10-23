@@ -5,7 +5,7 @@ import './ui.css';
 export function ColorPicker({
   value,
   onValueChange,
-  label = '색상',
+  label = 'Color',
   disabled = false,
 }: {
   value: string;
@@ -23,7 +23,7 @@ export function ColorPicker({
         <input
           id={id}
           type="color"
-          aria-label={`${label} 선택`}
+          aria-label={`Choose ${label}`}
           value={color}
           onChange={event => onValueChange(event.target.value)}
         />

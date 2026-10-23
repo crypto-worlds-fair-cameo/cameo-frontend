@@ -24,9 +24,7 @@ import { Menu, UserRound } from 'lucide-react';
 import HeaderLogo from '@/app/layout/header/HeaderLogo';
 import HeaderNav from '@/app/layout/header/HeaderNav';
 import { useQueryClient } from '@tanstack/react-query';
-import { sessionMutationKey } from '@/entities/session';
-import { WalletConnectContent, WalletConnectTitle } from './ui/WalletConnectContent';
-import { openWalletDialogStep } from './model/openWalletDialogStep';
+import { openWalletConnectDialog } from './model/openWalletConnectDialog';
 import { useTranslation } from 'react-i18next';
 import { useWalletAuthentication } from './model/useWalletAuthentication';
 import { cn } from '@/shared/lib/utils';
@@ -46,18 +44,7 @@ const Header = ({ menuItems, showSidebar = false }: HeaderProps) => {
   const accountButtonRef = useRef<HTMLButtonElement>(null);
   const openWalletDialog = useCallback(
     (returnFocusElement: HTMLElement | null = accountButtonRef.current) => {
-      // 지난 시도의 오류(서명 거절 등)가 새로 연 창에 남지 않도록 끝난 요청의 오류 기록을 지운다.
-      const mutations = queryClient.getMutationCache();
-      for (const mutation of mutations.findAll({
-        mutationKey: sessionMutationKey,
-        status: 'error',
-      }))
-        mutations.remove(mutation);
-      openWalletDialogStep({
-        title: <WalletConnectTitle />,
-        content: <WalletConnectContent />,
-        returnFocusElement,
-      });
+      openWalletConnectDialog(queryClient, returnFocusElement);
     },
     [queryClient]
   );
@@ -71,9 +58,9 @@ const Header = ({ menuItems, showSidebar = false }: HeaderProps) => {
       ref={accountButtonRef}
       variant={auth.isAuthenticated ? 'secondary' : 'primary'}
       className={cn(
-        'w-40 max-w-[min(55vw,14rem)]',
-        auth.isAuthenticated &&
-          'border-gray-200 bg-white px-3 text-black hover:bg-gray-50 active:bg-gray-100'
+        auth.isAuthenticated
+          ? 'w-40 max-w-[min(55vw,14rem)] border-gray-200 bg-white px-3 text-black hover:bg-gray-50 active:bg-gray-100'
+          : 'layout-header-connect w-auto max-w-none px-4'
       )}
       aria-haspopup={auth.isAuthenticated ? undefined : 'dialog'}
       aria-label={
@@ -109,7 +96,10 @@ const Header = ({ menuItems, showSidebar = false }: HeaderProps) => {
           </span>
         </>
       ) : (
-        <span className="truncate">{t('connect')}</span>
+        <>
+          <span aria-hidden="true">+</span>
+          <span>{t('connect')}</span>
+        </>
       )}
     </Button>
   );

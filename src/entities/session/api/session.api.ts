@@ -12,6 +12,7 @@ export interface AuthenticatedSession {
     id: string;
     displayName: string | null;
     avatarUrl: string | null;
+    createdAt?: string;
     wallets: { chainNamespace: string; address: string }[];
   };
   activeWallet: ActiveWallet;

@@ -259,4 +259,34 @@ describe('authoritative canvas renderer', () => {
     expect(x).toBeGreaterThan(50);
     expect(y).toBeGreaterThan(60);
   });
+
+  it('keeps the shared drawing off a practice paper and paints only the practice stroke', () => {
+    mockLayers();
+    const main = context();
+    const renderer = createCanvasDrawingRenderer();
+    const stored = chunk('1', 'a', 'own', '#ED4242', [
+      { x: 10, y: 10 },
+      { x: 20, y: 20 },
+    ]);
+    renderer.render(main.canvas, drawing([stored]), 'practice', settings);
+    expect(main.paint.drawImage).not.toHaveBeenCalled();
+    expect(main.paint.stroke).not.toHaveBeenCalled();
+
+    renderer.render(
+      main.canvas,
+      drawing([stored], {
+        practiceStroke: {
+          brush: { ...defaultBrushSettings, color: '#0000ff' },
+          points: [
+            { x: 1, y: 1 },
+            { x: 2, y: 2 },
+          ],
+        },
+      }),
+      'practice',
+      settings
+    );
+    expect(main.paint.drawImage).not.toHaveBeenCalled();
+    expect(main.colors).toContain('#0000ff');
+  });
 });

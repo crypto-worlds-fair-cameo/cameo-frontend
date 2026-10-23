@@ -40,6 +40,8 @@ export interface SeasonReady extends BaseReady {
     width: number;
     height: number;
     strokeLimitPerUser: number | null;
+    /** ready 시점에 이 사용자가 쓴 획 수. 손님이나 이 값을 보내지 않는 서버는 null·없음이다. */
+    strokesUsed?: number | null;
     isParticipant: boolean;
     isCreator: boolean;
   };
@@ -162,6 +164,10 @@ export function isCanvasReady(value: unknown, canvasKey: CanvasKey = 'main'): va
         (value.season.strokeLimitPerUser === null ||
           (Number.isSafeInteger(value.season.strokeLimitPerUser) &&
             (value.season.strokeLimitPerUser as number) >= 1)) &&
+        (value.season.strokesUsed === undefined ||
+          value.season.strokesUsed === null ||
+          (Number.isSafeInteger(value.season.strokesUsed) &&
+            (value.season.strokesUsed as number) >= 0)) &&
         typeof value.season.isParticipant === 'boolean' &&
         typeof value.season.isCreator === 'boolean' &&
         isDate(value.serverTime)))

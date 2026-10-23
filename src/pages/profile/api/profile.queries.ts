@@ -1,10 +1,20 @@
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 import { sessionMutationKey, sessionQueryKey, type AuthenticatedSession } from '@/entities/session';
-import { getParticipatedSeasons, updateDisplayName, uploadProfileImage } from './profile.api';
+import {
+  getHostedSeasons,
+  getParticipatedSeasons,
+  getTransactions,
+  getWalletBalance,
+  updateDisplayName,
+  uploadProfileImage,
+} from './profile.api';
 
 export const profileQueryKeys = {
   participated: (userId: string) => ['profile', 'participated', userId] as const,
+  hosted: (userId: string) => ['profile', 'hosted', userId] as const,
+  balance: (walletAddress: string) => ['profile', 'balance', walletAddress] as const,
+  transactions: (userId: string) => ['profile', 'transactions', userId] as const,
 };
 
 function isVisible() {
@@ -24,6 +34,47 @@ export function useParticipatedSeasonsQuery(userId: string) {
     retry: failureCount => failureCount < 2,
     refetchOnWindowFocus: true,
     refetchInterval: () => (isVisible() ? 30_000 : false),
+  });
+}
+
+/** 내가 만든 시즌도 20개씩 읽고, 시작·종료 시각이 지나 바뀐 상태와 참여자 수를 30초마다 갱신한다. */
+export function useHostedSeasonsQuery(userId: string) {
+  return useInfiniteQuery({
+    queryKey: profileQueryKeys.hosted(userId),
+    initialPageParam: 0,
+    queryFn: ({ pageParam, signal }) => getHostedSeasons(20, pageParam, signal),
+    getNextPageParam: page => {
+      const nextOffset = page.offset + page.limit;
+      return nextOffset < page.total ? nextOffset : undefined;
+    },
+    retry: failureCount => failureCount < 2,
+    refetchOnWindowFocus: true,
+    refetchInterval: () => (isVisible() ? 30_000 : false),
+  });
+}
+
+/** 잔액은 서버를 거쳐 RPC를 호출하므로 탭이 보일 때만 1분마다 갱신한다. */
+export function useWalletBalanceQuery(walletAddress: string) {
+  return useQuery({
+    queryKey: profileQueryKeys.balance(walletAddress),
+    queryFn: ({ signal }) => getWalletBalance(signal),
+    retry: false,
+    refetchOnWindowFocus: true,
+    refetchInterval: () => (isVisible() ? 60_000 : false),
+  });
+}
+
+export function useTransactionsQuery(userId: string) {
+  return useInfiniteQuery({
+    queryKey: profileQueryKeys.transactions(userId),
+    initialPageParam: 0,
+    queryFn: ({ pageParam, signal }) => getTransactions(20, pageParam, signal),
+    getNextPageParam: page => {
+      const nextOffset = page.offset + page.limit;
+      return nextOffset < page.total ? nextOffset : undefined;
+    },
+    retry: failureCount => failureCount < 2,
+    refetchOnWindowFocus: true,
   });
 }
 

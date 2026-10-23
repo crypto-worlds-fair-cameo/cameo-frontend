@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { cancelSeason, createSeason, endSeason, joinSeason } from './seasons.api';
+import { payAndJoinSeason } from './seasons.payment';
 import { seasonQueryKeys } from './seasons.queries';
 import type { CreateSeasonInput, Season } from './seasons.types';
 
@@ -60,6 +61,15 @@ export function useEndSeasonMutation(isCurrentScope: (scope: SeasonScopeToken) =
   return useScopedSeasonMutation<ScopedManageVariables>(({ id }) => endSeason(id), isCurrentScope);
 }
 
+interface ScopedJoinVariables extends ScopedManageVariables {
+  /** 입장료가 있는 시즌이면 결제할 현재 로그인 지갑 주소. */
+  payerWalletAddress?: string;
+}
+
 export function useJoinSeasonMutation(isCurrentScope: (scope: SeasonScopeToken) => boolean) {
-  return useScopedSeasonMutation<ScopedManageVariables>(({ id }) => joinSeason(id), isCurrentScope);
+  return useScopedSeasonMutation<ScopedJoinVariables>(
+    ({ id, payerWalletAddress }) =>
+      payerWalletAddress ? payAndJoinSeason(id, payerWalletAddress) : joinSeason(id),
+    isCurrentScope
+  );
 }

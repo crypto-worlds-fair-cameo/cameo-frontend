@@ -79,7 +79,7 @@ describe('SeasonNftClaimCard', () => {
 
   it.each([
     ['NOT_PARTICIPANT', '이 시즌에 참여한 사용자만 수령할 수 있습니다.'],
-    ['NO_VALID_STROKE', '유효한 획을 남긴 참여자만 수령할 수 있습니다.'],
+    ['NO_VALID_STROKE', '이 시즌 NFT를 받을 수 있는 참가자가 아니에요.'],
   ] as const)('renders ineligible reason %s without a button', (eligibility, message) => {
     const view = fullView();
     view.claim.eligibility = eligibility;
@@ -101,6 +101,35 @@ describe('SeasonNftClaimCard', () => {
     button.focus();
     await user.keyboard('{Enter}');
     expect(startClaim).toHaveBeenCalledTimes(1);
+  });
+
+  it('starts claim preparation once when opened from an outside claim button', () => {
+    const startClaim = vi.fn();
+    model.useSeasonNftClaim.mockReturnValue(result({ startClaim }));
+    const { rerender } = render(
+      <SeasonNftClaimCard seasonId="season-a" source="detail" autoStart />
+    );
+    rerender(<SeasonNftClaimCard seasonId="season-a" source="detail" autoStart />);
+    expect(startClaim).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not auto-start for a mismatched wallet or a claim already in progress', () => {
+    const startClaim = vi.fn();
+    model.useSeasonNftClaim.mockReturnValue(
+      result({
+        startClaim,
+        session: { activeWallet: { address: '22222222222222222222222222222222' } },
+      })
+    );
+    const { unmount } = render(
+      <SeasonNftClaimCard seasonId="season-a" source="detail" autoStart />
+    );
+    unmount();
+    const processing = fullView();
+    processing.claim = { ...processing.claim, state: 'PROCESSING' };
+    model.useSeasonNftClaim.mockReturnValue(result({ startClaim, view: processing }));
+    render(<SeasonNftClaimCard seasonId="season-a" source="detail" autoStart />);
+    expect(startClaim).not.toHaveBeenCalled();
   });
 
   it.each([

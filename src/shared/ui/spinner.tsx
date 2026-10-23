@@ -6,7 +6,7 @@ export function Spinner({ className, ...props }: ComponentProps<'span'>) {
   return (
     <span
       role="status"
-      aria-label="처리 중"
+      aria-label="Loading"
       {...props}
       className={cn('cameo-spinner', className)}
     />

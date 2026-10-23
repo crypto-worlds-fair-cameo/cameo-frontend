@@ -57,7 +57,7 @@ const SeasonCanvasPage = () => {
             className="season-create-button"
             disabled={scope.isChangingSession}
             onClick={event => {
-              // 지갑 연결 창은 헤더가 소유하므로 손님에게는 헤더의 연결 버튼을 안내한다.
+              // 손님에게는 참가와 같은 지갑 연결 안내를 띄운다.
               // 안내를 닫으면 포커스가 이 버튼으로 돌아오도록 안내 팝업의 복귀 대상으로 둔다.
               if (!scope.session) {
                 detailOpenerRef.current = event.currentTarget;
@@ -159,7 +159,8 @@ const SeasonCanvasPage = () => {
         notice={joinFlow.notice}
         joiningId={joinFlow.joiningId}
         onClose={joinFlow.closeNotice}
-        onRetry={season => void joinFlow.join(season)}
+        onPay={season => void joinFlow.confirmPayment(season)}
+        onRetry={season => void joinFlow.confirmPayment(season)}
         restoreFocusTo={detailOpenerRef}
         fallbackFocusTo={headingRef}
       />

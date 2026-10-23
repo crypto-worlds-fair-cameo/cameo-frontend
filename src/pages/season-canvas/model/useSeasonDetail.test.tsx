@@ -35,6 +35,8 @@ function season(overrides: Partial<Season> = {}): Season {
     height: 1000,
     strokeLimitPerUser: 1,
     capacity: 20,
+    entryRule: 'anyone',
+    entryFeeLamports: '0',
     participantCount: 1,
     startsAt: '2026-10-10T00:00:00.000Z',
     endsAt: '2026-10-11T00:00:00.000Z',

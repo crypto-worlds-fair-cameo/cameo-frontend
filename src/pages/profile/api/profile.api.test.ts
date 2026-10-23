@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { axiosInstance } from '@/shared/api/http-client';
-import { getParticipatedSeasons } from './profile.api';
+import { getHostedSeasons, getParticipatedSeasons } from './profile.api';
 
 vi.mock('@/shared/api/http-client', () => ({
   axiosInstance: { get: vi.fn(), patch: vi.fn() },
@@ -92,5 +92,48 @@ describe('participated seasons API', () => {
       items: [{ title: '🎨'.repeat(50) }],
     });
     await expect(getParticipatedSeasons(20, 0)).rejects.toThrow('invalid');
+  });
+});
+
+describe('hosted seasons API', () => {
+  const hosted = {
+    seasonId,
+    title: 'Design the UI',
+    lifecycleStatus: 'cancelled',
+    startsAt: '2026-10-01T00:00:00.000Z',
+    endsAt: '2026-10-10T00:00:00.000Z',
+    participantCount: 4,
+    finalImageUrl: null,
+  } as const;
+
+  it('requests the authenticated offset page of seasons I created', async () => {
+    vi.mocked(axiosInstance.get).mockResolvedValue(
+      envelope({ items: [hosted], total: 1, limit: 20, offset: 0 })
+    );
+
+    await expect(getHostedSeasons(20, 0)).resolves.toEqual({
+      items: [hosted],
+      total: 1,
+      limit: 20,
+      offset: 0,
+    });
+    expect(axiosInstance.get).toHaveBeenCalledWith('/seasons/hosted', {
+      params: { limit: 20, offset: 0 },
+      withCredentials: true,
+      signal: undefined,
+    });
+  });
+
+  it.each([
+    { ...hosted, participantCount: -1 },
+    { ...hosted, participantCount: 1.5 },
+    { ...hosted, lifecycleStatus: 'finished' },
+    { ...hosted, seasonId: 'not-a-uuid' },
+    { ...hosted, finalImageUrl: 'javascript:alert(1)' },
+  ])('rejects malformed hosted-season items', async malformed => {
+    vi.mocked(axiosInstance.get).mockResolvedValue(
+      envelope({ items: [malformed], total: 1, limit: 20, offset: 0 })
+    );
+    await expect(getHostedSeasons(20, 0)).rejects.toThrow('invalid');
   });
 });

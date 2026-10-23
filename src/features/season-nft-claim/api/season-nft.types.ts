@@ -1,8 +1,9 @@
 export type SeasonNftNetwork = 'devnet' | 'mainnet-beta';
 export type SeasonNftAvailability =
   'WAITING_FOR_END' | 'PREPARING' | 'READY' | 'EMPTY' | 'UNAVAILABLE';
-export type SeasonNftReason = 'CANCELLED' | 'FORCE_ENDED' | 'FEATURE_DISABLED' | null;
-export type ClaimEligibility = 'ELIGIBLE' | 'NOT_PARTICIPANT' | 'NO_VALID_STROKE';
+export type SeasonNftReason =
+  'CANCELLED' | 'FORCE_ENDED' | 'FEATURE_DISABLED' | 'TOO_MANY_CONTRIBUTORS' | null;
+export type ClaimEligibility = 'ELIGIBLE' | 'NOT_PARTICIPANT' | 'NO_VALID_STROKE' | 'CREATOR';
 export type ClaimState = 'UNCLAIMED' | 'PROCESSING' | 'CLAIMED';
 export type ReceiptState = 'NONE' | 'RESOLVING' | 'VERIFIED';
 export type ClaimAttemptState =

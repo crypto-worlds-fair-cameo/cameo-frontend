@@ -21,6 +21,8 @@ const open = {
   isParticipant: false,
   participantCount: 2,
   capacity: 10,
+  entryRule: 'anyone',
+  entryFeeLamports: '0',
 } as Season;
 
 function setup({ signedIn = true } = {}) {
@@ -128,6 +130,7 @@ describe('season join flow', () => {
       kind: 'error',
       season: open,
       error: 'unavailable',
+      payment: false,
     });
     api.joinSeason.mockResolvedValueOnce({ ...open, isParticipant: true });
     await act(async () => {
@@ -135,6 +138,28 @@ describe('season join flow', () => {
     });
     expect(system.result.current.notice).toEqual({ kind: 'joined', seasonId: 'season-a' });
     expect(api.joinSeason).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows the entry fee before a paid join sends a payment', async () => {
+    const system = setup();
+    const paid = { ...open, entryFeeLamports: '10000000' };
+    await act(async () => {
+      await system.result.current.join(paid);
+    });
+    expect(system.result.current.notice).toEqual({ kind: 'fee', season: paid });
+    expect(api.joinSeason).not.toHaveBeenCalled();
+    api.joinSeason.mockRejectedValueOnce(
+      new SeasonRequestError('rejected', 'business', 400, 'WALLET_SIGNING_FAILED')
+    );
+    await act(async () => {
+      await system.result.current.confirmPayment(paid);
+    });
+    expect(system.result.current.notice).toEqual({
+      kind: 'error',
+      season: paid,
+      error: 'walletSigning',
+      payment: true,
+    });
   });
 
   it('ignores a prior account response', async () => {

@@ -4,16 +4,16 @@ import { formatSeasonDateRange, formatSeasonDateTime, getSeasonDaysRemaining } f
 const now = Date.parse('2026-10-07T00:00:00.000Z');
 
 describe('season card dates', () => {
-  it('shows local dates with padded fields, 24-hour time and no seconds', () => {
-    expect(formatSeasonDateTime(new Date(2026, 0, 2, 0, 5, 49).toISOString())).toBe(
+  it('shows UTC dates with padded fields, 24-hour time and no seconds', () => {
+    expect(formatSeasonDateTime(new Date(Date.UTC(2026, 0, 2, 0, 5, 49)).toISOString())).toBe(
       '2026.01.02 00:05'
     );
     expect(formatSeasonDateTime('invalid')).toBe('invalid');
   });
 
   it('shows the year once for a date range within the same year and collapses a single day', () => {
-    const start = new Date(2026, 9, 12, 12).toISOString();
-    const end = new Date(2026, 10, 1, 12).toISOString();
+    const start = new Date(Date.UTC(2026, 9, 12, 12)).toISOString();
+    const end = new Date(Date.UTC(2026, 10, 1, 12)).toISOString();
     expect(formatSeasonDateRange(start, end, 'en')).toBe('Oct 12 – Nov 1, 2026');
     expect(formatSeasonDateRange(start, start, 'en')).toBe('Oct 12, 2026');
   });

@@ -1,17 +1,35 @@
 import { useRef, useState } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { SeasonNftClaimState } from '@/features/season-nft-claim';
 import type { Season } from '../api/seasons.types';
 import type { SeasonManageAction } from '../model/useSeasonDetail';
 import { SeasonDetailDialog } from './SeasonDetailDialog';
 import { MemoryRouter } from 'react-router';
 
+const nft = vi.hoisted(() => ({ state: null as SeasonNftClaimState | null }));
 vi.mock('@/features/season-nft-claim', () => ({
-  SeasonNftClaimCard: ({ seasonId }: { seasonId: string }) => (
-    <div data-testid={`nft-${seasonId}`}>NFT claim</div>
+  SeasonNftClaimCard: ({ seasonId, autoStart }: { seasonId: string; autoStart?: boolean }) => (
+    <div data-testid={`nft-${seasonId}`}>{autoStart ? 'NFT claim started' : 'NFT claim'}</div>
   ),
+  useSeasonNftClaimState: (_seasonId: string | undefined, enabled: boolean) =>
+    enabled ? nft.state : null,
   useSeasonNftPreview: () => null,
+}));
+
+beforeEach(() => {
+  nft.state = null;
+});
+vi.mock('../model/useSeasonSnapshotPreview', () => ({ useSeasonSnapshotPreview: () => null }));
+vi.mock('@/features/canvas-workspace', () => ({
+  CanvasLivePreview: ({
+    canvasKey,
+    requiresSession,
+  }: {
+    canvasKey: string;
+    requiresSession: boolean;
+  }) => <div data-testid="live-preview">{`${canvasKey} ${requiresSession}`}</div>,
 }));
 
 const season: Season = {
@@ -23,6 +41,8 @@ const season: Season = {
   height: 1000,
   strokeLimitPerUser: 1,
   capacity: 20,
+  entryRule: 'anyone',
+  entryFeeLamports: '0',
   participantCount: 1,
   startsAt: '2026-10-10T00:00:00.000Z',
   endsAt: '2026-10-11T00:00:00.000Z',
@@ -107,7 +127,7 @@ function openDetail(props: Parameters<typeof DetailHarness>[0] = {}) {
 describe('season detail focus lifecycle', () => {
   it('restores nested confirmation and detail focus to their openers', async () => {
     const opener = openDetail();
-    expect(screen.getByTestId(`nft-${season.id}`)).toBeTruthy();
+    expect(screen.getByRole('heading', { name: season.title })).toBeTruthy();
     const manageButton = screen.getByRole('button', { name: '예약 취소' });
     fireEvent.click(manageButton);
     fireEvent.click(screen.getByRole('button', { name: '돌아가기' }));
@@ -116,7 +136,7 @@ describe('season detail focus lifecycle', () => {
     await waitFor(() => expect(document.activeElement).toBe(opener));
 
     fireEvent.click(opener);
-    expect(screen.getByTestId(`nft-${season.id}`)).toBeTruthy();
+    expect(screen.getByRole('heading', { name: season.title })).toBeTruthy();
   });
 
   it('keeps translated close controls visible but disabled during a management request', () => {
@@ -166,5 +186,41 @@ describe('season detail actions', () => {
     expect(onBrowseLive).toHaveBeenCalledTimes(1);
     // 상단 X 닫기만 남고 하단 동작 영역에는 닫기 버튼이 없다.
     expect(screen.getAllByRole('button', { name: '닫기' })).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: 'NFT 받기' })).toBeNull();
+  });
+
+  it('puts an NFT claim button under the view button and opens the claim card from it', () => {
+    nft.state = 'claimable';
+    openDetail({ data: { ...season, status: 'ended', canCancel: false } });
+    const view = screen.getByRole('link', { name: '캔버스 보기' });
+    const claim = screen.getByRole('button', { name: 'NFT 받기' });
+    expect(view.compareDocumentPosition(claim) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.queryByTestId('nft-season-1')).toBeNull();
+
+    fireEvent.click(claim);
+    expect(screen.getByTestId('nft-season-1').textContent).toBe('NFT claim started');
+    expect(screen.queryByRole('button', { name: 'NFT 받기' })).toBeNull();
+  });
+
+  it.each([
+    ['claimed', 'ended'],
+    [null, 'ended'],
+    ['claimable', 'active'],
+  ] as const)('hides the NFT claim button for %s state in an %s season', (state, status) => {
+    nft.state = state;
+    openDetail({ data: { ...season, status, canCancel: false } });
+    expect(screen.queryByRole('button', { name: 'NFT 받기' })).toBeNull();
+  });
+});
+
+describe('season detail preview', () => {
+  it('shows the current canvas only while the season is live', () => {
+    openDetail({ data: { ...season, status: 'active', entryRule: 'wallet_holders' } });
+    expect(screen.getByTestId('live-preview').textContent).toBe('season:season-1 true');
+  });
+
+  it.each(['scheduled', 'ended'] as const)('keeps the %s preview off the live canvas', status => {
+    openDetail({ data: { ...season, status } });
+    expect(screen.queryByTestId('live-preview')).toBeNull();
   });
 });

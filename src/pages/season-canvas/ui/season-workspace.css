@@ -75,13 +75,15 @@
   line-height: 21px;
   font-variant-numeric: tabular-nums;
 }
-.season-workspace-host-actions {
+.season-workspace-host-actions,
+.season-workspace-ended-actions {
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin-top: 8px;
 }
-.season-workspace-host-actions .cameo-button {
+.season-workspace-host-actions .cameo-button,
+.season-workspace-ended-actions .cameo-button {
   width: 100%;
   height: 40px;
   padding: 0 8px;
@@ -92,16 +94,135 @@
   font-weight: 700;
   line-height: 20px;
 }
+.season-workspace-ended-actions .cameo-button--web3 {
+  background: var(--btn-web3-bg);
+  color: #fff;
+}
+.season-workspace-ended-actions .cameo-button--web3:hover {
+  background: var(--btn-web3-hover);
+}
+.season-workspace-ended-actions .cameo-button--web3:active {
+  background: var(--btn-web3-active);
+}
+.season-workspace-ended-actions .cameo-button--secondary:hover {
+  background: var(--color-gray-50);
+}
 .season-workspace-host-actions .season-workspace-end-button {
   color: var(--color-accent-red);
 }
 .season-workspace-panel p {
   margin: var(--space-2) 0;
 }
+/* 시안처럼 Leave 버튼은 팔레트와 같은 폭으로 둔다. */
 .season-workspace-back {
-  color: var(--text-primary);
-  text-decoration: underline;
+  display: flex;
+  width: 100%;
+  height: 40px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-radius: 10px;
+  background: var(--color-gray-600);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+  text-decoration: none;
+}
+.season-workspace-back svg {
+  width: 16px;
+  height: 16px;
+}
+.season-room-stage {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  padding: 64px 16px 24px;
+}
+.season-room-stage .canvas-viewport {
+  flex: 0 1 auto;
+  width: min(720px, 100%, calc(100dvh - 210px));
+  height: auto;
+  aspect-ratio: 1;
+  max-height: 100%;
+  align-self: center;
+  border: 1px solid var(--color-gray-400);
+  background: #fff;
+}
+.season-room-user {
+  position: absolute;
+  top: 18px;
+  right: 8px;
+  display: inline-flex;
+  max-width: min(240px, 46%);
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 14px 0 6px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--color-black);
   font-size: 13px;
+  line-height: 1;
+}
+.season-room-user span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 이름과 지갑 주소 두 줄 */
+.season-room-user-text {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.season-room-user-text > span {
+  font-weight: 700;
+}
+.season-room-user-text small {
+  overflow: hidden;
+  color: var(--color-gray-500);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 시안: 진한 'MY STROKES 5 / 10'과 빨간 진행 막대 */
+.season-room-strokes {
+  display: inline-flex;
+  min-width: min(280px, 100%);
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0;
+  padding: 10px 18px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-black);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.season-room-strokes-track {
+  width: 92px;
+  height: 6px;
+  flex: none;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-gray-200);
+}
+.season-room-strokes-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #f05252;
 }
 .season-workspace-rule {
   color: var(--text-secondary);
@@ -110,41 +231,109 @@
   padding: var(--space-6);
   overflow: auto;
 }
-/* 큰 작업 공간에서는 피그마의 도화지와 양쪽 도구 패널 위치를 유지한다. */
-@media (min-width: 1200px) and (min-height: 900px) {
+/* 시즌 도화지는 헤더 없이 팔레트·정사각 도화지·시즌 정보를 한 화면에 둔다.
+   메인 도화지처럼 작업 공간이 화면 전체를 덮고, 좌우 칸·내 계정·획 수 표시는 그 위에 뜬다.
+   확대하면 도화지가 칸 아래까지 화면을 채운다. */
+@media (min-width: 1024px) {
+  .season-workspace {
+    --season-right-width: 283px;
+    --season-right-gutter: 56px;
+    position: relative;
+  }
+  .season-workspace .canvas-left-sidebar,
+  .season-workspace .canvas-right-area {
+    position: relative;
+    z-index: 1;
+    pointer-events: none;
+  }
   .season-workspace .canvas-left-sidebar {
     flex-basis: 283px;
     gap: 16px;
-    padding: 47px 1px 24px 56px;
+    padding: 28px 1px 24px 56px;
   }
-  .season-workspace-back {
-    display: flex;
-    height: 40px;
-    align-items: center;
-    padding: 0 16px;
-    border-radius: 12px;
-    background: var(--color-gray-700);
-    color: #fff;
-    font-weight: 700;
-    line-height: 20px;
-    text-decoration: none;
-  }
+  /* 시안처럼 시즌 정보 카드는 팔레트와 같은 높이(위 여백 28 + Leave 40 + 간격 16)에서 시작하고,
+     내 계정 칩은 그 위 오른쪽 끝에 카드와 맞춰 둔다. */
   .season-workspace .canvas-right-area {
-    padding-top: 103px;
+    flex-basis: var(--season-right-width);
+    padding-top: 84px;
+    padding-right: var(--season-right-gutter);
   }
-  .season-workspace .canvas-viewport {
+  /* 패널과 버튼만 클릭을 받고, 칸의 빈 곳은 아래 도화지로 넘긴다. */
+  .season-workspace .season-workspace-back,
+  .season-workspace .color-palette,
+  .season-workspace .canvas-navigator-map,
+  .season-workspace .canvas-navigator-buttons button,
+  .season-workspace .canvas-right-area > * {
+    pointer-events: auto;
+  }
+  /* 가운데 칸은 자리만 차지하고, 도화지는 시즌 화면 전체를 기준으로 깔린다. */
+  .season-room-stage {
+    position: static;
+    pointer-events: none;
+  }
+  .season-room-stage .canvas-viewport {
     --canvas-border: var(--color-gray-400);
-    height: min(756px, calc(100dvh - 324px));
-    align-self: center;
-    transform: translateY(13px);
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+    max-height: none;
+    aspect-ratio: auto;
+    align-self: auto;
+    border: 0;
     background: transparent;
+    pointer-events: auto;
+  }
+  /* 1배 도화지 자리는 1920×1080 시안대로 좌우 칸 사이, 위 233px·아래 123px 여백 안이다(도화지 여백 16px 포함). */
+  .season-room-stage .canvas-fit-area {
+    inset: clamp(48px, 20.1vh, 217px) var(--season-right-width) clamp(80px, 9.9vh, 107px) 283px;
+  }
+  .season-room-user {
+    z-index: 1;
+    top: 28px;
+    right: var(--season-right-gutter);
+    height: 40px;
+    pointer-events: auto;
+  }
+  .season-room-strokes {
+    position: absolute;
+    z-index: 1;
+    bottom: clamp(12px, 4.5vh, 49px);
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  /* 휠 확대·끌어 옮기기 중에는 도화지만 보이게 위에 뜬 표시를 잠시 숨긴다. 지도와 +/− 버튼은 남긴다. */
+  .season-workspace .season-workspace-back,
+  .season-workspace .color-palette,
+  .season-workspace .canvas-right-area > *,
+  .season-room-user,
+  .season-room-strokes {
+    transition: opacity 0.3s ease;
+  }
+  .season-workspace[data-navigating] .season-workspace-back,
+  .season-workspace[data-navigating] .color-palette,
+  .season-workspace[data-navigating] .canvas-right-area > *,
+  .season-workspace[data-navigating] .season-room-user,
+  .season-workspace[data-navigating] .season-room-strokes {
+    opacity: 0;
+    pointer-events: none;
+    transition-duration: 0.15s;
+  }
+}
+@media (min-width: 1024px) and (prefers-reduced-motion: reduce) {
+  .season-workspace .season-workspace-back,
+  .season-workspace .color-palette,
+  .season-workspace .canvas-right-area > *,
+  .season-room-user,
+  .season-room-strokes {
+    transition: none;
   }
 }
 /* 1024~1199px에서는 오른쪽 패널 폭을 줄여 도화지 공간을 확보한다. */
 @media (min-width: 1024px) and (max-width: 1199px) {
-  .season-workspace .canvas-right-area {
-    flex-basis: 251px;
-    padding-right: 24px;
+  .season-workspace {
+    --season-right-width: 251px;
+    --season-right-gutter: 24px;
   }
 }
 /* 태블릿 이하에서는 세 영역을 문서 흐름에 놓아 패널 대신 페이지가 스크롤을 소유한다. */
@@ -179,10 +368,15 @@
     border-bottom: 1px solid var(--color-gray-200);
   }
 
-  .season-workspace > .canvas-viewport {
+  .season-room-stage {
     flex: 0 0 auto;
+    padding-top: 56px;
+  }
+
+  .season-room-stage .canvas-viewport {
+    width: min(100%, 500px);
     height: clamp(300px, 55dvh, 500px);
-    min-height: 300px;
+    aspect-ratio: auto;
   }
 
   .season-workspace .canvas-right-area {

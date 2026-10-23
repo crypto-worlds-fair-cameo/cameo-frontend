@@ -13,6 +13,21 @@
     "edit": "Edit",
     "joinedCanvases": "Joined Canvases"
   },
+  "overview": {
+    "joined": "Joined",
+    "balance": "Balance",
+    "transactions": "Transactions",
+    "empty": "No transactions.",
+    "unavailable": "—",
+    "sol": "{{amount}} SOL",
+    "loading": "Loading transactions.",
+    "error": "Transactions could not be loaded.",
+    "seasonEntry": "Season entry",
+    "entryReceived": "Entry fee received",
+    "paid": "−{{amount}} SOL",
+    "received": "+{{amount}} SOL",
+    "loadMore": "Load more"
+  },
   "status": {
     "active": "Active",
     "ended": "Ended",
@@ -21,13 +36,22 @@
   },
   "seasons": {
     "title": "My Seasons",
-    "newSeason": "New Season"
+    "newSeason": "New Season",
+    "loading": "Loading your seasons.",
+    "error": "Your seasons could not be loaded.",
+    "refreshError": "The list could not be refreshed. Existing items are still shown.",
+    "empty": "You haven't created a season yet.",
+    "loadMore": "Load more",
+    "participants_one": "{{count}} participant",
+    "participants_other": "{{count}} participants",
+    "open": "Open {{title}}"
   },
   "joined": {
     "title": "Joined Canvases",
     "empty": "You haven't joined a canvas yet.",
     "browse": "Browse seasons",
     "loading": "Loading joined canvases.",
+    "minted": "minted",
     "error": "Joined canvases could not be loaded.",
     "refreshError": "The list could not be refreshed. Existing items are still shown.",
     "loadMore": "Load more",
