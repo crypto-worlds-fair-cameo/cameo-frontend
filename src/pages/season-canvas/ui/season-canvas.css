@@ -181,10 +181,15 @@
 .season-preview__status--ended::before {
   display: none;
 }
-.season-preview__joined {
+.season-preview__badges {
   position: absolute;
   top: 14px;
   right: 18px;
+  display: inline-flex;
+  gap: 6px;
+}
+
+.season-preview__joined {
   display: inline-flex;
   align-items: center;
   height: 22px;

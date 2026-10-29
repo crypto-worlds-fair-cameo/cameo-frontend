@@ -6,7 +6,10 @@ const mocks = vi.hoisted(() => ({
   snapshot: null as string | null,
   snapshotEnabled: vi.fn(),
 }));
-vi.mock('@/features/season-nft-claim', () => ({ useSeasonNftPreview: () => mocks.image }));
+vi.mock('@/features/season-nft-claim', () => ({
+  useSeasonNftPreview: () => mocks.image,
+  useSeasonNftMinted: () => false,
+}));
 vi.mock('../model/useSeasonSnapshotPreview', () => ({
   useSeasonSnapshotPreview: (_seasonId: string | undefined, enabled: boolean) => {
     mocks.snapshotEnabled(enabled);

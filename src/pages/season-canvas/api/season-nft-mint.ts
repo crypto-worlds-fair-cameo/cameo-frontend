@@ -119,6 +119,7 @@ export async function getSeasonNftMintPreview(
   try {
     const response = await axiosInstance.get(`/seasons/${seasonId}/nft/mint`, {
       params: supply ? { supply } : undefined,
+      withCredentials: true,
     });
     return readPreview(response.data);
   } catch (error: unknown) {
@@ -131,7 +132,9 @@ export async function requestSeasonNftMint(
   input: { supply: string; description?: string }
 ): Promise<SeasonNftMintPreview> {
   try {
-    const response = await axiosInstance.post(`/seasons/${seasonId}/nft/mint`, input);
+    const response = await axiosInstance.post(`/seasons/${seasonId}/nft/mint`, input, {
+      withCredentials: true,
+    });
     return readPreview(response.data);
   } catch (error: unknown) {
     normalizeError(error);
@@ -143,7 +146,9 @@ export async function submitSeasonNftMintTransaction(
   input: { transactionId: string; signedTransactionBase64: string }
 ): Promise<void> {
   try {
-    await axiosInstance.post(`/seasons/${seasonId}/nft/mint/transactions`, input);
+    await axiosInstance.post(`/seasons/${seasonId}/nft/mint/transactions`, input, {
+      withCredentials: true,
+    });
   } catch (error: unknown) {
     normalizeError(error);
   }

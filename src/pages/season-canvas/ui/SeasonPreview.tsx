@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CanvasLivePreview } from '@/features/canvas-workspace';
-import { useSeasonNftPreview } from '@/features/season-nft-claim';
+import { useSeasonNftMinted, useSeasonNftPreview } from '@/features/season-nft-claim';
 import { cn } from '@/shared/lib/utils';
 import type { SeasonStatus } from '../api/seasons.types';
 import { useSeasonSnapshotPreview } from '../model/useSeasonSnapshotPreview';
@@ -30,6 +30,7 @@ export function SeasonPreview({
 }) {
   const { t } = useTranslation('seasonCanvas');
   const nftImageUrl = useSeasonNftPreview(seasonId, status === 'ended');
+  const nftMinted = useSeasonNftMinted(seasonId, status === 'ended');
   const snapshotUrl = useSeasonSnapshotPreview(seasonId, status === 'active' || status === 'ended');
   const imageUrl = (status === 'ended' ? nftImageUrl : null) ?? snapshotUrl;
   const showLive = Boolean(live && seasonId && status === 'active');
@@ -60,7 +61,12 @@ export function SeasonPreview({
           {t(`status.${status}`)}
         </span>
       )}
-      {joined && <span className="season-preview__joined">{t('card.joined')}</span>}
+      {(joined || nftMinted) && (
+        <span className="season-preview__badges">
+          {nftMinted && <span className="season-preview__joined">{t('card.nft')}</span>}
+          {joined && <span className="season-preview__joined">{t('card.joined')}</span>}
+        </span>
+      )}
     </div>
   );
 }
