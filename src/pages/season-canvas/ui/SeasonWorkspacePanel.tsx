@@ -2,7 +2,9 @@ import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
+import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/dialog';
 import { canRetryCanvasRecovery, type CanvasMode } from '@/features/canvas-workspace';
+import { SeasonNftClaimCard, useSeasonNftClaimState } from '@/features/season-nft-claim';
 import type { useSeasonWorkspace } from '../model/useSeasonWorkspace';
 import { SeasonStatusBadge } from './SeasonStatusBadge';
 import { formatSeasonDate, formatSeasonDateRange } from '../lib/seasonDate';
@@ -53,6 +55,8 @@ export function SeasonWorkspacePanel({
   const isOwner = Boolean(
     model.isOwner && scope.isReady && scope.session?.user.id === season?.creatorId
   );
+  const nftClaim = useSeasonNftClaimState(season?.id, ended && !isOwner);
+  const [claimOpen, setClaimOpen] = useState(false);
   const mintPromptKey = season ? `cameo.nft-mint-prompt.${season.id}` : '';
   const showMintPrompt =
     isOwner &&
@@ -181,6 +185,11 @@ export function SeasonWorkspacePanel({
               {t('workspace.createNft')}
             </Button>
           )}
+          {(nftClaim === 'claimable' || nftClaim === 'processing') && (
+            <Button variant="web3" onClick={() => setClaimOpen(true)}>
+              {t('detail.claimNft')}
+            </Button>
+          )}
           <Button variant="web3" onClick={() => setHoldersVersion(scope.resetVersion)}>
             {t('workspace.viewParticipants')}
           </Button>
@@ -296,6 +305,14 @@ export function SeasonWorkspacePanel({
             onOpenChange={setMintOpen}
           />
         </>
+      )}
+      {ended && season && !isOwner && (
+        <Dialog open={claimOpen} onOpenChange={setClaimOpen}>
+          <DialogContent>
+            <DialogTitle className="sr-only">{t('detail.claimNft')}</DialogTitle>
+            {claimOpen && <SeasonNftClaimCard seasonId={season.id} source="workspace" autoStart />}
+          </DialogContent>
+        </Dialog>
       )}
       {ended && season && (
         <SeasonHoldersDialog

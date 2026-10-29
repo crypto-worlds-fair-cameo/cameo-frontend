@@ -47,6 +47,28 @@ function isClaim(value: unknown): value is SeasonNftClaimView {
   );
 }
 
+const devnetSnapshotMediaPath =
+  /\/snapshots\/seasons\/[0-9a-f-]{36}\/[0-9a-f-]{36}\/(?:image\.png|metadata\.json)$/iu;
+
+/** Devnet media is served from the local snapshot store instead of Arweave. */
+function isMediaUrl(value: string, network: unknown): boolean {
+  if (isCanonicalArweaveUrl(value)) return true;
+  if (network !== 'devnet') return false;
+  try {
+    const url = new URL(value);
+    return (
+      ['http:', 'https:'].includes(url.protocol) &&
+      url.username === '' &&
+      url.password === '' &&
+      url.search === '' &&
+      url.hash === '' &&
+      devnetSnapshotMediaPath.test(url.pathname)
+    );
+  } catch {
+    return false;
+  }
+}
+
 function isSeasonNftView(value: unknown): value is SeasonNftView {
   if (!isRecord(value)) return false;
   return (
@@ -63,9 +85,9 @@ function isSeasonNftView(value: unknown): value is SeasonNftView {
       ])) &&
     isNullableString(value.name) &&
     (value.imageUrl === null ||
-      (typeof value.imageUrl === 'string' && isCanonicalArweaveUrl(value.imageUrl))) &&
+      (typeof value.imageUrl === 'string' && isMediaUrl(value.imageUrl, value.network))) &&
     (value.metadataUri === null ||
-      (typeof value.metadataUri === 'string' && isCanonicalArweaveUrl(value.metadataUri))) &&
+      (typeof value.metadataUri === 'string' && isMediaUrl(value.metadataUri, value.network))) &&
     (value.eligibleCount === null ||
       (typeof value.eligibleCount === 'number' &&
         Number.isSafeInteger(value.eligibleCount) &&

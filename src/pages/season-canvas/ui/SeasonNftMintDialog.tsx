@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/dialog';
 import { Input } from '@/shared/ui/input';
+import { formatWalletAddress } from '@/app/layout/header/lib/formatWalletAddress';
 import { signSolanaTransaction } from '@/shared/lib/solana-wallet/sign-transaction';
 import { formatSeasonDateRange } from '../lib/seasonDate';
 import { formatSol } from '../lib/seasonForm';
@@ -15,6 +16,7 @@ import {
   type SeasonNftMintPreview,
 } from '../api/season-nft-mint';
 import './season-management-dialogs.css';
+import './season-nft-mint-dialog.css';
 
 const MAX_CREATOR_ALLOCATION = 65_535;
 
@@ -50,6 +52,8 @@ export function SeasonNftMintDialog({
   const [supply, setSupply] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // 발행 반복마다 번호를 매겨, 창을 닫으면 진행 중인 반복이 지갑 서명을 더 요청하지 않게 한다.
+  const runRef = useRef(0);
   const preview = quote ?? loaded;
 
   if (loaded && draftSeasonId !== loaded.seasonId) {
@@ -61,7 +65,9 @@ export function SeasonNftMintDialog({
   }
 
   const close = () => {
-    if (step === 'minting') return;
+    // 발행 중에 닫으면 반복을 멈추고 확인 단계로 돌려 둔다. 다시 서명하면 서버에 남은 단계부터 이어진다.
+    runRef.current += 1;
+    if (step === 'minting') setStep('confirm');
     onOpenChange(false);
   };
 
@@ -97,6 +103,8 @@ export function SeasonNftMintDialog({
 
   const mint = async () => {
     if (!preview) return;
+    const run = ++runRef.current;
+    const stopped = () => runRef.current !== run;
     setStep('minting');
     setError(null);
     const seen = new Set<string>();
@@ -107,6 +115,7 @@ export function SeasonNftMintDialog({
       });
       setQuote(current);
       for (let attempt = 0; attempt < 200 && current.status !== 'READY'; attempt += 1) {
+        if (stopped()) return;
         if (current.status === 'BLOCKED' || current.status === 'EMPTY') {
           setQuote(current);
           setStep('failure');
@@ -120,154 +129,246 @@ export function SeasonNftMintDialog({
             network: current.network,
             serializedTransactionBase64: pending.serializedTransactionBase64,
           });
-          await submitSeasonNftMintTransaction(seasonId, {
-            transactionId: pending.transactionId,
-            signedTransactionBase64: signed,
-          });
+          if (stopped()) return;
+          try {
+            await submitSeasonNftMintTransaction(seasonId, {
+              transactionId: pending.transactionId,
+              signedTransactionBase64: signed,
+            });
+          } catch (cause: unknown) {
+            if (!(cause instanceof SeasonRequestError) || cause.code !== 'NFT_TRANSACTION_EXPIRED')
+              throw cause;
+          }
         } else {
           await wait(2000);
         }
+        if (stopped()) return;
         current = await getSeasonNftMintPreview(seasonId);
         setQuote(current);
       }
+      if (stopped()) return;
       setStep(current.status === 'READY' ? 'success' : 'failure');
     } catch (cause: unknown) {
+      if (stopped()) return;
       setError(cause instanceof SeasonRequestError ? cause.message : t('detail.error'));
       setStep('failure');
     }
   };
 
   const minted = preview?.mintedCount ?? '0';
+  const period = preview
+    ? formatSeasonDateRange(preview.startsAt, preview.endsAt, i18n.language)
+    : '';
 
   return (
     <Dialog open={open} onOpenChange={next => (next ? onOpenChange(true) : close())}>
-      <DialogContent className="season-management-dialog" showCloseButton={step !== 'minting'}>
-        <div className="season-management-body">
+      <DialogContent className="season-management-dialog nft-mint-dialog" showCloseButton={false}>
+        <div className="nft-mint">
           {step === 'info' && (
             <>
-              <DialogTitle>{t('workspace.mint.infoTitle')}</DialogTitle>
-              <DialogDescription>
+              <button type="button" className="nft-mint__back" onClick={close}>
+                <span aria-hidden="true">←</span>
+                {t('workspace.createNft')}
+              </button>
+              <DialogTitle>
                 {preview
-                  ? `${t('workspace.mint.period')} ${formatSeasonDateRange(preview.startsAt, preview.endsAt, i18n.language)}`
+                  ? t('workspace.mint.infoHeading', { title: preview.title })
                   : t('detail.loading')}
-              </DialogDescription>
+              </DialogTitle>
               {preview && (
-                <>
-                  <p>{t('workspace.mint.participants', { count: preview.eligibleCount })}</p>
-                  <p>{t('workspace.mint.strokes', { count: preview.strokeCount })}</p>
-                </>
+                <div className="nft-mint__rows">
+                  <div className="nft-mint__row">
+                    <span>{t('workspace.mint.durationLabel')}</span>
+                    <span>{period}</span>
+                  </div>
+                  <div className="nft-mint__row">
+                    <span>{t('workspace.mint.participantsLabel')}</span>
+                    <span>{preview.eligibleCount}</span>
+                  </div>
+                </div>
               )}
-              {(error || previewQuery.isError) && <p role="alert">{error ?? t('detail.error')}</p>}
-              <Button
-                className="season-management-button"
-                disabled={!preview}
-                onClick={() => setStep('supply')}
-              >
-                {t('workspace.mint.next')}
-              </Button>
+              {(error || previewQuery.isError) && (
+                <p className="nft-mint__error" role="alert">
+                  {error ?? t('detail.error')}
+                </p>
+              )}
+              <div className="nft-mint__actions">
+                <Button
+                  variant="secondary"
+                  className="season-management-button"
+                  disabled={!preview}
+                  onClick={() => setStep('supply')}
+                >
+                  {t('workspace.mint.next')}
+                </Button>
+                <Button className="season-management-button" onClick={close}>
+                  {t('workspace.mint.cancel')}
+                </Button>
+              </div>
             </>
           )}
           {step === 'supply' && preview && (
             <>
-              <DialogTitle>{t('workspace.mint.supplyTitle')}</DialogTitle>
-              <label>
-                {t('workspace.mint.description')}
+              <button type="button" className="nft-mint__back" onClick={() => setStep('info')}>
+                <span aria-hidden="true">←</span>
+                {t('workspace.createNft')}
+              </button>
+              <DialogTitle>{t('workspace.mint.infoHeading', { title: preview.title })}</DialogTitle>
+              <p className="nft-mint__date">{period}</p>
+              <label className="nft-mint__field">
+                <span>{t('workspace.mint.description')}</span>
                 <textarea
                   value={description}
                   maxLength={1000}
-                  placeholder={t('workspace.mint.descriptionPlaceholder')}
+                  placeholder={preview.description || t('workspace.mint.descriptionPlaceholder')}
                   onChange={event => setDescription(event.target.value)}
                 />
               </label>
-              <label>
-                {t('workspace.mint.supply')}
-                <Input
-                  inputMode="numeric"
-                  value={supply}
-                  onChange={event => setSupply(event.target.value.replace(/[^\d]/g, ''))}
-                />
-              </label>
-              <p>{t('workspace.mint.supplyHint', { count: preview.minSupply })}</p>
-              {error && <p role="alert">{error}</p>}
-              <Button
-                className="season-management-button"
-                loading={loading}
-                onClick={() => void goConfirm()}
-              >
-                {t('workspace.mint.next')}
-              </Button>
-            </>
-          )}
-          {step === 'confirm' && preview && (
-            <>
-              <DialogTitle>{t('workspace.mint.confirmTitle')}</DialogTitle>
-              {preview.imageUrl && <img src={preview.imageUrl} alt="" width={160} height={160} />}
-              <p>
-                {t('workspace.mint.supply')} {preview.supply}
-              </p>
-              <p>
-                {t('workspace.mint.network')} {preview.network}
-              </p>
-              <p>
-                {t('workspace.mint.wallet')} {preview.walletAddress}
-              </p>
-              <p>
-                {t('workspace.mint.fee')}{' '}
-                {preview.estimatedLamports
-                  ? `${formatSol(preview.estimatedLamports)} SOL`
-                  : t('workspace.mint.feeUnknown')}
-              </p>
-              <p>{t('workspace.mint.signatures', { count: preview.signatureCount })}</p>
-              {error && <p role="alert">{error}</p>}
-              <Button className="season-management-button" onClick={() => void mint()}>
-                {t('workspace.mint.sign')}
-              </Button>
-              <Button variant="secondary" className="season-management-button" onClick={close}>
-                {t('workspace.mint.cancel')}
-              </Button>
-            </>
-          )}
-          {step === 'minting' && (
-            <>
-              <DialogTitle>{t('workspace.mint.minting')}</DialogTitle>
-              <p role="status">
-                {t('workspace.mint.progress', {
-                  minted: preview?.mintedCount ?? '0',
-                  total: preview?.creatorAllocation ?? supply,
-                })}
-              </p>
-            </>
-          )}
-          {step === 'success' && (
-            <>
-              <DialogTitle>{t('workspace.mint.successTitle')}</DialogTitle>
-              {preview?.collectionAddress && (
-                <Button variant="secondary" asChild className="season-management-button">
-                  <a
-                    href={`https://explorer.solana.com/address/${encodeURIComponent(preview.collectionAddress)}${preview.network === 'devnet' ? '?cluster=devnet' : ''}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {t('workspace.mint.viewNft')}
-                  </a>
-                </Button>
+              <div className="nft-mint__rows">
+                <div className="nft-mint__row">
+                  <span>{t('workspace.mint.totalStrokes')}</span>
+                  <span>{preview.strokeCount}</span>
+                </div>
+                <div className="nft-mint__row">
+                  <label htmlFor="nft-mint-supply">{t('workspace.mint.supply')}</label>
+                  <Input
+                    id="nft-mint-supply"
+                    inputMode="numeric"
+                    value={supply}
+                    onChange={event => setSupply(event.target.value.replace(/[^\d]/g, ''))}
+                  />
+                </div>
+              </div>
+              {error && (
+                <p className="nft-mint__error" role="alert">
+                  {error}
+                </p>
               )}
+              <div className="nft-mint__actions">
+                <Button
+                  className="season-management-button"
+                  loading={loading}
+                  onClick={() => void goConfirm()}
+                >
+                  {t('workspace.createNft')}
+                </Button>
+                <Button variant="secondary" className="season-management-button" onClick={close}>
+                  {t('workspace.mint.cancel')}
+                </Button>
+              </div>
             </>
           )}
-          {step === 'failure' && (
-            <>
-              <DialogTitle>{t('workspace.mint.failureTitle')}</DialogTitle>
-              <DialogDescription>
-                {minted === '0'
-                  ? t('workspace.mint.failureBody')
-                  : t('workspace.mint.failureResume')}
-              </DialogDescription>
-              {error && <p role="alert">{error}</p>}
-              <Button className="season-management-button" onClick={() => void mint()}>
-                {t('workspace.mint.retry')}
-              </Button>
-            </>
-          )}
+          {(step === 'confirm' || step === 'minting' || step === 'success' || step === 'failure') &&
+            preview && (
+              <>
+                <button
+                  type="button"
+                  className="nft-mint__back"
+                  onClick={step === 'confirm' ? () => setStep('supply') : close}
+                >
+                  <span aria-hidden="true">←</span>
+                  {t('workspace.createNft')}
+                </button>
+                <DialogTitle>
+                  {step === 'failure'
+                    ? t('workspace.mint.failureTitle')
+                    : t('workspace.mint.confirmTitle')}
+                </DialogTitle>
+                {preview.imageUrl && (
+                  <img className="nft-mint__preview" src={preview.imageUrl} alt="" />
+                )}
+                <div className="nft-mint__rows">
+                  <div className="nft-mint__row">
+                    <span>{t('workspace.mint.supply')}</span>
+                    <span>{preview.supply}</span>
+                  </div>
+                  <div className="nft-mint__row">
+                    <span>{t('workspace.info')}</span>
+                    <span>{preview.title}</span>
+                  </div>
+                  <div className="nft-mint__row">
+                    <span>{t('workspace.mint.network')}</span>
+                    <span>
+                      {preview.network === 'devnet'
+                        ? t('workspace.mint.networkNameDevnet')
+                        : t('workspace.mint.networkName')}
+                    </span>
+                  </div>
+                  <div className="nft-mint__row">
+                    <span>{t('workspace.mint.wallet')}</span>
+                    <span>Phantom {formatWalletAddress(preview.walletAddress)}</span>
+                  </div>
+                </div>
+                <div className="nft-mint__row nft-mint__fee">
+                  <span>{t('workspace.mint.fee')}</span>
+                  <span>
+                    {preview.estimatedLamports
+                      ? `${formatSol(preview.estimatedLamports)} SOL`
+                      : t('workspace.mint.feeUnknown')}
+                  </span>
+                </div>
+                {step === 'success' && (
+                  <p className="nft-mint__status">{t('workspace.mint.successBody')}</p>
+                )}
+                {step === 'failure' && (
+                  <p className="nft-mint__status nft-mint__status--failure" role="alert">
+                    {minted === '0'
+                      ? t('workspace.mint.failureBody')
+                      : t('workspace.mint.failureResume')}
+                  </p>
+                )}
+                <div className="nft-mint__actions">
+                  {step === 'confirm' && (
+                    <Button
+                      variant="web3"
+                      className="season-management-button"
+                      onClick={() => void mint()}
+                    >
+                      {t('workspace.mint.sign')}
+                    </Button>
+                  )}
+                  {step === 'minting' && (
+                    <Button
+                      variant="web3"
+                      className="season-management-button"
+                      disabled
+                      aria-busy="true"
+                    >
+                      {t('workspace.mint.minting')}
+                    </Button>
+                  )}
+                  {step === 'success' && preview.collectionAddress && (
+                    <Button asChild className="season-management-button">
+                      <a
+                        href={`https://explorer.solana.com/address/${encodeURIComponent(preview.collectionAddress)}${preview.network === 'devnet' ? '?cluster=devnet' : ''}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {t('workspace.mint.viewNft')}
+                      </a>
+                    </Button>
+                  )}
+                  {step === 'failure' && (
+                    <Button
+                      variant="web3"
+                      className="season-management-button"
+                      onClick={() => void mint()}
+                    >
+                      {t('workspace.mint.retry')}
+                    </Button>
+                  )}
+                  {step !== 'success' && (
+                    <Button
+                      variant="secondary"
+                      className="season-management-button"
+                      onClick={close}
+                    >
+                      {t('workspace.mint.cancel')}
+                    </Button>
+                  )}
+                </div>
+              </>
+            )}
         </div>
       </DialogContent>
     </Dialog>
@@ -287,16 +388,13 @@ export function SeasonNftEndedPrompt({
   const { t } = useTranslation('seasonCanvas');
   return (
     <Dialog open={open} onOpenChange={next => !next && onLater()}>
-      <DialogContent className="season-management-dialog" showCloseButton={false}>
-        <div className="season-management-body">
-          <DialogTitle>{t('workspace.mint.endedTitle')}</DialogTitle>
-          <DialogDescription>{t('workspace.mint.endedBody')}</DialogDescription>
-          <Button className="season-management-button" onClick={onCreate}>
-            {t('workspace.createNft')}
-          </Button>
-          <Button variant="secondary" className="season-management-button" onClick={onLater}>
+      <DialogContent className="nft-ended-dialog" showCloseButton={false}>
+        <DialogTitle>{t('workspace.mint.endedTitle')}</DialogTitle>
+        <div className="nft-ended__actions">
+          <Button variant="secondary" onClick={onLater}>
             {t('workspace.mint.later')}
           </Button>
+          <Button onClick={onCreate}>{t('workspace.createNft')}</Button>
         </div>
       </DialogContent>
     </Dialog>

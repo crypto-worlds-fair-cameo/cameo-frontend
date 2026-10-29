@@ -16,6 +16,7 @@ vi.mock('@/features/season-nft-claim', () => ({
   useSeasonNftClaimState: (_seasonId: string | undefined, enabled: boolean) =>
     enabled ? nft.state : null,
   useSeasonNftPreview: () => null,
+  useSeasonNftMinted: () => false,
 }));
 
 beforeEach(() => {
