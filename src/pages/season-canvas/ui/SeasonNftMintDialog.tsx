@@ -5,7 +5,7 @@ import { Button } from '@/shared/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/dialog';
 import { Input } from '@/shared/ui/input';
 import { formatWalletAddress } from '@/app/layout/header/lib/formatWalletAddress';
-import { signSolanaTransaction } from '@/shared/lib/solana-wallet/sign-transaction';
+import { signSolanaTransactions } from '@/shared/lib/solana-wallet/sign-transaction';
 import { formatSeasonDateRange } from '../lib/seasonDate';
 import { formatSol } from '../lib/seasonForm';
 import { SeasonRequestError } from '../api/seasons.types';
@@ -25,6 +25,21 @@ type MintStep = 'info' | 'supply' | 'confirm' | 'minting' | 'success' | 'failure
 
 function wait(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function pendingOf(current: SeasonNftMintPreview): SeasonNftMintPendingTransaction[] {
+  if (current.pendingTransactions) return current.pendingTransactions;
+  return current.pendingTransaction ? [current.pendingTransaction] : [];
+}
+
+function samePending(
+  left: readonly SeasonNftMintPendingTransaction[],
+  right: readonly SeasonNftMintPendingTransaction[]
+): boolean {
+  return (
+    left.length === right.length &&
+    left.every((item, index) => item.transactionId === right[index]?.transactionId)
+  );
 }
 
 /** 끝난 시즌의 개설자가 수량을 고르고, 자기 지갑으로 발행 거래에 서명한다. */
@@ -53,11 +68,11 @@ export function SeasonNftMintDialog({
   const [supply, setSupply] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [prompt, setPrompt] = useState<SeasonNftMintPendingTransaction | null>(null);
+  const [prompt, setPrompt] = useState<SeasonNftMintPendingTransaction[]>([]);
   const [signing, setSigning] = useState(false);
   // 발행 반복마다 번호를 매겨, 창을 닫으면 진행 중인 반복이 지갑 서명을 더 요청하지 않게 한다.
   const runRef = useRef(0);
-  const promptRef = useRef<SeasonNftMintPendingTransaction | null>(null);
+  const promptRef = useRef<SeasonNftMintPendingTransaction[]>([]);
   const signingRef = useRef(false);
   const signedIds = useRef(new Set<string>());
   const preview = quote ?? loaded;
@@ -73,8 +88,8 @@ export function SeasonNftMintDialog({
   const close = () => {
     // 발행 중에 닫으면 반복을 멈추고 확인 단계로 돌려 둔다. 다시 서명하면 서버에 남은 단계부터 이어진다.
     runRef.current += 1;
-    promptRef.current = null;
-    setPrompt(null);
+    promptRef.current = [];
+    setPrompt([]);
     setSigning(false);
     if (step === 'minting') setStep('confirm');
     onOpenChange(false);
@@ -117,8 +132,8 @@ export function SeasonNftMintDialog({
     setStep('minting');
     setError(null);
     signedIds.current = new Set();
-    promptRef.current = null;
-    setPrompt(null);
+    promptRef.current = [];
+    setPrompt([]);
     try {
       let current = await requestSeasonNftMint(seasonId, {
         supply,
@@ -132,15 +147,17 @@ export function SeasonNftMintDialog({
           setStep('failure');
           return;
         }
-        const pending = current.pendingTransaction;
-        if (pending && !signedIds.current.has(pending.transactionId)) {
-          if (promptRef.current?.transactionId !== pending.transactionId) {
+        const pending = pendingOf(current).filter(
+          item => !signedIds.current.has(item.transactionId)
+        );
+        if (pending.length > 0) {
+          if (!samePending(promptRef.current, pending)) {
             promptRef.current = pending;
             setPrompt(pending);
           }
-        } else if (promptRef.current) {
-          promptRef.current = null;
-          setPrompt(null);
+        } else if (promptRef.current.length > 0) {
+          promptRef.current = [];
+          setPrompt([]);
         }
         await wait(2000);
         if (stopped()) return;
@@ -160,35 +177,44 @@ export function SeasonNftMintDialog({
     const pending = promptRef.current;
     const run = runRef.current;
     const network = (quote ?? loaded)?.network;
-    if (!pending || !network || signingRef.current) return;
+    if (pending.length === 0 || !network || signingRef.current) return;
     signingRef.current = true;
     setSigning(true);
     setError(null);
     try {
-      const signed = await signSolanaTransaction({
+      const signed = await signSolanaTransactions({
         walletAddress,
         network,
-        serializedTransactionBase64: pending.serializedTransactionBase64,
+        serializedTransactionsBase64: pending.map(item => item.serializedTransactionBase64),
       });
       if (runRef.current !== run) return;
-      try {
-        await submitSeasonNftMintTransaction(seasonId, {
-          transactionId: pending.transactionId,
-          signedTransactionBase64: signed,
-        });
-      } catch (cause: unknown) {
-        if (!(cause instanceof SeasonRequestError) || cause.code !== 'NFT_TRANSACTION_EXPIRED') {
-          throw cause;
+      for (let index = 0; index < pending.length; index += 1) {
+        const item = pending[index];
+        if (!item) continue;
+        try {
+          await submitSeasonNftMintTransaction(seasonId, {
+            transactionId: item.transactionId,
+            signedTransactionBase64: signed[index] ?? '',
+          });
+        } catch (cause: unknown) {
+          if (!(cause instanceof SeasonRequestError) || cause.code !== 'NFT_TRANSACTION_EXPIRED') {
+            throw cause;
+          }
         }
+        signedIds.current.add(item.transactionId);
       }
       if (runRef.current !== run) return;
-      signedIds.current.add(pending.transactionId);
-      if (promptRef.current?.transactionId === pending.transactionId) {
-        promptRef.current = null;
-        setPrompt(null);
+      if (samePending(promptRef.current, pending)) {
+        promptRef.current = [];
+        setPrompt([]);
       }
     } catch (cause: unknown) {
       if (runRef.current !== run) return;
+      const remaining = promptRef.current.filter(
+        item => !signedIds.current.has(item.transactionId)
+      );
+      promptRef.current = remaining;
+      setPrompt(remaining);
       setError(cause instanceof SeasonRequestError ? cause.message : t('detail.error'));
     } finally {
       signingRef.current = false;
@@ -368,17 +394,19 @@ export function SeasonNftMintDialog({
                       {t('workspace.mint.sign')}
                     </Button>
                   )}
-                  {step === 'minting' && prompt && (
+                  {step === 'minting' && prompt.length > 0 && (
                     <Button
                       variant="web3"
                       className="season-management-button"
                       disabled={signing}
                       onClick={() => void signPrompt()}
                     >
-                      {t('workspace.mint.confirmInWallet')}
+                      {prompt.length > 1
+                        ? t('workspace.mint.confirmInWalletCount', { count: prompt.length })
+                        : t('workspace.mint.confirmInWallet')}
                     </Button>
                   )}
-                  {step === 'minting' && !prompt && (
+                  {step === 'minting' && prompt.length === 0 && (
                     <Button
                       variant="web3"
                       className="season-management-button"

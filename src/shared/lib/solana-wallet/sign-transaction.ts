@@ -37,7 +37,7 @@ export class SolanaTransactionSigningError extends Error {
   }
 }
 
-export function walletChain(network: SolanaNetwork) {
+export function walletChain(network: SolanaNetwork): 'solana:devnet' | 'solana:mainnet' {
   return network === 'devnet' ? 'solana:devnet' : 'solana:mainnet';
 }
 
@@ -116,27 +116,33 @@ function bytesToBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
-/** 서버가 준비한 legacy 거래를 선택 계정으로 서명하고 같은 raw wire 형식으로 반환한다. */
-export async function signSolanaTransaction(input: {
+/** 서버가 준비한 legacy 거래들을 선택 계정으로 한 번에 서명하고 같은 raw wire 형식으로 반환한다. */
+export async function signSolanaTransactions(input: {
   walletAddress: string;
   network: SolanaNetwork;
-  serializedTransactionBase64: string;
-}): Promise<string> {
+  serializedTransactionsBase64: readonly string[];
+}): Promise<string[]> {
+  if (input.serializedTransactionsBase64.length === 0) {
+    throw new SolanaTransactionSigningError('TRANSACTION_INVALID');
+  }
   const { wallet, account, feature } = resolveSigningMatch(input.walletAddress, input.network);
-  const outputs = await feature.signTransaction({
-    account,
-    transaction: base64ToBytes(input.serializedTransactionBase64),
-    chain: walletChain(input.network),
-  });
-  const signed = outputs[0]?.signedTransaction;
-  if (
-    outputs.length !== 1 ||
-    !(signed instanceof Uint8Array) ||
-    signed.length === 0 ||
-    signed.length > 1232
-  ) {
+  const outputs = await feature.signTransaction(
+    ...input.serializedTransactionsBase64.map(serialized => ({
+      account,
+      transaction: base64ToBytes(serialized),
+      chain: walletChain(input.network),
+    }))
+  );
+  if (outputs.length !== input.serializedTransactionsBase64.length) {
     throw new SolanaTransactionSigningError('WALLET_RESPONSE_INVALID');
   }
+  const signed = outputs.map(output => {
+    const bytes = output?.signedTransaction;
+    if (!(bytes instanceof Uint8Array) || bytes.length === 0 || bytes.length > 1232) {
+      throw new SolanaTransactionSigningError('WALLET_RESPONSE_INVALID');
+    }
+    return bytesToBase64(bytes);
+  });
   // 팝업이 열린 동안 registry가 바뀌면 이전 계정의 반환값을 현재 선택 결과로 제출하지 않는다.
   try {
     const current = resolveSigningMatch(input.walletAddress, input.network);
@@ -149,5 +155,20 @@ export async function signSolanaTransaction(input: {
     }
     throw new SolanaTransactionSigningError('ACCOUNT_CHANGED');
   }
-  return bytesToBase64(signed);
+  return signed;
+}
+
+/** 서버가 준비한 legacy 거래 하나를 선택 계정으로 서명하고 같은 raw wire 형식으로 반환한다. */
+export async function signSolanaTransaction(input: {
+  walletAddress: string;
+  network: SolanaNetwork;
+  serializedTransactionBase64: string;
+}): Promise<string> {
+  const [signed] = await signSolanaTransactions({
+    walletAddress: input.walletAddress,
+    network: input.network,
+    serializedTransactionsBase64: [input.serializedTransactionBase64],
+  });
+  if (!signed) throw new SolanaTransactionSigningError('WALLET_RESPONSE_INVALID');
+  return signed;
 }

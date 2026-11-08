@@ -31,6 +31,7 @@ export interface SeasonNftMintPreview {
   signatureCount: number;
   collectionAddress: string | null;
   pendingTransaction: SeasonNftMintPendingTransaction | null;
+  pendingTransactions?: SeasonNftMintPendingTransaction[];
 }
 
 const decimal = /^(?:0|[1-9][0-9]*)$/u;
@@ -47,15 +48,21 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
+function isPending(value: unknown): value is SeasonNftMintPendingTransaction {
+  return (
+    isRecord(value) &&
+    typeof value.transactionId === 'string' &&
+    typeof value.serializedTransactionBase64 === 'string' &&
+    (value.purpose === 'SETUP' || value.purpose === 'CREATOR_MINT')
+  );
+}
+
 function isPreview(value: unknown): value is SeasonNftMintPreview {
   if (!isRecord(value)) return false;
   const pending = value.pendingTransaction;
-  const pendingOk =
-    pending === null ||
-    (isRecord(pending) &&
-      typeof pending.transactionId === 'string' &&
-      typeof pending.serializedTransactionBase64 === 'string' &&
-      (pending.purpose === 'SETUP' || pending.purpose === 'CREATOR_MINT'));
+  const pendingOk = pending === null || isPending(pending);
+  const batch = value.pendingTransactions;
+  const batchOk = batch === undefined || (Array.isArray(batch) && batch.every(isPending));
   return (
     typeof value.seasonId === 'string' &&
     statuses.includes(value.status as SeasonNftMintStatus) &&
@@ -81,7 +88,8 @@ function isPreview(value: unknown): value is SeasonNftMintPreview {
     decimal.test(value.mintedCount) &&
     typeof value.signatureCount === 'number' &&
     (value.collectionAddress === null || typeof value.collectionAddress === 'string') &&
-    pendingOk
+    pendingOk &&
+    batchOk
   );
 }
 

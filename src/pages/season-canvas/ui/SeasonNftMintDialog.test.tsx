@@ -8,7 +8,7 @@ const api = vi.hoisted(() => ({
   getSeasonNftMintPreview: vi.fn(),
   requestSeasonNftMint: vi.fn(),
   submitSeasonNftMintTransaction: vi.fn(),
-  signSolanaTransaction: vi.fn(),
+  signSolanaTransactions: vi.fn(),
 }));
 vi.mock('../api/season-nft-mint', () => ({
   getSeasonNftMintPreview: api.getSeasonNftMintPreview,
@@ -16,7 +16,7 @@ vi.mock('../api/season-nft-mint', () => ({
   submitSeasonNftMintTransaction: api.submitSeasonNftMintTransaction,
 }));
 vi.mock('@/shared/lib/solana-wallet/sign-transaction', () => ({
-  signSolanaTransaction: api.signSolanaTransaction,
+  signSolanaTransactions: api.signSolanaTransactions,
 }));
 
 const preview: SeasonNftMintPreview = {
@@ -80,7 +80,7 @@ describe('SeasonNftMintDialog', () => {
   });
 
   it('stops asking the wallet to sign after the creator cancels mid-mint', async () => {
-    let finishSigning: (signed: string) => void = () => {};
+    let finishSigning: (signed: string[]) => void = () => {};
     api.requestSeasonNftMint.mockResolvedValue({
       ...preview,
       status: 'PREPARING',
@@ -90,16 +90,16 @@ describe('SeasonNftMintDialog', () => {
         purpose: 'SETUP',
       },
     });
-    api.signSolanaTransaction.mockImplementation(
+    api.signSolanaTransactions.mockImplementation(
       () =>
-        new Promise<string>(resolve => {
+        new Promise<string[]>(resolve => {
           finishSigning = resolve;
         })
     );
     const onOpenChange = renderDialog();
     fireEvent.click(await openConfirmStep());
     fireEvent.click(await screen.findByRole('button', { name: '팬텀에서 확인' }));
-    await waitFor(() => expect(api.signSolanaTransaction).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(api.signSolanaTransactions).toHaveBeenCalledTimes(1));
 
     // 지갑 서명 창이 떠 있는 동안 취소하면 창을 닫고 확인 단계로 돌아간다.
     fireEvent.click(screen.getByRole('button', { name: '취소' }));
@@ -107,9 +107,47 @@ describe('SeasonNftMintDialog', () => {
     expect(await screen.findByRole('button', { name: '서명하고 발행' })).toBeTruthy();
 
     // 취소 뒤에 지갑이 서명을 돌려줘도 서버에 보내거나 다음 서명을 요청하지 않는다.
-    finishSigning('signed');
+    finishSigning(['signed']);
     await new Promise(resolve => setTimeout(resolve, 0));
     expect(api.submitSeasonNftMintTransaction).not.toHaveBeenCalled();
-    expect(api.signSolanaTransaction).toHaveBeenCalledTimes(1);
+    expect(api.signSolanaTransactions).toHaveBeenCalledTimes(1);
+  });
+
+  it('asks Phantom to approve leftover NFTs in one confirmation', async () => {
+    api.requestSeasonNftMint.mockResolvedValue({
+      ...preview,
+      status: 'PREPARING',
+      pendingTransaction: {
+        transactionId: 'mint-1',
+        serializedTransactionBase64: 'AQ==',
+        purpose: 'CREATOR_MINT',
+      },
+      pendingTransactions: [
+        {
+          transactionId: 'mint-1',
+          serializedTransactionBase64: 'AQ==',
+          purpose: 'CREATOR_MINT',
+        },
+        {
+          transactionId: 'mint-2',
+          serializedTransactionBase64: 'Ag==',
+          purpose: 'CREATOR_MINT',
+        },
+      ],
+    });
+    api.signSolanaTransactions.mockResolvedValue(['one', 'two']);
+    api.submitSeasonNftMintTransaction.mockResolvedValue(undefined);
+    api.getSeasonNftMintPreview.mockResolvedValue({ ...preview, status: 'READY' });
+    renderDialog();
+    fireEvent.click(await openConfirmStep());
+    fireEvent.click(await screen.findByRole('button', { name: '팬텀에서 확인 (2건)' }));
+    await waitFor(() =>
+      expect(api.signSolanaTransactions).toHaveBeenCalledWith(
+        expect.objectContaining({
+          serializedTransactionsBase64: ['AQ==', 'Ag=='],
+        })
+      )
+    );
+    await waitFor(() => expect(api.submitSeasonNftMintTransaction).toHaveBeenCalledTimes(2));
   });
 });

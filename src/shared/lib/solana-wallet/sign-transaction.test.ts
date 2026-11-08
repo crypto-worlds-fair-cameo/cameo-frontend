@@ -4,6 +4,7 @@ vi.mock('@wallet-standard/app', () => ({ getWallets: () => ({ get: () => registr
 import {
   getTransactionSigningSupport,
   signSolanaTransaction,
+  signSolanaTransactions,
   walletChain,
 } from './sign-transaction';
 
@@ -65,6 +66,23 @@ describe('Wallet Standard transaction adapter', () => {
       chain: 'solana:devnet',
     });
     expect(signed).toBe('AQID');
+  });
+
+  it('signs several transactions in one wallet request', async () => {
+    const target = wallet();
+    target.signTransaction.mockResolvedValue([
+      { signedTransaction: new Uint8Array([1]) },
+      { signedTransaction: new Uint8Array([2]) },
+    ]);
+    registry.wallets = [target.value];
+    const signed = await signSolanaTransactions({
+      walletAddress: address,
+      network: 'devnet',
+      serializedTransactionsBase64: ['AQI=', 'AgI='],
+    });
+    expect(target.signTransaction).toHaveBeenCalledTimes(1);
+    expect(target.signTransaction.mock.calls[0]).toHaveLength(2);
+    expect(signed).toEqual(['AQ==', 'Ag==']);
   });
   it('reports account, chain, and feature failures without requesting a signature', () => {
     const missingFeature = wallet({ feature: false });
