@@ -69,7 +69,9 @@ export function SeasonDetailDialog(props: SeasonDetailDialogProps) {
   const summary = notFound ? undefined : (season ?? props.preview);
   const nftClaim = useSeasonNftClaimState(actionable?.id, actionable?.status === 'ended');
   const [claimOpenFor, setClaimOpenFor] = useState<string | null>(null);
+  const [claimPending, setClaimPending] = useState(false);
   const claimOpen = actionable?.status === 'ended' && claimOpenFor === actionable.id;
+  const stayOnClaim = props.isManaging || claimPending;
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
   const endButtonRef = useRef<HTMLButtonElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -88,19 +90,31 @@ export function SeasonDetailDialog(props: SeasonDetailDialogProps) {
   }, [props.manageAction]);
   return (
     <>
-      <Dialog open={props.selectedId !== null} onOpenChange={open => !open && props.onClose()}>
+      <Dialog
+        open={props.selectedId !== null}
+        onOpenChange={open => {
+          if (!open && stayOnClaim) return;
+          if (!open) props.onClose();
+        }}
+      >
         <DialogContent
           ref={contentRef}
           tabIndex={-1}
           className="season-dialog season-detail-dialog"
           showCloseButton={false}
+          onEscapeKeyDown={event => {
+            if (stayOnClaim) event.preventDefault();
+          }}
+          onPointerDownOutside={event => {
+            if (stayOnClaim) event.preventDefault();
+          }}
           onCloseAutoFocus={event => {
             event.preventDefault();
             restoreDialogFocus(props.restoreFocusTo.current, props.fallbackFocusTo.current);
           }}
         >
           {/* 관리 요청 중에는 닫기를 막되, 스크롤 위치와 관계없이 상단 닫기 버튼을 표시한다. */}
-          <DialogCloseButton aria-label={t('detail.close')} disabled={props.isManaging} />
+          <DialogCloseButton aria-label={t('detail.close')} disabled={stayOnClaim} />
           <div className="season-detail-layout">
             <SeasonPreview
               seasonId={summary?.id}
@@ -180,11 +194,14 @@ export function SeasonDetailDialog(props: SeasonDetailDialogProps) {
                     </Button>
                   ))}
                 {/* 종료된 시즌의 완성된 캔버스는 누구나 볼 수 있다. */}
-                {actionable?.status === 'ended' && (
-                  <Button asChild>
-                    <Link to={`/season-canvas/${actionable.id}`}>{t('detail.view')}</Link>
-                  </Button>
-                )}
+                {actionable?.status === 'ended' &&
+                  (claimPending ? (
+                    <Button disabled>{t('detail.view')}</Button>
+                  ) : (
+                    <Button asChild>
+                      <Link to={`/season-canvas/${actionable.id}`}>{t('detail.view')}</Link>
+                    </Button>
+                  ))}
                 {/* 받을 수 있거나 받는 중인 참가자에게만 보이고, 누르면 비용 안내와 서명 단계가 있는 수령 카드로 바뀐다. */}
                 {actionable?.status === 'ended' &&
                   !claimOpen &&
@@ -194,7 +211,12 @@ export function SeasonDetailDialog(props: SeasonDetailDialogProps) {
                     </Button>
                   )}
                 {claimOpen && (
-                  <SeasonNftClaimCard seasonId={actionable.id} source="detail" autoStart />
+                  <SeasonNftClaimCard
+                    seasonId={actionable.id}
+                    source="detail"
+                    autoStart
+                    onPendingChange={setClaimPending}
+                  />
                 )}
                 {/* 서버가 제공한 관리 권한에 따라 취소·조기 종료 버튼을 표시한다. */}
                 {season?.canCancel && (
@@ -230,7 +252,7 @@ export function SeasonDetailDialog(props: SeasonDetailDialogProps) {
                   </Button>
                 )}
                 {actionable?.status === 'ended' ? (
-                  <Button variant="secondary" onClick={props.onBrowseLive}>
+                  <Button variant="secondary" disabled={claimPending} onClick={props.onBrowseLive}>
                     {t('detail.browseLive')}
                     <ArrowRight aria-hidden="true" />
                   </Button>

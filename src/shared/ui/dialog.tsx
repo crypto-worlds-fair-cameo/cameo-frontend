@@ -77,7 +77,10 @@ function DialogCloseButton({
     <DialogPrimitive.Close
       {...props}
       data-slot="dialog-close"
-      className={cn('cameo-dialog-close', className)}
+      className={cn(
+        'cameo-dialog-close disabled:pointer-events-none disabled:opacity-40',
+        className
+      )}
     >
       <XIcon size={20} aria-hidden="true" />
       <span className="sr-only">{t('close')}</span>

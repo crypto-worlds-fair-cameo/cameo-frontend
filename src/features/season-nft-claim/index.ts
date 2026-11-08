@@ -9,6 +9,10 @@ export type {
 } from './api/season-nft.types';
 export { isSnapshotPreviewUrl } from './api/season-nft.types';
 
-export { useSeasonNftMinted, useSeasonNftPreview } from './model/useSeasonNftPreview';
+export {
+  useSeasonNftMintAvailable,
+  useSeasonNftMinted,
+  useSeasonNftPreview,
+} from './model/useSeasonNftPreview';
 export { useSeasonNftClaimState } from './model/useSeasonNftClaimState';
 export type { SeasonNftClaimState } from './model/useSeasonNftClaimState';

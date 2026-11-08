@@ -65,6 +65,12 @@
   margin: 0;
 }
 
+.season-nft-card__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .season-nft-card__eyebrow,
 .season-nft-card__wallet span,
 .season-nft-card__cost span,

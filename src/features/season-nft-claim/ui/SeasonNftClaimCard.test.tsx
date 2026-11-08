@@ -168,6 +168,31 @@ describe('SeasonNftClaimCard', () => {
     }
   );
 
+  it('shows a spinner and holds the screen while the next signature is not ready', () => {
+    const onPendingChange = vi.fn();
+    model.useSeasonNftClaim.mockReturnValue(
+      result({
+        attempt: {
+          attemptId: 'attempt-a',
+          state: 'CONFIRMING',
+          step: 'ALLOWLIST_PROOF',
+          walletAddress: address,
+          network: 'devnet',
+          transaction: null,
+          errorCode: null,
+          retryable: false,
+        },
+      })
+    );
+    render(
+      <SeasonNftClaimCard seasonId="season-a" source="detail" onPendingChange={onPendingChange} />
+    );
+    expect(screen.getByText('네트워크에서 거래를 확인하고 있습니다.')).toBeTruthy();
+    expect(screen.getByRole('status', { name: 'Loading' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'NFT 발행 서명' })).toBeNull();
+    expect(onPendingChange).toHaveBeenCalledWith(true);
+  });
+
   it('blocks signing for a fixed-wallet mismatch and unsupported wallet', () => {
     model.useSeasonNftClaim.mockReturnValue(
       result({

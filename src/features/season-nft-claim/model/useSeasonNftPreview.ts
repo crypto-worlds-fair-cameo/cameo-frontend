@@ -31,3 +31,9 @@ export function useSeasonNftPreview(seasonId: string | undefined, enabled: boole
 export function useSeasonNftMinted(seasonId: string | undefined, enabled: boolean) {
   return useSeasonNftStatus(seasonId, enabled)?.availability === 'READY';
 }
+
+/** 서버가 NFT 기능을 꺼 두었거나 상태를 읽지 못하면 발행 버튼을 보이지 않게 false를 돌려준다. */
+export function useSeasonNftMintAvailable(seasonId: string | undefined, enabled: boolean) {
+  const status = useSeasonNftStatus(seasonId, enabled);
+  return status !== null && status.availability !== 'UNAVAILABLE';
+}

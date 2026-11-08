@@ -98,6 +98,7 @@ describe('SeasonNftMintDialog', () => {
     );
     const onOpenChange = renderDialog();
     fireEvent.click(await openConfirmStep());
+    fireEvent.click(await screen.findByRole('button', { name: '팬텀에서 확인' }));
     await waitFor(() => expect(api.signSolanaTransaction).toHaveBeenCalledTimes(1));
 
     // 지갑 서명 창이 떠 있는 동안 취소하면 창을 닫고 확인 단계로 돌아간다.

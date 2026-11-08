@@ -221,6 +221,7 @@
       "sign": "Sign & Mint",
       "cancel": "Cancel",
       "minting": "Minting...",
+      "confirmInWallet": "Confirm in Phantom",
       "progress": "{{minted}} / {{total}}",
       "successTitle": "Confirm Mint",
       "successBody": "NFT minted successfully!",

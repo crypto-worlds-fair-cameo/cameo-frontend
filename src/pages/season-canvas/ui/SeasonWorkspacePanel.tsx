@@ -4,7 +4,11 @@ import { Plus } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/dialog';
 import { canRetryCanvasRecovery, type CanvasMode } from '@/features/canvas-workspace';
-import { SeasonNftClaimCard, useSeasonNftClaimState } from '@/features/season-nft-claim';
+import {
+  SeasonNftClaimCard,
+  useSeasonNftClaimState,
+  useSeasonNftMintAvailable,
+} from '@/features/season-nft-claim';
 import type { useSeasonWorkspace } from '../model/useSeasonWorkspace';
 import { SeasonStatusBadge } from './SeasonStatusBadge';
 import { formatSeasonDate, formatSeasonDateRange } from '../lib/seasonDate';
@@ -56,11 +60,14 @@ export function SeasonWorkspacePanel({
     model.isOwner && scope.isReady && scope.session?.user.id === season?.creatorId
   );
   const nftClaim = useSeasonNftClaimState(season?.id, ended && !isOwner);
+  const canMintNft = useSeasonNftMintAvailable(season?.id, ended && isOwner);
   const [claimOpen, setClaimOpen] = useState(false);
+  const [claimPending, setClaimPending] = useState(false);
   const mintPromptKey = season ? `cameo.nft-mint-prompt.${season.id}` : '';
   const showMintPrompt =
     isOwner &&
     ended &&
+    canMintNft &&
     !collection &&
     !holders.isLoading &&
     !mintPromptDismissed &&
@@ -180,7 +187,7 @@ export function SeasonWorkspacePanel({
       )}
       {ended && (
         <div className="season-workspace-ended-actions">
-          {isOwner && !collection && (
+          {isOwner && canMintNft && !collection && (
             <Button variant="web3" onClick={() => setMintOpen(true)}>
               {t('workspace.createNft')}
             </Button>
@@ -307,10 +314,31 @@ export function SeasonWorkspacePanel({
         </>
       )}
       {ended && season && !isOwner && (
-        <Dialog open={claimOpen} onOpenChange={setClaimOpen}>
-          <DialogContent>
+        <Dialog
+          open={claimOpen}
+          onOpenChange={open => {
+            if (!open && claimPending) return;
+            setClaimOpen(open);
+          }}
+        >
+          <DialogContent
+            showCloseButton={!claimPending}
+            onEscapeKeyDown={event => {
+              if (claimPending) event.preventDefault();
+            }}
+            onPointerDownOutside={event => {
+              if (claimPending) event.preventDefault();
+            }}
+          >
             <DialogTitle className="sr-only">{t('detail.claimNft')}</DialogTitle>
-            {claimOpen && <SeasonNftClaimCard seasonId={season.id} source="workspace" autoStart />}
+            {claimOpen && (
+              <SeasonNftClaimCard
+                seasonId={season.id}
+                source="workspace"
+                autoStart
+                onPendingChange={setClaimPending}
+              />
+            )}
           </DialogContent>
         </Dialog>
       )}

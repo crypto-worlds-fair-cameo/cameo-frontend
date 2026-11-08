@@ -220,6 +220,7 @@
       "sign": "서명하고 발행",
       "cancel": "취소",
       "minting": "발행 중...",
+      "confirmInWallet": "팬텀에서 확인",
       "progress": "{{minted}} / {{total}}",
       "successTitle": "발행 확인",
       "successBody": "NFT를 만들었습니다",

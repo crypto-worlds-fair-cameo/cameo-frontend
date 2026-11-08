@@ -9,6 +9,11 @@ vi.mock('../api/seasons.api', async original => ({
   ...(await original<typeof import('../api/seasons.api')>()),
   listSeasonHolders: api.listSeasonHolders,
 }));
+const nft = vi.hoisted(() => ({ mintAvailable: false }));
+vi.mock('@/features/season-nft-claim', async original => ({
+  ...(await original<typeof import('@/features/season-nft-claim')>()),
+  useSeasonNftMintAvailable: () => nft.mintAvailable,
+}));
 
 const collectionAddress = 'BhBXZAzWGGx2wZCwbkDC9NDQh5NBreTJ3TvDe2GNW1aD';
 
@@ -61,6 +66,7 @@ function renderPanel(model: ReturnType<typeof useSeasonWorkspace>) {
 }
 
 beforeEach(() => {
+  nft.mintAvailable = false;
   api.listSeasonHolders.mockResolvedValue({
     items: [],
     page: 1,
@@ -112,6 +118,22 @@ describe('SeasonWorkspacePanel', () => {
     renderPanel(workspace('active', { sessionKey: 'guest', isReady: true, resetVersion: 0 }));
     expect(screen.queryByRole('button', { name: '참가자 보기' })).toBeNull();
     expect(api.listSeasonHolders).not.toHaveBeenCalled();
+  });
+
+  it('offers Create NFT to the host only while the server allows minting', async () => {
+    const model = workspace('ended', { sessionKey: 'host', isReady: true, resetVersion: 0 });
+    Object.assign(model, { isOwner: true, season: { ...model.season!, creatorId: 'user-1' } });
+
+    const disabled = renderPanel(model);
+    await vi.waitFor(() => expect(api.listSeasonHolders).toHaveBeenCalled());
+    expect(screen.queryByRole('button', { name: 'NFT 만들기' })).toBeNull();
+    disabled.unmount();
+
+    nft.mintAvailable = true;
+    renderPanel(model);
+    expect((await screen.findAllByRole('button', { name: 'NFT 만들기' })).length).toBeGreaterThan(
+      0
+    );
   });
 
   it('confirms a paid entry fee before joining from inside the room', async () => {

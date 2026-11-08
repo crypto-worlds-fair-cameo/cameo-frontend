@@ -3,6 +3,7 @@ import { ExternalLink, ImageOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
+import { Spinner } from '@/shared/ui/spinner';
 import {
   isSnapshotPreviewUrl,
   SeasonNftRequestError,
@@ -19,6 +20,8 @@ export interface SeasonNftClaimCardProps {
   previewImageUrl?: string | null;
   /** 사용자가 바깥의 "NFT 받기" 버튼으로 카드를 연 경우, 같은 버튼을 다시 누르지 않게 수령 준비를 한 번 시작한다. */
   autoStart?: boolean;
+  /** 다음 서명 버튼이 나오기 전 대기 중이면 바깥 화면이 닫히지 않게 알린다. */
+  onPendingChange?: (pending: boolean) => void;
 }
 
 const base58Address = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/u;
@@ -194,6 +197,24 @@ export function SeasonNftClaimCard(props: SeasonNftClaimCardProps) {
     view?.claim.state === 'UNCLAIMED';
   const autoStartedRef = useRef(false);
   const startClaim = model.startClaim;
+  const onPendingChange = props.onPendingChange;
+  const waitingForNextStep =
+    model.isStarting ||
+    model.isSigning ||
+    attempt?.state === 'QUEUED' ||
+    attempt?.state === 'SUBMITTING' ||
+    attempt?.state === 'CONFIRMING' ||
+    attempt?.state === 'SUCCEEDED' ||
+    (attempt?.state === 'AWAITING_SIGNATURE' && !transaction) ||
+    (!view && !model.statusQuery.isError);
+
+  useEffect(() => {
+    onPendingChange?.(waitingForNextStep);
+  }, [onPendingChange, waitingForNextStep]);
+
+  useEffect(() => {
+    return () => onPendingChange?.(false);
+  }, [onPendingChange]);
 
   useEffect(() => {
     if (!canAutoStart || autoStartedRef.current) return;
@@ -258,7 +279,8 @@ export function SeasonNftClaimCard(props: SeasonNftClaimCardProps) {
           </div>
         )}
         <p className="season-nft-card__status" aria-live="polite">
-          {content.message}
+          {waitingForNextStep && <Spinner />}
+          <span>{content.message}</span>
         </p>
         {content.retryStatus && (
           <Button variant="secondary" size="sm" onClick={() => void model.statusQuery.refetch()}>
