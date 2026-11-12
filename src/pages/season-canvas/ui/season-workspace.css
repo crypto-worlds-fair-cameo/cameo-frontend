@@ -249,7 +249,16 @@
   .season-workspace .canvas-left-sidebar {
     flex-basis: 283px;
     gap: 16px;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 28px 1px 24px 56px;
+  }
+  /* 창이 낮으면 왼쪽 칸만 올라가고, 나가기 버튼은 칸 위에 붙어 화면 밖으로 나가지 않는다. */
+  .season-workspace .season-workspace-back {
+    position: sticky;
+    top: 0;
+    z-index: 2;
   }
   /* 시안처럼 시즌 정보 카드는 팔레트와 같은 높이(위 여백 28 + Leave 40 + 간격 16)에서 시작하고,
      내 계정 칩은 그 위 오른쪽 끝에 카드와 맞춰 둔다. */
