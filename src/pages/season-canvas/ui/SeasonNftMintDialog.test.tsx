@@ -85,6 +85,7 @@ describe('SeasonNftMintDialog', () => {
     api.requestSeasonNftMint.mockResolvedValue({
       ...preview,
       status: 'PREPARING',
+      step: 2,
       pendingTransaction: {
         transactionId: 'tx-1',
         serializedTransactionBase64: 'AQ==',
@@ -99,7 +100,8 @@ describe('SeasonNftMintDialog', () => {
     );
     const onOpenChange = renderDialog();
     fireEvent.click(await openConfirmStep());
-    fireEvent.click(await screen.findByRole('button', { name: '팬텀에서 확인' }));
+    expect(await screen.findByText('2 / 6')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '팬텀에서 확인' }));
     await waitFor(() => expect(api.signSolanaTransactions).toHaveBeenCalledTimes(1));
 
     // 지갑 서명 창이 떠 있는 동안 취소하면 창을 닫고 확인 단계로 돌아간다.

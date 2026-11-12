@@ -12,6 +12,27 @@
   text-align: left;
 }
 
+.nft-mint__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 28px;
+}
+
+.nft-mint__heading .nft-mint__back {
+  margin: 0;
+}
+
+.nft-mint__step {
+  flex: none;
+  margin: 0;
+  color: #111;
+  font-size: 13px;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
 .nft-mint__back {
   display: inline-flex;
   align-items: center;
@@ -156,6 +177,52 @@
 
 .nft-mint__status--failure {
   color: #e10600;
+}
+
+/*
+ * 그림이 있는 확인 단계는 높이가 891px이라, 화면 높이가 923px보다 낮으면 창 안에서 스크롤해야 했다.
+ * 낮은 화면에서는 간격을 줄이고 남는 높이만큼만 그림을 보여 주어 한 화면에 담는다.
+ * 559px = 그림을 뺀 내용 497px + 창 바깥 여백 32px + 안내나 오류 한 줄 30px.
+ */
+@media (max-height: 922px) {
+  .nft-mint-dialog:has(.nft-mint__preview) {
+    padding: 20px 40px 24px;
+  }
+
+  .nft-mint:has(.nft-mint__preview) .nft-mint__back,
+  .nft-mint:has(.nft-mint__preview) .nft-mint__heading {
+    margin-bottom: 16px;
+  }
+
+  .nft-mint:has(.nft-mint__preview) .nft-mint__heading .nft-mint__back {
+    margin-bottom: 0;
+  }
+
+  .nft-mint:has(.nft-mint__preview) .nft-mint__preview {
+    width: min(100%, clamp(96px, calc(100dvh - 559px), 280px));
+    margin: 12px auto 4px;
+  }
+
+  .nft-mint:has(.nft-mint__preview) .nft-mint__rows {
+    margin-top: 16px;
+  }
+
+  .nft-mint:has(.nft-mint__preview) .nft-mint__row {
+    min-height: 44px;
+  }
+
+  .nft-mint:has(.nft-mint__preview) .nft-mint__fee {
+    margin-top: 12px;
+  }
+
+  .nft-mint:has(.nft-mint__preview) .nft-mint__status {
+    margin-top: 10px;
+  }
+
+  .nft-mint:has(.nft-mint__preview) .nft-mint__actions {
+    gap: 8px;
+    margin-top: 20px;
+  }
 }
 
 .cameo-dialog-overlay:has(+ .nft-ended-dialog) {

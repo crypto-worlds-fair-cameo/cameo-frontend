@@ -224,6 +224,7 @@
       "confirmInWalletCount": "팬텀에서 확인 ({{count}}건)",
       "signFailed": "지갑에서 서명하지 못했습니다. 팬텀을 확인한 뒤 다시 눌러 주세요.",
       "progress": "{{minted}} / {{total}}",
+      "step": "{{current}} / {{total}}",
       "successTitle": "발행 확인",
       "successBody": "NFT를 만들었습니다",
       "viewNft": "NFT 보기",

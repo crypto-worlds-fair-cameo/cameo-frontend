@@ -332,14 +332,24 @@ export function SeasonNftMintDialog({
           {(step === 'confirm' || step === 'minting' || step === 'success' || step === 'failure') &&
             preview && (
               <>
-                <button
-                  type="button"
-                  className="nft-mint__back"
-                  onClick={step === 'confirm' ? () => setStep('supply') : close}
-                >
-                  <span aria-hidden="true">←</span>
-                  {t('workspace.createNft')}
-                </button>
+                <div className="nft-mint__heading">
+                  <button
+                    type="button"
+                    className="nft-mint__back"
+                    onClick={step === 'confirm' ? () => setStep('supply') : close}
+                  >
+                    <span aria-hidden="true">←</span>
+                    {t('workspace.createNft')}
+                  </button>
+                  {preview.step != null && preview.step >= 1 && preview.signatureCount >= 1 && (
+                    <p className="nft-mint__step">
+                      {t('workspace.mint.step', {
+                        current: preview.step,
+                        total: preview.signatureCount,
+                      })}
+                    </p>
+                  )}
+                </div>
                 <DialogTitle>
                   {step === 'failure'
                     ? t('workspace.mint.failureTitle')

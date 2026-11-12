@@ -29,6 +29,8 @@ export interface SeasonNftMintPreview {
   walletAddress: string;
   mintedCount: string;
   signatureCount: number;
+  /** 지금 팬텀 확인이 전체 중 몇 번째인지. 예전 서버는 이 값을 보내지 않는다. */
+  step?: number | null;
   collectionAddress: string | null;
   pendingTransaction: SeasonNftMintPendingTransaction | null;
   pendingTransactions?: SeasonNftMintPendingTransaction[];
@@ -87,6 +89,9 @@ function isPreview(value: unknown): value is SeasonNftMintPreview {
     typeof value.mintedCount === 'string' &&
     decimal.test(value.mintedCount) &&
     typeof value.signatureCount === 'number' &&
+    (value.step === undefined ||
+      value.step === null ||
+      (Number.isInteger(value.step) && (value.step as number) >= 1)) &&
     (value.collectionAddress === null || typeof value.collectionAddress === 'string') &&
     pendingOk &&
     batchOk
