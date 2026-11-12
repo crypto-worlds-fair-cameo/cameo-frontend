@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SeasonNftMintPreview } from '../api/season-nft-mint';
+import { SeasonRequestError } from '../api/seasons.types';
 import { SeasonNftMintDialog } from './SeasonNftMintDialog';
 
 const api = vi.hoisted(() => ({
@@ -149,5 +150,49 @@ describe('SeasonNftMintDialog', () => {
       )
     );
     await waitFor(() => expect(api.submitSeasonNftMintTransaction).toHaveBeenCalledTimes(2));
+  });
+
+  it('shows why a signature was not accepted and keeps the confirm button', async () => {
+    const preparing: SeasonNftMintPreview = {
+      ...preview,
+      status: 'PREPARING',
+      pendingTransaction: {
+        transactionId: 'tx-1',
+        serializedTransactionBase64: 'AQ==',
+        purpose: 'SETUP',
+      },
+    };
+    api.requestSeasonNftMint.mockResolvedValue(preparing);
+    renderDialog();
+    const sign = await openConfirmStep();
+    // 발행 중 다시 조회해도 같은 서명 요청이 남아 있다.
+    api.getSeasonNftMintPreview.mockResolvedValue(preparing);
+    fireEvent.click(sign);
+
+    // 서버가 서명한 거래를 거절하면 그 사유를 보여 준다.
+    api.signSolanaTransactions.mockResolvedValue(['signed']);
+    api.submitSeasonNftMintTransaction.mockRejectedValueOnce(
+      new SeasonRequestError(
+        'The signed transaction does not match the prepared transaction.',
+        'business',
+        400,
+        'NFT_TRANSACTION_INVALID'
+      )
+    );
+    fireEvent.click(await screen.findByRole('button', { name: '팬텀에서 확인' }));
+    expect((await screen.findByRole('alert')).textContent).toBe(
+      'The signed transaction does not match the prepared transaction.'
+    );
+    expect(screen.getByRole('button', { name: '팬텀에서 확인' })).toBeTruthy();
+
+    // 지갑이 서명을 돌려주지 않으면 지갑을 확인하라고 안내한다.
+    api.signSolanaTransactions.mockRejectedValueOnce(new Error('User rejected'));
+    fireEvent.click(screen.getByRole('button', { name: '팬텀에서 확인' }));
+    await waitFor(() =>
+      expect(screen.getByRole('alert').textContent).toBe(
+        '지갑에서 서명하지 못했습니다. 팬텀을 확인한 뒤 다시 눌러 주세요.'
+      )
+    );
+    expect(api.submitSeasonNftMintTransaction).toHaveBeenCalledTimes(1);
   });
 });

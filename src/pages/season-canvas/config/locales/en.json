@@ -223,6 +223,7 @@
       "minting": "Minting...",
       "confirmInWallet": "Confirm in Phantom",
       "confirmInWalletCount": "Confirm in Phantom ({{count}})",
+      "signFailed": "The wallet did not sign. Check Phantom and try again.",
       "progress": "{{minted}} / {{total}}",
       "successTitle": "Confirm Mint",
       "successBody": "NFT minted successfully!",

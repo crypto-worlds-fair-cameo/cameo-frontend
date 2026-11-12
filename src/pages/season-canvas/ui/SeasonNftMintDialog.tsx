@@ -91,6 +91,7 @@ export function SeasonNftMintDialog({
     promptRef.current = [];
     setPrompt([]);
     setSigning(false);
+    setError(null);
     if (step === 'minting') setStep('confirm');
     onOpenChange(false);
   };
@@ -215,7 +216,10 @@ export function SeasonNftMintDialog({
       );
       promptRef.current = remaining;
       setPrompt(remaining);
-      setError(cause instanceof SeasonRequestError ? cause.message : t('detail.error'));
+      // 서버가 거절한 사유는 그대로 보여 주고, 그 밖은 지갑이 서명을 돌려주지 않은 경우다.
+      setError(
+        cause instanceof SeasonRequestError ? cause.message : t('workspace.mint.signFailed')
+      );
     } finally {
       signingRef.current = false;
       if (runRef.current === run) setSigning(false);
@@ -382,6 +386,11 @@ export function SeasonNftMintDialog({
                     {minted === '0'
                       ? t('workspace.mint.failureBody')
                       : t('workspace.mint.failureResume')}
+                  </p>
+                )}
+                {error && step !== 'success' && (
+                  <p className="nft-mint__error" role="alert">
+                    {error}
                   </p>
                 )}
                 <div className="nft-mint__actions">
