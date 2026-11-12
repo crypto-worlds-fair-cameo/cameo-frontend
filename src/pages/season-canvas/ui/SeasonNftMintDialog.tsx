@@ -93,7 +93,18 @@ export function SeasonNftMintDialog({
     setSigning(false);
     setError(null);
     if (step === 'minting') setStep('confirm');
+    else if (step === 'confirm' && (preview?.mintedCount ?? '0') === '0') {
+      // 서명을 시작하기 전에 닫으면 다음 열 때 예전 확인 화면이 아니라 수량 입력으로 연다.
+      setQuote(null);
+      setStep('supply');
+    }
     onOpenChange(false);
+  };
+
+  const backToSupply = () => {
+    setQuote(null);
+    setError(null);
+    setStep('supply');
   };
 
   const allocationTooLarge = () => {
@@ -336,7 +347,7 @@ export function SeasonNftMintDialog({
                   <button
                     type="button"
                     className="nft-mint__back"
-                    onClick={step === 'confirm' ? () => setStep('supply') : close}
+                    onClick={step === 'confirm' ? backToSupply : close}
                   >
                     <span aria-hidden="true">←</span>
                     {t('workspace.createNft')}
@@ -459,7 +470,11 @@ export function SeasonNftMintDialog({
                     <Button
                       variant="secondary"
                       className="season-management-button"
-                      onClick={close}
+                      onClick={
+                        step === 'confirm' && minted === '0'
+                          ? backToSupply
+                          : close
+                      }
                     >
                       {t('workspace.mint.cancel')}
                     </Button>

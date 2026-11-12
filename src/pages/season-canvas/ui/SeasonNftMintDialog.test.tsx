@@ -70,7 +70,12 @@ async function openConfirmStep() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  api.getSeasonNftMintPreview.mockResolvedValue(preview);
+  api.getSeasonNftMintPreview.mockImplementation(
+    async (_seasonId: string, supply?: string) => ({
+      ...preview,
+      supply: supply && supply.length > 0 ? supply : preview.supply,
+    })
+  );
 });
 
 describe('SeasonNftMintDialog', () => {
@@ -78,6 +83,19 @@ describe('SeasonNftMintDialog', () => {
     renderDialog();
     await openConfirmStep();
     expect(screen.getByText('Solana Devnet(연습망)')).toBeTruthy();
+  });
+
+  it('returns to the quantity field when cancel is pressed before signing', async () => {
+    renderDialog();
+    await openConfirmStep();
+    fireEvent.click(screen.getByRole('button', { name: '취소' }));
+    const supply = screen.getByRole('textbox', { name: '발행 수량' });
+    expect((supply as HTMLInputElement).value).toBe('2');
+    fireEvent.change(supply, { target: { value: '9' } });
+    const createButtons = screen.getAllByRole('button', { name: 'NFT 만들기' });
+    fireEvent.click(createButtons[createButtons.length - 1]);
+    expect(await screen.findByText('9')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: '서명하고 발행' })).toBeTruthy();
   });
 
   it('stops asking the wallet to sign after the creator cancels mid-mint', async () => {
