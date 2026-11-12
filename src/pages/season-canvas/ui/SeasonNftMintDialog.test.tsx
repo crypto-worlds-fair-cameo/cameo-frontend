@@ -10,6 +10,7 @@ const api = vi.hoisted(() => ({
   requestSeasonNftMint: vi.fn(),
   submitSeasonNftMintTransaction: vi.fn(),
   signSolanaTransactions: vi.fn(),
+  getWalletBalance: vi.fn(),
 }));
 vi.mock('../api/season-nft-mint', () => ({
   getSeasonNftMintPreview: api.getSeasonNftMintPreview,
@@ -18,6 +19,9 @@ vi.mock('../api/season-nft-mint', () => ({
 }));
 vi.mock('@/shared/lib/solana-wallet/sign-transaction', () => ({
   signSolanaTransactions: api.signSolanaTransactions,
+}));
+vi.mock('@/pages/profile/api/profile.api', () => ({
+  getWalletBalance: api.getWalletBalance,
 }));
 
 const preview: SeasonNftMintPreview = {
@@ -65,20 +69,45 @@ async function openConfirmStep() {
   // 수량 단계에는 위쪽 뒤로 가기와 아래쪽 확인 버튼이 같은 이름이라 아래쪽 버튼을 누른다.
   const createButtons = screen.getAllByRole('button', { name: 'NFT 만들기' });
   fireEvent.click(createButtons[createButtons.length - 1]);
-  return screen.findByRole('button', { name: '서명하고 발행' });
+  const sign = await screen.findByRole('button', { name: '서명하고 발행' });
+  await waitFor(() => expect((sign as HTMLButtonElement).disabled).toBe(false));
+  return sign;
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
-  api.getSeasonNftMintPreview.mockImplementation(
-    async (_seasonId: string, supply?: string) => ({
-      ...preview,
-      supply: supply && supply.length > 0 ? supply : preview.supply,
-    })
-  );
+  api.getWalletBalance.mockResolvedValue({
+    walletAddress: preview.walletAddress,
+    network: preview.network,
+    lamports: '999999999999',
+  });
+  api.getSeasonNftMintPreview.mockImplementation(async (_seasonId: string, supply?: string) => ({
+    ...preview,
+    supply: supply && supply.length > 0 ? supply : preview.supply,
+  }));
 });
 
 describe('SeasonNftMintDialog', () => {
+  it('blocks signing when the wallet cannot pay the mint fee', async () => {
+    api.getWalletBalance.mockResolvedValue({
+      walletAddress: preview.walletAddress,
+      network: preview.network,
+      lamports: '1',
+    });
+    renderDialog();
+    await screen.findByText('시즌 정보 : Night Sky');
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+    const createButtons = screen.getAllByRole('button', { name: 'NFT 만들기' });
+    fireEvent.click(createButtons[createButtons.length - 1]);
+    const sign = await screen.findByRole('button', { name: '서명하고 발행' });
+    expect(
+      await screen.findByText('솔라나가 부족합니다. 잔액을 채운 뒤에 발행할 수 있습니다.')
+    ).toBeTruthy();
+    await waitFor(() => expect((sign as HTMLButtonElement).disabled).toBe(true));
+    fireEvent.click(sign);
+    expect(api.requestSeasonNftMint).not.toHaveBeenCalled();
+  });
+
   it('shows that the mint runs on the Solana practice network', async () => {
     renderDialog();
     await openConfirmStep();

@@ -213,6 +213,8 @@
       "confirmTitle": "Confirm Mint",
       "fee": "Mint Fee",
       "feeUnknown": "The cost could not be estimated. Check the amount in your wallet.",
+      "insufficientSol": "Not enough SOL. Add funds before minting.",
+      "balanceUnavailable": "The wallet balance could not be checked, so minting cannot start.",
       "signatures": "{{count}} signatures",
       "wallet": "Wallet",
       "network": "Network",

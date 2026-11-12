@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/dialog';
 import { Input } from '@/shared/ui/input';
 import { formatWalletAddress } from '@/app/layout/header/lib/formatWalletAddress';
 import { signSolanaTransactions } from '@/shared/lib/solana-wallet/sign-transaction';
+import { getWalletBalance } from '@/pages/profile/api/profile.api';
 import { formatSeasonDateRange } from '../lib/seasonDate';
 import { formatSol } from '../lib/seasonForm';
 import { SeasonRequestError } from '../api/seasons.types';
@@ -42,6 +43,24 @@ function samePending(
   );
 }
 
+/** 아직 하나도 발행하지 않았고 수수료를 알고 있을 때만 잔액과 비교한다. */
+function blocksUnstartedMint(input: {
+  fee: string | null | undefined;
+  minted: string;
+  balanceLamports: string | undefined;
+  sameWallet: boolean;
+}): boolean {
+  if (
+    !input.fee ||
+    input.minted !== '0' ||
+    !input.sameWallet ||
+    input.balanceLamports === undefined
+  ) {
+    return false;
+  }
+  return BigInt(input.balanceLamports) < BigInt(input.fee);
+}
+
 /** 끝난 시즌의 개설자가 수량을 고르고, 자기 지갑으로 발행 거래에 서명한다. */
 export function SeasonNftMintDialog({
   open,
@@ -76,6 +95,34 @@ export function SeasonNftMintDialog({
   const signingRef = useRef(false);
   const signedIds = useRef(new Set<string>());
   const preview = quote ?? loaded;
+  const balanceQuery = useQuery({
+    queryKey: ['profile', 'balance', walletAddress],
+    enabled: open && walletAddress.length > 0,
+    retry: false,
+    queryFn: ({ signal }) => getWalletBalance(signal),
+  });
+  const balance = balanceQuery.data;
+  const sameWallet =
+    balance !== undefined &&
+    preview !== null &&
+    balance.network === preview.network &&
+    balance.walletAddress === walletAddress;
+  const balanceApplies =
+    preview?.estimatedLamports != null &&
+    (preview.mintedCount ?? '0') === '0' &&
+    (step === 'confirm' || step === 'failure');
+  const checkingBalance = balanceApplies && balanceQuery.isPending;
+  const balanceUnavailable =
+    balanceApplies && (balanceQuery.isError || (balanceQuery.isSuccess && !sameWallet));
+  const insufficientSol =
+    balanceApplies &&
+    blocksUnstartedMint({
+      fee: preview?.estimatedLamports,
+      minted: preview?.mintedCount ?? '0',
+      balanceLamports: balance?.lamports,
+      sameWallet,
+    });
+  const mintBlocked = checkingBalance || balanceUnavailable || insufficientSol;
 
   if (loaded && draftSeasonId !== loaded.seasonId) {
     setDraftSeasonId(loaded.seasonId);
@@ -138,7 +185,7 @@ export function SeasonNftMintDialog({
   };
 
   const mint = async () => {
-    if (!preview) return;
+    if (!preview || mintBlocked) return;
     const run = ++runRef.current;
     const stopped = () => runRef.current !== run;
     setStep('minting');
@@ -409,6 +456,13 @@ export function SeasonNftMintDialog({
                       : t('workspace.mint.failureResume')}
                   </p>
                 )}
+                {(insufficientSol || balanceUnavailable) && (
+                  <p className="nft-mint__error" role="alert">
+                    {insufficientSol
+                      ? t('workspace.mint.insufficientSol')
+                      : t('workspace.mint.balanceUnavailable')}
+                  </p>
+                )}
                 {error && step !== 'success' && (
                   <p className="nft-mint__error" role="alert">
                     {error}
@@ -419,6 +473,7 @@ export function SeasonNftMintDialog({
                     <Button
                       variant="web3"
                       className="season-management-button"
+                      disabled={mintBlocked}
                       onClick={() => void mint()}
                     >
                       {t('workspace.mint.sign')}
@@ -461,6 +516,7 @@ export function SeasonNftMintDialog({
                     <Button
                       variant="web3"
                       className="season-management-button"
+                      disabled={mintBlocked}
                       onClick={() => void mint()}
                     >
                       {t('workspace.mint.retry')}
@@ -470,11 +526,7 @@ export function SeasonNftMintDialog({
                     <Button
                       variant="secondary"
                       className="season-management-button"
-                      onClick={
-                        step === 'confirm' && minted === '0'
-                          ? backToSupply
-                          : close
-                      }
+                      onClick={step === 'confirm' && minted === '0' ? backToSupply : close}
                     >
                       {t('workspace.mint.cancel')}
                     </Button>

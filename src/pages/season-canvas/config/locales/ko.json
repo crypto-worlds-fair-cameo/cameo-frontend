@@ -212,6 +212,8 @@
       "confirmTitle": "발행 확인",
       "fee": "민팅 수수료",
       "feeUnknown": "비용을 계산하지 못했어요. 지갑에서 실제 금액을 확인하세요.",
+      "insufficientSol": "솔라나가 부족합니다. 잔액을 채운 뒤에 발행할 수 있습니다.",
+      "balanceUnavailable": "지갑 잔액을 확인하지 못해 발행을 시작할 수 없습니다.",
       "signatures": "서명 {{count}}번",
       "wallet": "지갑",
       "network": "네트워크",
