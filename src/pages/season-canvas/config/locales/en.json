@@ -209,6 +209,7 @@
       "descriptionPlaceholder": "Leave blank to use the season description.",
       "supply": "Supply",
       "supplyHint": "At least {{count}}. Each participant gets one, and the rest goes to your wallet.",
+      "supplyNotApplied": "The quantity could not be changed. Check it and try again.",
       "allocationLimit": "The amount sent straight to your wallet can be at most 65535.",
       "confirmTitle": "Confirm Mint",
       "fee": "Mint Fee",

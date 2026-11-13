@@ -108,6 +108,27 @@ describe('SeasonNftMintDialog', () => {
     expect(api.requestSeasonNftMint).not.toHaveBeenCalled();
   });
 
+  it('does not open confirm with the previous quantity when the new one is not applied', async () => {
+    renderDialog();
+    await openConfirmStep();
+    fireEvent.click(screen.getByRole('button', { name: '취소' }));
+    fireEvent.change(screen.getByRole('textbox', { name: '발행 수량' }), {
+      target: { value: '9' },
+    });
+    api.getSeasonNftMintPreview.mockResolvedValue({ ...preview, supply: '2' });
+    const createButtons = screen.getAllByRole('button', { name: 'NFT 만들기' });
+    fireEvent.click(createButtons[createButtons.length - 1]);
+    expect(
+      await screen.findByText(
+        '입력한 수량으로 바꾸지 못했습니다. 수량을 확인하고 다시 눌러 주세요.'
+      )
+    ).toBeTruthy();
+    expect(screen.queryByRole('button', { name: '서명하고 발행' })).toBeNull();
+    expect((screen.getByRole('textbox', { name: '발행 수량' }) as HTMLInputElement).value).toBe(
+      '9'
+    );
+  });
+
   it('shows that the mint runs on the Solana practice network', async () => {
     renderDialog();
     await openConfirmStep();

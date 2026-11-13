@@ -33,6 +33,11 @@ function pendingOf(current: SeasonNftMintPreview): SeasonNftMintPendingTransacti
   return current.pendingTransaction ? [current.pendingTransaction] : [];
 }
 
+function sameSupply(left: string, right: string): boolean {
+  if (!/^[1-9][0-9]*$/u.test(left) || !/^[1-9][0-9]*$/u.test(right)) return false;
+  return BigInt(left) === BigInt(right);
+}
+
 function samePending(
   left: readonly SeasonNftMintPendingTransaction[],
   right: readonly SeasonNftMintPendingTransaction[]
@@ -85,6 +90,9 @@ export function SeasonNftMintDialog({
   const [draftSeasonId, setDraftSeasonId] = useState<string | null>(null);
   const [description, setDescription] = useState('');
   const [supply, setSupply] = useState('');
+  // 입력 중에 서버 수량이 다시 도착해도 방금 친 숫자를 덮지 않는다.
+  const supplyRef = useRef('');
+  const supplyTouched = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [prompt, setPrompt] = useState<SeasonNftMintPendingTransaction[]>([]);
@@ -125,9 +133,14 @@ export function SeasonNftMintDialog({
   const mintBlocked = checkingBalance || balanceUnavailable || insufficientSol;
 
   if (loaded && draftSeasonId !== loaded.seasonId) {
+    const switchingSeason = draftSeasonId !== null;
     setDraftSeasonId(loaded.seasonId);
     setDescription(loaded.description);
-    setSupply(loaded.supply);
+    if (switchingSeason || !supplyTouched.current) {
+      supplyTouched.current = false;
+      supplyRef.current = loaded.supply;
+      setSupply(loaded.supply);
+    }
     setQuote(null);
     setStep('info');
   }
@@ -172,10 +185,17 @@ export function SeasonNftMintDialog({
       setError(t('workspace.mint.allocationLimit'));
       return;
     }
+    const requested = supplyRef.current;
     setLoading(true);
     setError(null);
+    setQuote(null);
     try {
-      setQuote(await getSeasonNftMintPreview(seasonId, supply));
+      const next = await getSeasonNftMintPreview(seasonId, requested);
+      if (!sameSupply(next.supply, requested)) {
+        setError(t('workspace.mint.supplyNotApplied'));
+        return;
+      }
+      setQuote(next);
       setStep('confirm');
     } catch (cause: unknown) {
       setError(cause instanceof SeasonRequestError ? cause.message : t('detail.error'));
@@ -194,10 +214,16 @@ export function SeasonNftMintDialog({
     promptRef.current = [];
     setPrompt([]);
     try {
+      const requested = supplyRef.current;
       let current = await requestSeasonNftMint(seasonId, {
-        supply,
+        supply: requested,
         description: description.trim() || undefined,
       });
+      if (!sameSupply(current.supply, requested)) {
+        setError(t('workspace.mint.supplyNotApplied'));
+        setStep('supply');
+        return;
+      }
       setQuote(current);
       for (let attempt = 0; attempt < 900 && current.status !== 'READY'; attempt += 1) {
         if (stopped()) return;
@@ -220,7 +246,9 @@ export function SeasonNftMintDialog({
         }
         await wait(2000);
         if (stopped()) return;
-        current = await getSeasonNftMintPreview(seasonId);
+        const next = await getSeasonNftMintPreview(seasonId, supplyRef.current);
+        if (!sameSupply(next.supply, supplyRef.current)) continue;
+        current = next;
         setQuote(current);
       }
       if (stopped()) return;
@@ -364,7 +392,12 @@ export function SeasonNftMintDialog({
                     id="nft-mint-supply"
                     inputMode="numeric"
                     value={supply}
-                    onChange={event => setSupply(event.target.value.replace(/[^\d]/g, ''))}
+                    onChange={event => {
+                      const next = event.target.value.replace(/[^\d]/g, '');
+                      supplyTouched.current = true;
+                      supplyRef.current = next;
+                      setSupply(next);
+                    }}
                   />
                 </div>
               </div>
@@ -419,7 +452,7 @@ export function SeasonNftMintDialog({
                 <div className="nft-mint__rows">
                   <div className="nft-mint__row">
                     <span>{t('workspace.mint.supply')}</span>
-                    <span>{preview.supply}</span>
+                    <span>{minted === '0' ? supply : preview.supply}</span>
                   </div>
                   <div className="nft-mint__row">
                     <span>{t('workspace.info')}</span>

@@ -208,6 +208,7 @@
       "descriptionPlaceholder": "비워 두면 시즌 설명을 사용합니다.",
       "supply": "발행 수량",
       "supplyHint": "최소 {{count}}개. 참가자는 1개씩 받고, 나머지는 개설자 지갑으로 들어갑니다.",
+      "supplyNotApplied": "입력한 수량으로 바꾸지 못했습니다. 수량을 확인하고 다시 눌러 주세요.",
       "allocationLimit": "개설자 지갑으로 바로 넣는 수량은 65535개까지예요.",
       "confirmTitle": "발행 확인",
       "fee": "민팅 수수료",
