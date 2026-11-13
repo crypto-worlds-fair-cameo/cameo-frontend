@@ -126,8 +126,9 @@ const Header = ({ menuItems, showSidebar = false }: HeaderProps) => {
               className="h-[var(--control-height-md)] w-40 max-w-[min(55vw,14rem)] shrink-0 rounded-[var(--radius-button)] motion-reduce:animate-none"
             />
           ) : auth.isAuthenticated ? (
-            // 로그인한 계정 버튼은 프로필 이동과 연결 해제를 고르는 메뉴를 연다.
-            <DropdownMenu>
+            // 계정 메뉴는 페이지 스크롤을 잠그지 않는다. 목록은 html이 스크롤하는데
+            // 모달 잠금은 body만 보고 휠을 취소해서, 메뉴를 연 뒤 위로 올라가지 못한다.
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>{accountButton}</DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-[min(55vw,14rem)]">
                 <DropdownMenuItem asChild>

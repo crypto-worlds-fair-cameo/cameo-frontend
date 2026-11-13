@@ -10,7 +10,8 @@
   flex-direction: column;
   align-items: center;
   gap: 30px;
-  padding: 27px 0 47px;
+  /* 위는 공통 본문 padding(1.5rem)과 합쳐 제목까지 70px. 아래는 버튼과 구분선 사이 70px. */
+  padding: calc(70px - 1.5rem) 0 70px;
   text-align: center;
 }
 .season-hero h1 {
@@ -30,6 +31,11 @@
   box-shadow: 0 2px 4px rgb(0 0 0 / 15%);
   font-size: 13px;
   font-weight: 700;
+}
+.season-create-button__plus {
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1;
 }
 .season-create-button.cameo-button:hover {
   background: var(--surface-card);
@@ -1045,10 +1051,14 @@
     padding-bottom: 0;
   }
 }
+@media (min-width: 768px) {
+  .season-hero {
+    padding-top: calc(70px - 2rem);
+  }
+}
 @media (max-width: 640px) {
   .season-hero {
     gap: var(--space-5);
-    padding: var(--space-3) 0 var(--space-8);
   }
   .season-hero h1 {
     font-size: 32px;

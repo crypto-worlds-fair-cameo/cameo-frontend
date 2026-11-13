@@ -69,7 +69,9 @@ const SeasonCanvasPage = () => {
               create.openDialog();
             }}
           >
-            <span aria-hidden="true">+</span>
+            <span className="season-create-button__plus" aria-hidden="true">
+              +
+            </span>
             {t('create')}
           </Button>
         )}

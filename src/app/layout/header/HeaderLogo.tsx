@@ -6,9 +6,9 @@ const HeaderLogo = ({ onNavigate }: { onNavigate?: () => void }) => {
       <img
         src="/images/cameo_LOGO.svg"
         alt="CAMEO"
-        width={144}
-        height={32}
-        className="h-8 w-36 max-w-full object-contain object-left"
+        width={115.2}
+        height={25.6}
+        className="h-[25.6px] w-[115.2px] max-w-full object-contain object-left"
       />
     </Link>
   );

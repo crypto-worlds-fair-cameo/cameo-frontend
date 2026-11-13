@@ -240,9 +240,10 @@ body {
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    /* 시간을 0에 가깝게만 줄이면 메뉴가 닫히기 전에 애니메이션이 끝나
+       스크롤 잠금이 화면에 남는다. 애니메이션을 끄면 바로 닫힌다. */
+    animation: none !important;
+    transition: none !important;
     scroll-behavior: auto !important;
   }
 }

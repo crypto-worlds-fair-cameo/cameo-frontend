@@ -418,6 +418,7 @@
   }
   .cameo-navigation--top {
     flex-wrap: wrap;
+    gap: 50px;
   }
   .cameo-navigation--sidebar {
     flex-direction: column;
