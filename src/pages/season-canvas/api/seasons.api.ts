@@ -108,11 +108,31 @@ function isSnapshotImageUrl(value: unknown): value is string {
   }
 }
 
-function isSnapshotHistory(value: unknown): value is { items: { imageUrl: string }[] } {
+/** 화면에 쓸 스냅샷 그림 크기. 카드는 작은 그림, 상세 창은 중간 그림을 쓴다. */
+export type SeasonSnapshotSize = 'thumbnail' | 'preview';
+
+interface SnapshotHistoryItem {
+  imageUrl: string;
+  previewUrl?: string | null;
+  thumbnailUrl?: string | null;
+}
+
+/** 축소 그림 주소는 서버가 아직 만들지 않았으면 null이고, 예전 서버 응답에는 필드가 없다. */
+function isOptionalSnapshotImageUrl(value: unknown): value is string | null | undefined {
+  return value === undefined || value === null || isSnapshotImageUrl(value);
+}
+
+function isSnapshotHistory(value: unknown): value is { items: SnapshotHistoryItem[] } {
   return (
     isRecord(value) &&
     Array.isArray(value.items) &&
-    value.items.every(item => isRecord(item) && isSnapshotImageUrl(item.imageUrl))
+    value.items.every(
+      item =>
+        isRecord(item) &&
+        isSnapshotImageUrl(item.imageUrl) &&
+        isOptionalSnapshotImageUrl(item.previewUrl) &&
+        isOptionalSnapshotImageUrl(item.thumbnailUrl)
+    )
   );
 }
 
@@ -202,17 +222,25 @@ export async function getSeason(id: string, signal?: AbortSignal): Promise<Seaso
   }
 }
 
-/** 시즌 도화지의 가장 최근 스냅샷 이미지 주소를 조회한다. 아직 찍힌 스냅샷이 없으면 null이다. */
+/**
+ * 시즌 도화지의 가장 최근 스냅샷에서 화면 크기에 맞는 그림 주소를 조회한다. 아직 찍힌 스냅샷이 없으면 null이다.
+ * 원하는 크기의 축소 그림이 아직 없으면 그다음 큰 그림(최종적으로 원본)을 돌려준다.
+ */
 export async function getLatestSeasonSnapshotUrl(
   seasonId: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  size: SeasonSnapshotSize = 'thumbnail'
 ): Promise<string | null> {
   try {
     const response = await axiosInstance.get(
       `/canvases/${encodeURIComponent(seasonId)}/history?limit=1`,
       { withCredentials: true, signal }
     );
-    return unwrapEnvelope(response.data, isSnapshotHistory).items[0]?.imageUrl ?? null;
+    const latest = unwrapEnvelope(response.data, isSnapshotHistory).items[0];
+    if (!latest) return null;
+    return (
+      (size === 'thumbnail' ? latest.thumbnailUrl : null) ?? latest.previewUrl ?? latest.imageUrl
+    );
   } catch (error) {
     return normalizeError(error);
   }

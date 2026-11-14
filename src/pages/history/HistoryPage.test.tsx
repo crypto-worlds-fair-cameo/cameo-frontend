@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { listCanvasHistory } from './api/history.api';
@@ -15,6 +15,8 @@ function snapshot(id: string, hour: number): CanvasHistoryItem {
   return {
     id,
     imageUrl: `https://api.example.com/canvas-assets/${id}.png`,
+    previewUrl: null,
+    thumbnailUrl: null,
     width: 100,
     height: 100,
     capturedAt: new Date(2026, 9, 9, hour).toISOString(),
@@ -90,6 +92,38 @@ describe('history page', () => {
     ]);
     expect(screen.getByText('스냅샷 3개')).toBeTruthy();
     expect(screen.queryByRole('button', { name: '더 보기' })).toBeNull();
+  });
+
+  it('shows the small image on cards and the medium image in the dialog, keeping the original for download', async () => {
+    const shrunk = {
+      ...snapshot('a', 18),
+      previewUrl: 'https://api.example.com/canvas-assets/a/preview.webp',
+      thumbnailUrl: 'https://api.example.com/canvas-assets/a/thumbnail.webp',
+    };
+    // 축소 그림이 아직 없는 예전 스냅샷은 원본을 그대로 쓴다.
+    const old = snapshot('b', 17);
+    vi.mocked(listCanvasHistory).mockResolvedValue({
+      items: [shrunk, old],
+      nextCursor: null,
+      hasNext: false,
+    });
+    const user = userEvent.setup();
+    renderHistory();
+
+    const cards = await screen.findAllByRole('button', { name: /스냅샷 열기/ });
+    const cardImages = cards.map(card => card.querySelector('img')!);
+    expect(cardImages[0].getAttribute('src')).toBe(shrunk.thumbnailUrl);
+    expect(cardImages[1].getAttribute('src')).toBe(old.imageUrl);
+
+    // 작은 그림을 불러오지 못하면 원본으로 넘어간다.
+    fireEvent.error(cardImages[0]);
+    expect(cards[0].querySelector('img')!.getAttribute('src')).toBe(shrunk.imageUrl);
+
+    await user.click(cards[0]);
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByRole('img').getAttribute('src')).toBe(shrunk.previewUrl);
+    fireEvent.error(within(dialog).getByRole('img'));
+    expect(within(dialog).getByRole('img').getAttribute('src')).toBe(shrunk.imageUrl);
   });
 
   it('moves between snapshots in the dialog and fetches older ones at the end of the list', async () => {

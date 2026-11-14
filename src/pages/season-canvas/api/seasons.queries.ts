@@ -4,6 +4,7 @@ import {
   getSeason,
   listSeasonHolders,
   listSeasons,
+  type SeasonSnapshotSize,
 } from './seasons.api';
 import type { ListSeasonHoldersInput, ListSeasonsInput } from './seasons.types';
 
@@ -14,8 +15,8 @@ export const seasonQueryKeys = {
   list: (sessionKey: string, input: ListSeasonsInput) =>
     ['season-canvas', sessionKey, 'list', input.status ?? 'all', input.page, input.limit] as const,
   detail: (sessionKey: string, id: string) => ['season-canvas', sessionKey, 'detail', id] as const,
-  snapshot: (sessionKey: string, id: string) =>
-    ['season-canvas', sessionKey, 'snapshot', id] as const,
+  snapshot: (sessionKey: string, id: string, size: SeasonSnapshotSize = 'thumbnail') =>
+    ['season-canvas', sessionKey, 'snapshot', id, size] as const,
   holders: (sessionKey: string, id: string, input: ListSeasonHoldersInput) =>
     [
       'season-canvas',
@@ -57,11 +58,12 @@ export function useSeasonHoldersQuery(
 export function useSeasonSnapshotQuery(
   sessionKey: string | undefined,
   seasonId: string | undefined,
-  enabled: boolean
+  enabled: boolean,
+  size: SeasonSnapshotSize = 'thumbnail'
 ) {
   return useQuery({
-    queryKey: seasonQueryKeys.snapshot(sessionKey ?? 'pending', seasonId ?? 'none'),
-    queryFn: ({ signal }) => getLatestSeasonSnapshotUrl(seasonId!, signal),
+    queryKey: seasonQueryKeys.snapshot(sessionKey ?? 'pending', seasonId ?? 'none', size),
+    queryFn: ({ signal }) => getLatestSeasonSnapshotUrl(seasonId!, signal, size),
     enabled: enabled && sessionKey !== undefined && seasonId !== undefined,
     retry: false,
     staleTime: 60_000,

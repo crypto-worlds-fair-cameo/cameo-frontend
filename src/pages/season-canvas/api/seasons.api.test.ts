@@ -124,6 +124,22 @@ describe('season API contract', () => {
     get.mockResolvedValueOnce(history([]));
     expect(await getLatestSeasonSnapshotUrl(season.id)).toBeNull();
 
+    // 카드는 작은 그림, 상세 창은 중간 그림을 고르고 아직 없으면 그다음 큰 그림으로 넘어간다.
+    const previewUrl = imageUrl.replace('image.png', 'preview.webp');
+    const thumbnailUrl = imageUrl.replace('image.png', 'thumbnail.webp');
+    get.mockResolvedValue(history([{ imageUrl, previewUrl, thumbnailUrl }]));
+    expect(await getLatestSeasonSnapshotUrl(season.id)).toBe(thumbnailUrl);
+    expect(await getLatestSeasonSnapshotUrl(season.id, undefined, 'preview')).toBe(previewUrl);
+    get.mockResolvedValue(history([{ imageUrl, previewUrl, thumbnailUrl: null }]));
+    expect(await getLatestSeasonSnapshotUrl(season.id)).toBe(previewUrl);
+    get.mockResolvedValue(history([{ imageUrl, previewUrl: null, thumbnailUrl: null }]));
+    expect(await getLatestSeasonSnapshotUrl(season.id, undefined, 'preview')).toBe(imageUrl);
+
+    get.mockResolvedValueOnce(history([{ imageUrl, thumbnailUrl: 'javascript:alert(1)' }]));
+    await expect(getLatestSeasonSnapshotUrl(season.id)).rejects.toMatchObject({
+      kind: 'invalid-response',
+    });
+
     get.mockResolvedValueOnce(history([{ imageUrl: 'javascript:alert(1)' }]));
     await expect(getLatestSeasonSnapshotUrl(season.id)).rejects.toMatchObject({
       kind: 'invalid-response',

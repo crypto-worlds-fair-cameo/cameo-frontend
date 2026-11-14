@@ -31,7 +31,11 @@ export function SeasonPreview({
   const { t } = useTranslation('seasonCanvas');
   const nftImageUrl = useSeasonNftPreview(seasonId, status === 'ended');
   const nftMinted = useSeasonNftMinted(seasonId, status === 'ended');
-  const snapshotUrl = useSeasonSnapshotPreview(seasonId, status === 'active' || status === 'ended');
+  const snapshotUrl = useSeasonSnapshotPreview(
+    seasonId,
+    status === 'active' || status === 'ended',
+    variant === 'detail' ? 'preview' : 'thumbnail'
+  );
   const imageUrl = (status === 'ended' ? nftImageUrl : null) ?? snapshotUrl;
   const showLive = Boolean(live && seasonId && status === 'active');
   const [failedUrl, setFailedUrl] = useState<string | null>(null);

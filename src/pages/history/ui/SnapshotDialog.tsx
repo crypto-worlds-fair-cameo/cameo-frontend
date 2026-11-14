@@ -1,4 +1,4 @@
-import type { KeyboardEvent } from 'react';
+import { useState, type KeyboardEvent } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/button';
@@ -36,6 +36,12 @@ export function SnapshotDialog({
   const { t, i18n } = useTranslation('history');
   const date = item ? formatSnapshotDate(item.capturedAt, i18n.language) : '';
   const time = item ? formatSnapshotTime(item.capturedAt, i18n.language) : '';
+  // 이 창에는 확대 기능이 없어 화면보다 큰 중간 그림이면 충분하다. 없거나 불러오지 못하면 원본을 쓴다.
+  const [failedUrls, setFailedUrls] = useState<string[]>([]);
+  const viewUrl = item
+    ? ([item.previewUrl, item.imageUrl].find(url => url !== null && !failedUrls.includes(url)) ??
+      item.imageUrl)
+    : undefined;
 
   // 좌우 방향키로 시안의 Prev·Next와 같은 방향으로 이동한다.
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
@@ -60,11 +66,12 @@ export function SnapshotDialog({
             <div className="history-dialog__frame">
               <img
                 key={item.id}
-                src={item.imageUrl}
+                src={viewUrl}
                 alt={t('dialog.imageAlt', { date, time })}
                 width={item.width}
                 height={item.height}
                 decoding="async"
+                onError={() => viewUrl && setFailedUrls(urls => [...urls, viewUrl])}
               />
             </div>
             <div className="history-dialog__info">

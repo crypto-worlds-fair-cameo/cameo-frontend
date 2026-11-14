@@ -10,6 +10,8 @@ const canvasId = '0414f7c0-e937-4efb-a058-7b5bf11f75b8';
 const item: CanvasHistoryItem = {
   id: '2f1c8f0e-3c47-4c8f-9a4e-6f8f7b0c1d2e',
   imageUrl: `https://api.cameoprint.com/canvas-assets/snapshots/main/${canvasId}/2f1c8f0e-3c47-4c8f-9a4e-6f8f7b0c1d2e/image.png`,
+  previewUrl: `https://api.cameoprint.com/canvas-assets/snapshots/main/${canvasId}/2f1c8f0e-3c47-4c8f-9a4e-6f8f7b0c1d2e/preview.webp`,
+  thumbnailUrl: `https://api.cameoprint.com/canvas-assets/snapshots/main/${canvasId}/2f1c8f0e-3c47-4c8f-9a4e-6f8f7b0c1d2e/thumbnail.webp`,
   width: 2000,
   height: 2000,
   capturedAt: '2026-10-09T09:00:00.000Z',
@@ -35,6 +37,23 @@ describe('canvas history API contract', () => {
     expect(options).toMatchObject({ withCredentials: true, signal: controller.signal });
   });
 
+  it('reads snapshots without shrunken images as null so the screen falls back to the original', async () => {
+    // 축소 그림을 아직 만들지 않은 스냅샷은 null, 예전 서버는 필드 자체가 없다.
+    const { previewUrl: _previewUrl, thumbnailUrl: _thumbnailUrl, ...legacy } = item;
+    get.mockResolvedValue(
+      envelope({
+        items: [{ ...item, previewUrl: null, thumbnailUrl: null }, legacy],
+        nextCursor: null,
+        hasNext: false,
+      })
+    );
+    const page = await listCanvasHistory(canvasId, { limit: 20 });
+    expect(page.items).toEqual([
+      { ...item, previewUrl: null, thumbnailUrl: null },
+      { ...item, previewUrl: null, thumbnailUrl: null },
+    ]);
+  });
+
   it('passes the previous nextCursor unchanged', async () => {
     get.mockResolvedValue(envelope({ items: [], nextCursor: null, hasNext: false }));
     await listCanvasHistory(canvasId, { limit: 20, cursor: 'eyJ2IjoxfQ' });
@@ -53,6 +72,17 @@ describe('canvas history API contract', () => {
         success: true,
         data: {
           items: [{ ...item, imageUrl: 'javascript:alert(1)' }],
+          nextCursor: null,
+          hasNext: false,
+        },
+      },
+    ],
+    [
+      'a non-http thumbnail URL',
+      {
+        success: true,
+        data: {
+          items: [{ ...item, thumbnailUrl: 'javascript:alert(1)' }],
           nextCursor: null,
           hasNext: false,
         },

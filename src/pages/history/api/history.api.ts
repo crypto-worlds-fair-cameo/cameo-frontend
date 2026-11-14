@@ -21,11 +21,25 @@ function isHttpUrl(value: unknown): value is string {
   }
 }
 
-function isHistoryItem(value: unknown): value is CanvasHistoryItem {
+/** 축소 그림 주소는 서버가 아직 만들지 않았으면 null이고, 예전 서버 응답에는 필드가 없다. */
+function isOptionalHttpUrl(value: unknown): value is string | null | undefined {
+  return value === undefined || value === null || isHttpUrl(value);
+}
+
+type HistoryItemResponse = Omit<CanvasHistoryItem, 'previewUrl' | 'thumbnailUrl'> & {
+  previewUrl?: string | null;
+  thumbnailUrl?: string | null;
+};
+
+type HistoryPageResponse = Omit<CanvasHistoryPage, 'items'> & { items: HistoryItemResponse[] };
+
+function isHistoryItem(value: unknown): value is HistoryItemResponse {
   return (
     isRecord(value) &&
     typeof value.id === 'string' &&
     isHttpUrl(value.imageUrl) &&
+    isOptionalHttpUrl(value.previewUrl) &&
+    isOptionalHttpUrl(value.thumbnailUrl) &&
     typeof value.width === 'number' &&
     value.width > 0 &&
     typeof value.height === 'number' &&
@@ -37,7 +51,7 @@ function isHistoryItem(value: unknown): value is CanvasHistoryItem {
 }
 
 /** 다음 페이지가 있다고 하면서 커서가 없는 응답은 더 보기를 진행할 수 없으므로 거절한다. */
-function isHistoryPage(value: unknown): value is CanvasHistoryPage {
+function isHistoryPage(value: unknown): value is HistoryPageResponse {
   return (
     isRecord(value) &&
     Array.isArray(value.items) &&
@@ -91,7 +105,15 @@ export async function listCanvasHistory(
     if (!isRecord(body) || body.success !== true || !isHistoryPage(body.data)) {
       throw new HistoryRequestError('The server returned an invalid response.', 'invalid-response');
     }
-    return body.data;
+    // 축소 그림이 없는 항목은 null로 맞춰, 화면이 원본으로 넘어갈지 한 가지 값으로 판단하게 한다.
+    return {
+      ...body.data,
+      items: body.data.items.map(item => ({
+        ...item,
+        previewUrl: item.previewUrl ?? null,
+        thumbnailUrl: item.thumbnailUrl ?? null,
+      })),
+    };
   } catch (error) {
     return normalizeError(error);
   }

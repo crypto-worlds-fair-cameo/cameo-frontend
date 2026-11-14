@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/button';
@@ -91,8 +91,12 @@ export function SeasonNftMintDialog({
   const [description, setDescription] = useState('');
   const [supply, setSupply] = useState('');
   // 입력 중에 서버 수량이 다시 도착해도 방금 친 숫자를 덮지 않는다.
+  const [supplyTouched, setSupplyTouched] = useState(false);
+  // 서명을 기다리는 비동기 흐름이 화면의 최신 수량을 읽도록, 그린 직후에 값을 맞춰 둔다.
   const supplyRef = useRef('');
-  const supplyTouched = useRef(false);
+  useLayoutEffect(() => {
+    supplyRef.current = supply;
+  }, [supply]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [prompt, setPrompt] = useState<SeasonNftMintPendingTransaction[]>([]);
@@ -136,9 +140,8 @@ export function SeasonNftMintDialog({
     const switchingSeason = draftSeasonId !== null;
     setDraftSeasonId(loaded.seasonId);
     setDescription(loaded.description);
-    if (switchingSeason || !supplyTouched.current) {
-      supplyTouched.current = false;
-      supplyRef.current = loaded.supply;
+    if (switchingSeason || !supplyTouched) {
+      setSupplyTouched(false);
       setSupply(loaded.supply);
     }
     setQuote(null);
@@ -394,7 +397,7 @@ export function SeasonNftMintDialog({
                     value={supply}
                     onChange={event => {
                       const next = event.target.value.replace(/[^\d]/g, '');
-                      supplyTouched.current = true;
+                      setSupplyTouched(true);
                       supplyRef.current = next;
                       setSupply(next);
                     }}

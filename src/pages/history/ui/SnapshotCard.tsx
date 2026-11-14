@@ -12,7 +12,11 @@ interface SnapshotCardProps {
 
 export function SnapshotCard({ item, isLatest, onOpen }: SnapshotCardProps) {
   const { t, i18n } = useTranslation('history');
-  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  // 카드는 작은 그림을 쓰고, 없거나 불러오지 못하면 원본으로 넘어간다.
+  const [failedUrls, setFailedUrls] = useState<string[]>([]);
+  const imageUrl = [item.thumbnailUrl, item.imageUrl].find(
+    url => url !== null && !failedUrls.includes(url)
+  );
   const date = formatSnapshotDate(item.capturedAt, i18n.language);
   const time = formatSnapshotTime(item.capturedAt, i18n.language);
 
@@ -24,21 +28,21 @@ export function SnapshotCard({ item, isLatest, onOpen }: SnapshotCardProps) {
       onClick={onOpen}
     >
       <span className="history-card__frame">
-        {failedUrl === item.imageUrl ? (
-          <span className="history-card__fallback">
-            <ImageOff aria-hidden="true" />
-            {t('imageUnavailable')}
-          </span>
-        ) : (
+        {imageUrl ? (
           <img
-            src={item.imageUrl}
+            src={imageUrl}
             alt=""
             width={item.width}
             height={item.height}
             loading="lazy"
             decoding="async"
-            onError={() => setFailedUrl(item.imageUrl)}
+            onError={() => setFailedUrls(urls => [...urls, imageUrl])}
           />
+        ) : (
+          <span className="history-card__fallback">
+            <ImageOff aria-hidden="true" />
+            {t('imageUnavailable')}
+          </span>
         )}
         {(isLatest || item.isFinal) && (
           <span className="history-badge">{isLatest ? t('latest') : t('final')}</span>

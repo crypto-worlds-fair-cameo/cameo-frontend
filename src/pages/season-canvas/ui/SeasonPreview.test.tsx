@@ -5,14 +5,16 @@ const mocks = vi.hoisted(() => ({
   image: null as string | null,
   snapshot: null as string | null,
   snapshotEnabled: vi.fn(),
+  snapshotSize: vi.fn(),
 }));
 vi.mock('@/features/season-nft-claim', () => ({
   useSeasonNftPreview: () => mocks.image,
   useSeasonNftMinted: () => false,
 }));
 vi.mock('../model/useSeasonSnapshotPreview', () => ({
-  useSeasonSnapshotPreview: (_seasonId: string | undefined, enabled: boolean) => {
+  useSeasonSnapshotPreview: (_seasonId: string | undefined, enabled: boolean, size?: string) => {
     mocks.snapshotEnabled(enabled);
+    mocks.snapshotSize(size);
     return enabled ? mocks.snapshot : null;
   },
 }));
@@ -23,8 +25,25 @@ beforeEach(() => {
   mocks.image = null;
   mocks.snapshot = null;
   mocks.snapshotEnabled.mockClear();
+  mocks.snapshotSize.mockClear();
 });
 describe('SeasonPreview', () => {
+  it('asks for the small image on cards and the medium image in the detail window', () => {
+    const { rerender } = render(
+      <SeasonPreview seasonId="one" status="active" className="season-card__preview" />
+    );
+    expect(mocks.snapshotSize).toHaveBeenLastCalledWith('thumbnail');
+    rerender(
+      <SeasonPreview
+        seasonId="one"
+        status="active"
+        variant="detail"
+        className="season-detail__preview"
+      />
+    );
+    expect(mocks.snapshotSize).toHaveBeenLastCalledWith('preview');
+  });
+
   it('uses the final image and recovers the placeholder on load failure without hiding status', () => {
     mocks.image = 'https://arweave.net/' + 'a'.repeat(43);
     const { rerender } = render(

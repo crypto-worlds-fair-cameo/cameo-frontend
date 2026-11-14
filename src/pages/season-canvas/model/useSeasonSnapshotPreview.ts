@@ -1,12 +1,17 @@
 import { useIsMutating } from '@tanstack/react-query';
 import { sessionMutationKey, useSessionQuery } from '@/entities/session';
+import type { SeasonSnapshotSize } from '../api/seasons.api';
 import { useSeasonSnapshotQuery } from '../api/seasons.queries';
 
 /**
- * 시즌 미리보기에 쓸 최신 스냅샷 주소를 돌려준다.
+ * 시즌 미리보기에 쓸 최신 스냅샷 주소를 돌려준다. 카드는 작은 그림, 상세 창은 중간 그림을 고른다.
  * 지갑 전용·취소 시즌은 세션마다 볼 수 있는 범위가 달라 세션별로 조회하고, 세션 전환 중·조회 실패에는 이전 이미지를 노출하지 않는다.
  */
-export function useSeasonSnapshotPreview(seasonId: string | undefined, enabled: boolean) {
+export function useSeasonSnapshotPreview(
+  seasonId: string | undefined,
+  enabled: boolean,
+  size: SeasonSnapshotSize = 'thumbnail'
+) {
   const sessionQuery = useSessionQuery();
   const changingSession = useIsMutating({ mutationKey: sessionMutationKey }) > 0;
   const session = changingSession ? undefined : sessionQuery.data;
@@ -18,6 +23,6 @@ export function useSeasonSnapshotPreview(seasonId: string | undefined, enabled: 
       : session === null || sessionQuery.isError
         ? 'guest'
         : undefined;
-  const query = useSeasonSnapshotQuery(sessionKey, seasonId, enabled);
+  const query = useSeasonSnapshotQuery(sessionKey, seasonId, enabled, size);
   return sessionKey && !query.isError ? (query.data ?? null) : null;
 }

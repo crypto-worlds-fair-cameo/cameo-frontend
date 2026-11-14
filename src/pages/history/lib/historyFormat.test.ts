@@ -13,6 +13,8 @@ function snapshot(id: string, localDate: Date): CanvasHistoryItem {
   return {
     id,
     imageUrl: `https://api.example.com/canvas-assets/${id}.png`,
+    previewUrl: null,
+    thumbnailUrl: null,
     width: 100,
     height: 100,
     capturedAt: localDate.toISOString(),

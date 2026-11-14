@@ -6,6 +6,7 @@ export { useCanvasZoom } from './model/useCanvasZoom';
 export type { CanvasZoomController } from './model/useCanvasZoom';
 export { useCanvasRealtime } from './model/useCanvasRealtime';
 export { useCanvasMode } from './model/useCanvasMode';
+export { useCanvasPreviewImage } from './model/useCanvasPreviewImage';
 export type { CanvasMode } from './model/useCanvasMode';
 export type { CanvasSyncState } from './model/canvasSync';
 export { canRetryCanvasRecovery, initialCanvasSync } from './model/canvasSync';

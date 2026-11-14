@@ -4,7 +4,12 @@ import { useIsMobile } from '@/shared/lib/hooks/use-mobile';
 import { Button } from '@/shared/ui/button';
 import { ColorPalette } from '@/shared/ui/color-palette/ColorPalette';
 import { defaultBrushSettings } from '@/shared/ui/color-palette/model/brushSettings';
-import { CanvasNavigator, CanvasViewport, useCanvasZoom } from '@/features/canvas-workspace';
+import {
+  CanvasNavigator,
+  CanvasViewport,
+  useCanvasPreviewImage,
+  useCanvasZoom,
+} from '@/features/canvas-workspace';
 import { useFitToHeight } from './model/useFitToHeight';
 import { CanvasStatsPanel } from './ui/CanvasStatsPanel';
 import { useCanvasRealtime } from '@/features/canvas-workspace';
@@ -65,6 +70,9 @@ const MainCanvasPage = () => {
     !sync.error &&
     connection.status !== 'reconnecting' &&
     connection.status !== 'failed';
+  // 원본 그림과 획을 다 받기 전에 서버가 미리 줄여 둔 그림을 도화지 위에 먼저 보여 준다.
+  // 그리기 엔진과 별개의 조회라서 획 복구 순서에는 관여하지 않는다.
+  const previewImageUrl = useCanvasPreviewImage(import.meta.env.VITE_MAIN_CANVAS_ID, showLoading);
   // 손님의 실제 획은 공통 엔진이 거절한다. 서버가 손님으로 확인한 상태에서
   // 도화지 안의 실제 획이 거절된 경우에만 지갑 연결 안내를 연다.
   const pageDrawingModel: typeof drawingModel = {
@@ -114,7 +122,7 @@ const MainCanvasPage = () => {
         // 휴대폰은 확대 도구를 숨기므로 휠 확대도 끄고 도화지 전체 보기로 고정한다.
         zoom={isMobile ? undefined : zoom}
       >
-        {showLoading && <CanvasLoadingOverlay />}
+        {showLoading && <CanvasLoadingOverlay previewImageUrl={previewImageUrl} />}
       </CanvasViewport>
       {/* 오른쪽 영역은 독립 패널을 배치하는 공간이며, 각 패널이 자체 UI를 소유한다. */}
       <aside className="canvas-right-area">
