@@ -94,6 +94,17 @@ describe('wallet connect dialog', () => {
     expect(auth.connect).toHaveBeenCalledWith('Solflare', expect.any(Function));
   });
 
+  it('shows each wallet icon even before the wallet is installed', () => {
+    mockAuth();
+    renderInDialog(<WalletConnectContent />);
+
+    const iconOf = (name: RegExp) =>
+      screen.getByRole('button', { name }).querySelector('img')?.getAttribute('src');
+    expect(iconOf(/Phantom/)).toBe('/images/phantom.svg');
+    expect(iconOf(/Solflare/)).toBe('/images/solflare.svg');
+    expect(iconOf(/Backpack/)).toBe('/images/backpack.png');
+  });
+
   it('starts with the first installed wallet and uses its own icon', () => {
     installWallet('Backpack');
     const auth = mockAuth();

@@ -19,12 +19,19 @@ interface WalletOptionRowProps {
   className?: string;
 }
 
-/** 지갑 아이콘. 설치된 지갑은 그 지갑의 아이콘을, 아니면 Phantom 유령 모양이나 이름 첫 글자를 그린다. */
+/** 설치 전에도 목록에서 알아볼 수 있도록 Solflare·Backpack 아이콘은 공식 사이트의 파비콘을 그대로 담아 둔다. */
+const BUNDLED_ICONS: Record<string, string> = {
+  Solflare: '/images/solflare.svg',
+  Backpack: '/images/backpack.png',
+};
+
+/** 지갑 아이콘. 설치된 지갑은 그 지갑의 아이콘을, 아니면 미리 담아 둔 그림이나 이름 첫 글자를 그린다. */
 function WalletMark({ walletName, icon }: { walletName?: string; icon?: string }) {
-  if (icon) {
+  const shownIcon = icon ?? (walletName ? BUNDLED_ICONS[walletName] : undefined);
+  if (shownIcon) {
     return (
       <img
-        src={icon}
+        src={shownIcon}
         alt=""
         aria-hidden="true"
         width={20}
