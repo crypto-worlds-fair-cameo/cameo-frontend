@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SeasonNftMintPreview } from '../api/season-nft-mint';
 import { SeasonRequestError } from '../api/seasons.types';
+import { rememberWalletChoice } from '@/shared/lib/solana-wallet/wallet-choice';
 import { SeasonNftMintDialog } from './SeasonNftMintDialog';
 
 const api = vi.hoisted(() => ({
@@ -75,6 +76,8 @@ async function openConfirmStep() {
 }
 
 beforeEach(() => {
+  // 로그인할 때 Phantom을 썼다고 기억해 둔다. 안내 문구는 그 지갑 이름으로 나온다.
+  rememberWalletChoice(preview.walletAddress, 'Phantom');
   vi.clearAllMocks();
   api.getWalletBalance.mockResolvedValue({
     walletAddress: preview.walletAddress,
@@ -169,7 +172,7 @@ describe('SeasonNftMintDialog', () => {
     const onOpenChange = renderDialog();
     fireEvent.click(await openConfirmStep());
     expect(await screen.findByText('2 / 6')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: '팬텀에서 확인' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Phantom에서 확인' }));
     await waitFor(() => expect(api.signSolanaTransactions).toHaveBeenCalledTimes(1));
 
     // 지갑 서명 창이 떠 있는 동안 취소하면 창을 닫고 확인 단계로 돌아간다.
@@ -211,7 +214,7 @@ describe('SeasonNftMintDialog', () => {
     api.getSeasonNftMintPreview.mockResolvedValue({ ...preview, status: 'READY' });
     renderDialog();
     fireEvent.click(await openConfirmStep());
-    fireEvent.click(await screen.findByRole('button', { name: '팬텀에서 확인 (2건)' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Phantom에서 확인 (2건)' }));
     await waitFor(() =>
       expect(api.signSolanaTransactions).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -249,18 +252,18 @@ describe('SeasonNftMintDialog', () => {
         'NFT_TRANSACTION_INVALID'
       )
     );
-    fireEvent.click(await screen.findByRole('button', { name: '팬텀에서 확인' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Phantom에서 확인' }));
     expect((await screen.findByRole('alert')).textContent).toBe(
       'The signed transaction does not match the prepared transaction.'
     );
-    expect(screen.getByRole('button', { name: '팬텀에서 확인' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Phantom에서 확인' })).toBeTruthy();
 
     // 지갑이 서명을 돌려주지 않으면 지갑을 확인하라고 안내한다.
     api.signSolanaTransactions.mockRejectedValueOnce(new Error('User rejected'));
-    fireEvent.click(screen.getByRole('button', { name: '팬텀에서 확인' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Phantom에서 확인' }));
     await waitFor(() =>
       expect(screen.getByRole('alert').textContent).toBe(
-        '지갑에서 서명하지 못했습니다. 팬텀을 확인한 뒤 다시 눌러 주세요.'
+        '지갑에서 서명하지 못했습니다. Phantom 창을 확인한 뒤 다시 눌러 주세요.'
       )
     );
     expect(api.submitSeasonNftMintTransaction).toHaveBeenCalledTimes(1);

@@ -6,6 +6,7 @@ import {
   useLoginMutation,
   useLogoutMutation,
 } from '../api/wallet-auth.mutations';
+import { forgetWalletChoice } from '@/shared/lib/solana-wallet/wallet-choice';
 import { disconnectWallet, WalletAuthError } from '../lib/wallet-standard';
 import { useModalStore } from '@/shared/ui/modal/model/modalStore';
 
@@ -99,7 +100,9 @@ export function useWalletAuthentication() {
       onSuccess: () => {
         closeCurrentDialog(content);
         // The server session is already gone even if the extension cannot disconnect.
-        void disconnectWallet(walletAddress).catch(() => {});
+        void disconnectWallet(walletAddress)
+          .catch(() => {})
+          .finally(forgetWalletChoice);
       },
     });
   }

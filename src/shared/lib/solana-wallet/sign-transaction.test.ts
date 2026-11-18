@@ -3,10 +3,12 @@ const registry = vi.hoisted(() => ({ wallets: [] as unknown[] }));
 vi.mock('@wallet-standard/app', () => ({ getWallets: () => ({ get: () => registry.wallets }) }));
 import {
   getTransactionSigningSupport,
+  reconnectSigningWallet,
   signSolanaTransaction,
   signSolanaTransactions,
   walletChain,
 } from './sign-transaction';
+import { forgetWalletChoice, rememberWalletChoice } from './wallet-choice';
 
 const address = '11111111111111111111111111111111';
 function wallet(options?: { accountChains?: string[]; feature?: boolean; output?: Uint8Array }) {
@@ -45,7 +47,30 @@ function wallet(options?: { accountChains?: string[]; feature?: boolean; output?
 }
 beforeEach(() => {
   registry.wallets = [];
+  forgetWalletChoice();
 });
+
+/** 같은 지갑 모양에 이름과 계정 공개 여부만 바꾼다. connect는 조용한 연결 요청을 받으면 계정을 내놓는다. */
+function namedWallet(name: string, options?: { exposed?: boolean; connect?: () => Promise<void> }) {
+  const base = wallet();
+  const accounts = options?.exposed === false ? [] : [base.account];
+  const connect = vi.fn(
+    options?.connect ??
+      (async () => {
+        accounts.splice(0, accounts.length, base.account);
+      })
+  );
+  return {
+    ...base,
+    connect,
+    value: {
+      ...base.value,
+      name,
+      accounts,
+      features: { ...base.value.features, 'standard:connect': { version: '1.0.0', connect } },
+    },
+  };
+}
 
 describe('Wallet Standard transaction adapter', () => {
   it('maps backend networks to Wallet Standard chains', () => {
@@ -84,6 +109,76 @@ describe('Wallet Standard transaction adapter', () => {
     expect(target.signTransaction.mock.calls[0]).toHaveLength(2);
     expect(signed).toEqual(['AQ==', 'Ag==']);
   });
+  it('asks the wallet used to sign in when two wallets hold the same address', async () => {
+    const phantom = namedWallet('Phantom');
+    const solflare = namedWallet('Solflare');
+    registry.wallets = [phantom.value, solflare.value];
+    // 어느 지갑으로 로그인했는지 모르면 임의 지갑을 열지 않는다.
+    expect(getTransactionSigningSupport(address, 'devnet')).toEqual({
+      supported: false,
+      reason: 'ACCOUNT_AMBIGUOUS',
+    });
+
+    rememberWalletChoice(address, 'Solflare');
+    await signSolanaTransaction({
+      walletAddress: address,
+      network: 'devnet',
+      serializedTransactionBase64: 'AQI=',
+    });
+    expect(solflare.signTransaction).toHaveBeenCalledTimes(1);
+    expect(phantom.signTransaction).not.toHaveBeenCalled();
+  });
+
+  it('quietly reconnects the wallet used to sign in when it does not show the account after a reload', async () => {
+    const backpack = namedWallet('Backpack', { exposed: false });
+    const phantom = namedWallet('Phantom', { exposed: false });
+    registry.wallets = [phantom.value, backpack.value];
+    rememberWalletChoice(address, 'Backpack');
+
+    await signSolanaTransaction({
+      walletAddress: address,
+      network: 'devnet',
+      serializedTransactionBase64: 'AQI=',
+    });
+    expect(backpack.connect).toHaveBeenCalledWith({ silent: true });
+    expect(phantom.connect).not.toHaveBeenCalled();
+    expect(backpack.signTransaction).toHaveBeenCalledTimes(1);
+
+    // 계정이 이미 보이면 다시 연결하지 않는다.
+    await signSolanaTransaction({
+      walletAddress: address,
+      network: 'devnet',
+      serializedTransactionBase64: 'AQI=',
+    });
+    expect(backpack.connect).toHaveBeenCalledTimes(1);
+  });
+
+  it('treats a sign-in from before the wallet choice was remembered as Phantom', async () => {
+    const phantom = namedWallet('Phantom', { exposed: false });
+    registry.wallets = [phantom.value];
+    expect(await reconnectSigningWallet(address)).toBe(true);
+    expect(phantom.connect).toHaveBeenCalledWith({ silent: true });
+  });
+
+  it('reports a missing account when the wallet refuses a quiet reconnect', async () => {
+    const solflare = namedWallet('Solflare', {
+      exposed: false,
+      connect: async () => {
+        throw new Error('not trusted');
+      },
+    });
+    registry.wallets = [solflare.value];
+    rememberWalletChoice(address, 'Solflare');
+    await expect(
+      signSolanaTransaction({
+        walletAddress: address,
+        network: 'devnet',
+        serializedTransactionBase64: 'AQI=',
+      })
+    ).rejects.toMatchObject({ code: 'ACCOUNT_NOT_FOUND' });
+    expect(solflare.signTransaction).not.toHaveBeenCalled();
+  });
+
   it('reports account, chain, and feature failures without requesting a signature', () => {
     const missingFeature = wallet({ feature: false });
     registry.wallets = [missingFeature.value];

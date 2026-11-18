@@ -1,9 +1,11 @@
 import { getWallets } from '@wallet-standard/app';
 import type { Wallet, WalletAccount } from '@wallet-standard/base';
+import { StandardConnect, type StandardConnectFeature } from '@wallet-standard/features';
 import {
   SolanaSignTransaction,
   type SolanaSignTransactionFeature,
 } from '@solana/wallet-standard-features';
+import { rememberedWalletName } from './wallet-choice';
 
 export type SolanaNetwork = 'devnet' | 'mainnet-beta';
 export type TransactionSigningFailure =
@@ -76,11 +78,38 @@ function resolveSigningMatch(walletAddress: string, network: SolanaNetwork): Sig
   if (signingMatches.length === 0) {
     throw new SolanaTransactionSigningError('SIGN_TRANSACTION_UNSUPPORTED');
   }
-  // 같은 주소를 여러 지갑이 제시하면 임의 확장 프로그램을 열지 않는다.
-  if (signingMatches.length !== 1) {
+  if (signingMatches.length === 1) return signingMatches[0]!;
+  // 같은 주소를 여러 지갑이 제시하면 로그인에 쓴 지갑으로 서명받는다. 모르면 임의 확장 프로그램을 열지 않는다.
+  const remembered = rememberedWalletName(walletAddress);
+  const preferred = signingMatches.filter(({ wallet }) => wallet.name === remembered);
+  if (preferred.length !== 1) {
     throw new SolanaTransactionSigningError('ACCOUNT_AMBIGUOUS');
   }
-  return signingMatches[0]!;
+  return preferred[0]!;
+}
+
+/**
+ * 서명할 주소를 알려 주는 지갑이 없으면, 로그인에 쓴 지갑에 팝업 없이(silent) 다시 연결을 시도한다.
+ * 새로고침 뒤 지갑이 계정을 다시 알려 주지 않는 경우를 위한 것이다. 지갑 기록이 없는 예전 로그인은
+ * 그때 쓸 수 있던 유일한 지갑인 Phantom으로 본다. 주소가 보이면 true다.
+ */
+export async function reconnectSigningWallet(walletAddress: string): Promise<boolean> {
+  if (!walletAddress) return false;
+  if (matchingAccounts(walletAddress).length > 0) return true;
+  const walletName = rememberedWalletName(walletAddress) ?? 'Phantom';
+  const wallet = getWallets()
+    .get()
+    .find(registered => registered.name === walletName);
+  const feature = wallet?.features[StandardConnect] as
+    StandardConnectFeature[typeof StandardConnect] | undefined;
+  if (typeof feature?.connect !== 'function') return false;
+  try {
+    await feature.connect({ silent: true });
+  } catch {
+    // 이 사이트를 아직 허락하지 않은 지갑은 조용한 연결을 거절한다. 그때는 다시 로그인해야 한다.
+    return false;
+  }
+  return matchingAccounts(walletAddress).length > 0;
 }
 
 export function getTransactionSigningSupport(
@@ -124,6 +153,10 @@ export async function signSolanaTransactions(input: {
 }): Promise<string[]> {
   if (input.serializedTransactionsBase64.length === 0) {
     throw new SolanaTransactionSigningError('TRANSACTION_INVALID');
+  }
+  // 계정이 이미 보이면 기다리지 않고 바로 지갑에 요청한다.
+  if (matchingAccounts(input.walletAddress).length === 0) {
+    await reconnectSigningWallet(input.walletAddress);
   }
   const { wallet, account, feature } = resolveSigningMatch(input.walletAddress, input.network);
   const outputs = await feature.signTransaction(

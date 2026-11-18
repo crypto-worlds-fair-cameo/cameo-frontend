@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/button';
 import { DialogDescription } from '@/shared/ui/dialog';
 import { useModalStore } from '@/shared/ui/modal/model/modalStore';
+import { useSupportedWallets } from '@/shared/lib/solana-wallet/supported-wallets';
+import { useRememberedWalletName } from '@/shared/lib/solana-wallet/wallet-choice';
 import {
   walletDialogActionsClassName,
   walletDialogButtonClassName,
@@ -21,6 +23,8 @@ export function WalletConnectedContent({ finish = false }: { finish?: boolean })
   const { t } = useTranslation('wallet');
   const { walletAddress } = useWalletAuthentication();
   const closeModal = useModalStore(state => state.closeModal);
+  const walletName = useRememberedWalletName(walletAddress);
+  const walletIcon = useSupportedWallets().find(wallet => wallet.name === walletName)?.icon;
 
   return (
     <div className="wallet-dialog">
@@ -38,9 +42,11 @@ export function WalletConnectedContent({ finish = false }: { finish?: boolean })
       {walletAddress && (
         <WalletOptionRow
           className="mt-12"
+          walletName={walletName}
+          icon={walletIcon}
           label={
             <>
-              {t('dialog.phantom')}{' '}
+              {walletName ?? t('dialog.walletFallback')}{' '}
               <span className="font-data" title={walletAddress}>
                 {formatWalletAddress(walletAddress)}
               </span>

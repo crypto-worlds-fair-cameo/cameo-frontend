@@ -7,7 +7,7 @@
     "profile": "프로필"
   },
   "disconnect": "지갑 연결 해제",
-  "installPhantom": "Phantom 설치",
+  "install": "{{walletName}} 설치",
   "nickname": {
     "title": "닉네임 만들기",
     "label": "닉네임",
@@ -22,7 +22,8 @@
   "dialog": {
     "title": "지갑 연결",
     "description": "연결할 지갑을 선택하세요.",
-    "phantom": "Phantom",
+    "notInstalled": "설치 안 됨",
+    "walletFallback": "지갑",
     "connecting": "지갑 연결 중…",
     "rejected": "요청 거절됨",
     "failed": "연결 실패",

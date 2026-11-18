@@ -12,6 +12,7 @@ import { defaultBrushSettings } from '@/shared/ui/color-palette/model/brushSetti
 import { ColorPalette } from '@/shared/ui/color-palette/ColorPalette';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
 import { useIsMobile } from '@/shared/lib/hooks/use-mobile';
+import { useRememberedWalletName } from '@/shared/lib/solana-wallet/wallet-choice';
 import { useState } from 'react';
 import { useSeasonWorkspace } from './model/useSeasonWorkspace';
 import { SeasonWorkspacePanel } from './ui/SeasonWorkspacePanel';
@@ -65,6 +66,7 @@ function SeasonWorkspace({ id }: { id: string }) {
   const used =
     limit === null ? counted : Math.min(limit, realtime.sync.strokeUsed ? limit : counted);
   const walletAddress = session?.activeWallet.address;
+  const walletName = useRememberedWalletName(walletAddress);
   const shortWallet = walletAddress
     ? `${walletAddress.slice(0, 4)}…${walletAddress.slice(-4)}`
     : '';
@@ -122,7 +124,14 @@ function SeasonWorkspace({ id }: { id: string }) {
             {/* 시안처럼 이름 아래에 지갑 주소를 한 줄 더 보여 준다. */}
             <span className="season-room-user-text">
               <span>{displayName}</span>
-              {shortWallet && <small>{t('workspace.wallet', { address: shortWallet })}</small>}
+              {shortWallet && (
+                <small>
+                  {t('workspace.wallet', {
+                    walletName: walletName ?? t('workspace.walletFallback'),
+                    address: shortWallet,
+                  })}
+                </small>
+              )}
             </span>
           </div>
         )}

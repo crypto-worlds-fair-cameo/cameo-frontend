@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { AuthenticatedSession } from '@/entities/session';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
 import { Button } from '@/shared/ui/button';
+import { useRememberedWalletName } from '@/shared/lib/solana-wallet/wallet-choice';
 import { shortenAddress } from '../lib/profileFormat';
 import { EditProfileDialog } from './EditProfileDialog';
 
@@ -21,6 +22,8 @@ export function ProfileHeader({
   onShowJoined,
 }: ProfileHeaderProps) {
   const { t } = useTranslation('profile');
+  // 로그인에 쓴 지갑 이름을 보여 준다. 다른 사람의 프로필이거나 기록이 없으면 "지갑"이라고만 쓴다.
+  const walletName = useRememberedWalletName(walletAddress);
   const name = user.displayName?.trim();
   return (
     <header className="profile-header">
@@ -34,7 +37,7 @@ export function ProfileHeader({
         <h1>{name ? `@${name}` : t('fallbackName')}</h1>
         {walletAddress && (
           <p title={walletAddress}>
-            <span>{t('header.wallet')} </span>
+            <span>{walletName ?? t('header.wallet')} </span>
             <span>{shortenAddress(walletAddress)}</span>
           </p>
         )}

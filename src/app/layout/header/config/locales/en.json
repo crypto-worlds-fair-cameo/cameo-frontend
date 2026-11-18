@@ -7,7 +7,7 @@
     "profile": "Profile"
   },
   "disconnect": "Disconnect Wallet",
-  "installPhantom": "Install Phantom",
+  "install": "Install {{walletName}}",
   "nickname": {
     "title": "Create Nickname",
     "label": "name",
@@ -22,7 +22,8 @@
   "dialog": {
     "title": "Connect Wallet",
     "description": "Choose a wallet to connect.",
-    "phantom": "Phantom",
+    "notInstalled": "Not installed",
+    "walletFallback": "Wallet",
     "connecting": "Connecting to wallet…",
     "rejected": "Request rejected",
     "failed": "Connection failed",

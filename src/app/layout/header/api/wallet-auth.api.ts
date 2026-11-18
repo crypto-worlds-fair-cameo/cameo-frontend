@@ -1,5 +1,6 @@
 import { axiosInstance } from '@/shared/api/http-client';
 import type { AuthenticatedSession } from '@/entities/session';
+import { rememberWalletChoice } from '@/shared/lib/solana-wallet/wallet-choice';
 import { getWalletForSignIn, signInWithWallet } from '../lib/wallet-standard';
 
 interface ApiResponse<T> {
@@ -52,6 +53,8 @@ export async function authenticateWallet(walletName: string): Promise<WalletLogi
     { challengeId: challenge.data.data.challengeId, ...proof } satisfies LoginBody,
     credentials
   );
+  // 서버가 받아 준 로그인만 기억해, 서명할 때 같은 지갑을 열게 한다.
+  rememberWalletChoice(response.data.data.activeWallet.address, wallet.name);
   return response.data.data;
 }
 

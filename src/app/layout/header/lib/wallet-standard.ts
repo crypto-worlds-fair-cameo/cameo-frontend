@@ -1,6 +1,7 @@
 import { getWallets } from '@wallet-standard/app';
 import type { Wallet, WalletWithFeatures } from '@wallet-standard/base';
 import { StandardDisconnect, type StandardDisconnectFeature } from '@wallet-standard/features';
+import { rememberedWalletName } from '@/shared/lib/solana-wallet/wallet-choice';
 import {
   SolanaSignIn,
   type SolanaSignInFeature,
@@ -71,13 +72,16 @@ export async function signInWithWallet(wallet: SignInWallet, input: SolanaSignIn
 }
 
 export async function disconnectWallet(address?: string): Promise<void> {
+  const remembered = rememberedWalletName(address);
+  const holders = getWallets()
+    .get()
+    .filter(registeredWallet =>
+      registeredWallet.accounts.some(account => account.address === address)
+    );
   const wallet =
     connectedWallet ??
-    getWallets()
-      .get()
-      .find(registeredWallet =>
-        registeredWallet.accounts.some(account => account.address === address)
-      );
+    holders.find(registeredWallet => registeredWallet.name === remembered) ??
+    holders[0];
   connectedWallet = undefined;
   const feature = wallet?.features[StandardDisconnect] as
     StandardDisconnectFeature[typeof StandardDisconnect] | undefined;

@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/dialog';
 import { Input } from '@/shared/ui/input';
 import { formatWalletAddress } from '@/app/layout/header/lib/formatWalletAddress';
 import { signSolanaTransactions } from '@/shared/lib/solana-wallet/sign-transaction';
+import { useRememberedWalletName } from '@/shared/lib/solana-wallet/wallet-choice';
 import { getWalletBalance } from '@/pages/profile/api/profile.api';
 import { formatSeasonDateRange } from '../lib/seasonDate';
 import { formatSol } from '../lib/seasonForm';
@@ -79,6 +80,8 @@ export function SeasonNftMintDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const { t, i18n } = useTranslation('seasonCanvas');
+  // 팬텀만이 아니라 로그인에 쓴 지갑 이름으로 안내한다.
+  const walletName = useRememberedWalletName(walletAddress) ?? t('workspace.walletFallback');
   const previewQuery = useQuery({
     queryKey: ['season-nft-mint', seasonId],
     enabled: open,
@@ -307,7 +310,9 @@ export function SeasonNftMintDialog({
       setPrompt(remaining);
       // 서버가 거절한 사유는 그대로 보여 주고, 그 밖은 지갑이 서명을 돌려주지 않은 경우다.
       setError(
-        cause instanceof SeasonRequestError ? cause.message : t('workspace.mint.signFailed')
+        cause instanceof SeasonRequestError
+          ? cause.message
+          : t('workspace.mint.signFailed', { walletName })
       );
     } finally {
       signingRef.current = false;
@@ -471,7 +476,9 @@ export function SeasonNftMintDialog({
                   </div>
                   <div className="nft-mint__row">
                     <span>{t('workspace.mint.wallet')}</span>
-                    <span>Phantom {formatWalletAddress(preview.walletAddress)}</span>
+                    <span>
+                      {walletName} {formatWalletAddress(preview.walletAddress)}
+                    </span>
                   </div>
                 </div>
                 <div className="nft-mint__row nft-mint__fee">
@@ -523,8 +530,11 @@ export function SeasonNftMintDialog({
                       onClick={() => void signPrompt()}
                     >
                       {prompt.length > 1
-                        ? t('workspace.mint.confirmInWalletCount', { count: prompt.length })
-                        : t('workspace.mint.confirmInWallet')}
+                        ? t('workspace.mint.confirmInWalletCount', {
+                            count: prompt.length,
+                            walletName,
+                          })
+                        : t('workspace.mint.confirmInWallet', { walletName })}
                     </Button>
                   )}
                   {step === 'minting' && prompt.length === 0 && (
